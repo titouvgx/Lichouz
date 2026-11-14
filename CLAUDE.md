@@ -79,7 +79,7 @@ Svelte 5 (runes uniquement : `$state`, `$derived`, `$effect`, `$props`) + TypeSc
   6. Petits restes : icône toujours un chariot (logo Lichouz = chantier à décider) ; dossier du projet claude.ai encore nommé `courses-famille/` (cosmétique) ; branches `admin-v1` et `aide` fusionnées, supprimables ; la fonction serveur écrit maintenant la raison des échecs dans ses Logs
 - **Étape 10 : mise en prod → v1.0.0** (guide `supabase/prod/README.md`), après les tests de l'utilisateur sur téléphone
 - **Validé, à faire ensuite** : booster des recettes du jour (accueil : booster qui se déchire, 5 cartes qui sortent vers leur place `floatLayout`, une ouverture par jour, bouton « Passer », mouvement réduit → cartes directes)
-- **Boîte à idées (feu vert requis)** : liste par WhatsApp/SMS, recopier une semaine, favoris et notes, minuteurs en cuisine, notifications, livre de recettes PDF, figer la liste, arrondir les pièces, Nutri-Score, Playwright + sauvegardes, import de recette par lien
+- **Boîte à idées (feu vert requis)** : liste par WhatsApp/SMS, recopier une semaine, favoris et notes, minuteurs en cuisine, notifications, livre de recettes PDF, figer la liste, arrondir les pièces, Nutri-Score, Playwright + sauvegardes, import de recette par lien, **e-mails par Brevo** (SMTP perso dans Supabase : l'e-mail intégré n'envoie qu'aux membres de l'équipe du projet, 2/heure → « mot de passe oublié » probablement inutilisable pour la famille ; Brevo gratuit 300/jour, expéditeur `@lichouz.fr` si domaine ; laissé tel quel pour la V1 le 14/11/2026)
 - **Décision produit** : l'appli reste familiale (pas de Play Store). Plan grand public dans les docs Claude de l'utilisateur : seulement sur demande
 
 ## Commandes
