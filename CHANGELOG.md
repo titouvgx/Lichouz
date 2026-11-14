@@ -46,8 +46,8 @@ Migrations nécessaires : **17** (`20261114100000_familles_invitations.sql`), **
 
 ### Modifié
 - **L'appli s'appelle désormais Lichouz** (onglet, écran d'accueil du téléphone, connexion,
-  invitation, Mon compte). Nouvelle adresse `https://titouvgx.github.io/lichouz/` une fois le dépôt
-  renommé : réinstaller l'appli, mettre à jour Site URL / Redirect URLs dans Supabase
+  invitation, Mon compte). Nouvelle adresse `https://titouvgx.github.io/Lichouz/` (L majuscule
+  obligatoire) : réinstaller l'appli, mettre à jour Site URL / Redirect URLs dans Supabase
   (`docs/renommage-lichouz.md`).
 
 ### Corrigé

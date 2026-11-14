@@ -1,7 +1,7 @@
 # Lichouz — Contexte projet
 
 **Lichouz** (anciennement « Courses en famille », renommée le 14/11/2026 → `docs/renommage-lichouz.md`) : PWA familiale : recettes, planning de la semaine, liste de courses partagée en temps réel entre les membres d'une famille.
-- **Site** : https://titouvgx.github.io/lichouz/ — **Repo** : https://github.com/titouvgx/lichouz (public). ⚠️ Au 14/11 le dépôt s'appelle `Lichouz` (L majuscule) → le site répond sur `/Lichouz/` et `/lichouz/` = 404 (casse prise en compte par GitHub Pages) ; conseillé : renommer en `lichouz` minuscules (voir « À reprendre »)
+- **Site** : https://titouvgx.github.io/Lichouz/ — **Repo** : https://github.com/titouvgx/Lichouz (public). ⚠️ **L majuscule obligatoire** : GitHub Pages respecte la casse (`/lichouz/` = 404). Décision du 14/11/2026 : on garde `Lichouz` ; Site URL / Redirect URLs Supabase = `/Lichouz/`. Ne pas renommer le dépôt (casserait les liens et les applis installées)
 - **Détails à lire seulement si besoin** : `docs/architecture.md` (modèle, Realtime, photos, hors connexion, vie du foyer, structure des fichiers, recettes livrées), `docs/design.md` (design « Mer », règles UI mobile), `docs/historique.md` (étapes passées, anciennes décisions), `supabase/prod/README.md` (mise en prod), `tests/rls/README.md` (banc d'attaque)
 
 ## Règles de travail (demandées par l'utilisateur)
@@ -71,7 +71,7 @@ Svelte 5 (runes uniquement : `$state`, `$derived`, `$effect`, `$props`) + TypeSc
 ## Suite
 - **Administration v1** (migration 19) : en ligne le 14/11/2026. Hors v1 : déplacer une famille, désactiver un compte, gérer le catalogue dans l'appli (reste en JSON), quitter soi-même sa famille, supprimer une famille d'une autre super-famille depuis `#/admin`
 - **À reprendre (arrêt du 14/11/2026)** — en ligne : admin v1 + Lichouz + aide (`main` = 749fdd6, déploiement et contrôle de sécurité verts) :
-  1. **Casse de l'adresse** : dépôt `Lichouz` → site sur `/Lichouz/` seulement ; Supabase `courses-test` a `/lichouz/` → lien « mot de passe oublié » en 404 tant que ce n'est pas aligné. Conseil : renommer le dépôt en `lichouz` (sinon : `/Lichouz/` dans Supabase + docs). Revérifier les deux adresses après
+  1. ✅ **Casse de l'adresse** (réglé le 14/11/2026) : on garde `Lichouz` ; l'utilisateur a mis `/Lichouz/` dans Supabase `courses-test` ; docs alignées. À refaire à l'identique sur la prod
   2. **Essais sur téléphone** (avant la prod) : réinstaller l'appli (nouvelle adresse), écran de bienvenue plein écran (Fermer = revient à la prochaine ouverture ; « Ne plus afficher » = définitif), Aide, invitation avec un 2e e-mail, retrait du compte jetable (corbeille dans Ma famille), mot de passe oublié
   3. **`comptes_sans_profil`** (requête de contrôle 19) : valeur pas encore donnée ; si > 0 = comptes créés par les essais d'invitation ratés → proposer un nettoyage
   4. **Mise en prod** ensuite : projet Supabase à nommer `lichouz-prod` (le guide dit `courses-prod`), fonction créée directement à l'adresse `accepter-invitation` + Verify JWT désactivé, préparer `npm run prod:sql`, requête de contrôle sur la prod, puis v1.0.0
