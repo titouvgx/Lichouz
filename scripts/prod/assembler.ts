@@ -1,4 +1,4 @@
-// Prépare le SQL d'installation d'une base NEUVE (courses-prod) en 3 fichiers à
+// Prépare le SQL d'installation d'une base NEUVE (lichouz-prod) en 3 fichiers à
 // coller dans l'ordre dans le SQL Editor de Supabase :
 //   1-structure.sql     migrations jusqu'aux ingrédients (avant les recettes de démo)
 //   2-ton-compte.sql    ta famille + ton profil super-admin (à compléter : ton e-mail)

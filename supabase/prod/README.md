@@ -1,11 +1,11 @@
-# Mise en production — `courses-prod` (v1.0.0)
+# Mise en production — `lichouz-prod` (v1.0.0)
 
 Procédure pas à pas. Compter environ 45 minutes. Chaque étape se vérifie avant de passer à la suivante.
 **Prérequis** : la version a été testée sur le site de test (invitation, création de compte, recette
 privée / partagée, photo, mot de passe oublié) et toutes les vérifications GitHub sont vertes.
 
 ## 1. Créer le projet Supabase
-1. supabase.com → **New project** → nom `courses-prod`, même région que `courses-test`, mot de passe
+1. supabase.com → **New project** → nom `lichouz-prod`, même région que `courses-test`, mot de passe
    de base généré et rangé dans ton gestionnaire de mots de passe (il ne sert jamais dans l'appli).
 2. **Settings → API Keys** : note l'adresse du projet (`https://xxxx.supabase.co`) et la **clé
    publishable** (`sb_publishable_…`). La clé secrète ne sort jamais de Supabase.
@@ -46,7 +46,7 @@ select
 
 ## 6. Brancher le site sur la prod
 GitHub → dépôt → **Settings → Secrets and variables → Actions → Variables** :
-`VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY` = valeurs de `courses-prod` (étape 1).
+`VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY` = valeurs de `lichouz-prod` (étape 1).
 ⚠️ Variables, pas secrets ; jamais la clé secrète.
 
 ## 7. Version 1.0.0 (Claude s'en charge)
@@ -66,5 +66,7 @@ création du compte → le membre apparaît. Supprimer ensuite ce compte de test
   test séparé (Cloudflare Pages par exemple).
 - **Sauvegardes** : l'offre gratuite n'en fait pas. Prévoir un export régulier (Database → Backups
   n'est disponible qu'en payant ; à défaut, export SQL manuel).
-- **E-mails** : environ 2 e-mails d'authentification par heure pour tout le projet (mot de passe
-  oublié). Suffisant en famille ; sinon brancher un SMTP (Resend…).
+- **E-mails** : l'e-mail intégré de Supabase est limité à 2 par heure et n'envoie qu'aux adresses
+  membres de l'équipe du projet → « mot de passe oublié » probablement inutilisable pour la famille.
+  Accepté pour la V1 ; solution : SMTP Brevo (boîte à idées). Les invitations, elles, n'utilisent pas d'e-mail.
+- **Offre gratuite** : 2 projets actifs maximum (`courses-test` + `lichouz-prod`).
