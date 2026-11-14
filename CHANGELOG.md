@@ -21,7 +21,10 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
-Migrations nécessaires : **17** (`20261114100000_familles_invitations.sql`), **18**
+## [1.0.0] — 2026-11-15 — Première version en production (base `lichouz-prod`)
+
+Installation d'une base neuve : migrations **1 à 19** via `npm run prod:sql` (guide `supabase/prod/README.md`),
+contrôle 1 / 1 / 50 / 0 validé le 15/11/2026. Depuis la 0.9.0 (base existante) : migrations **17** (`20261114100000_familles_invitations.sql`), **18**
 (`20261114110000_recettes_photos.sql`), **19** (`20261114120000_admin_famille.sql`) + fonction serveur
 `accepter-invitation` déployée + réglages Auth (voir `CLAUDE.md`, « Supabase : réglages… »).
 

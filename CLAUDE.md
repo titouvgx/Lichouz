@@ -35,7 +35,7 @@ Svelte 5 (runes uniquement : `$state`, `$derived`, `$effect`, `$props`) + TypeSc
 
 **État des bases** (à tenir à jour) :
 - `courses-test` : 1 à 19 appliquées et vérifiées le 14/11/2026 (513 ingrédients, 50 catalogue dont 49 avec photo, 0 table sans RLS ; contrôle 19 : `supabase/tests/controle_19_admin_famille.sql`, tout à true) ; fonction `accepter-invitation` redéployée (adresse `/accepter-invitation`, Verify JWT désactivé), invitation testée OK
-- `courses-prod` : pas encore créée → guide `supabase/prod/README.md` (`npm run prod:sql`)
+- `lichouz-prod` : créée le 15/11/2026, migrations 1 à 19 via `npm run prod:sql`, contrôle 1/1/50/0 OK ; Site URL `/Lichouz/` ; fonction `accepter-invitation` à confirmer (URL + Verify JWT désactivé) ; variables GitHub branchées sur la prod → le site public utilise la prod depuis la v1.0.0. `courses-test` : essais seulement (se met en pause après 7 jours)
 
 **Règle** : migration exécutée et vérifiée (requête de contrôle) AVANT de pousser le code qui en dépend. Nouvelle table = RLS par famille + attaques ajoutées dans `tests/rls` avant de pousser. Recettes livrées : `visibility = 'catalogue'`, JSON dans `supabase/recettes/` (jamais les vraies recettes de la famille dans le dépôt public), migrations générées jamais éditées à la main.
 
@@ -74,7 +74,7 @@ Svelte 5 (runes uniquement : `$state`, `$derived`, `$effect`, `$props`) + TypeSc
   1. ✅ **Casse de l'adresse** (réglé le 14/11/2026) : on garde `Lichouz` ; l'utilisateur a mis `/Lichouz/` dans Supabase `courses-test` ; docs alignées. À refaire à l'identique sur la prod
   2. **Essais sur téléphone** (avant la prod) : réinstaller l'appli (nouvelle adresse), écran de bienvenue plein écran (Fermer = revient à la prochaine ouverture ; « Ne plus afficher » = définitif), Aide, invitation avec un 2e e-mail, retrait du compte jetable (corbeille dans Ma famille), mot de passe oublié
   3. **`comptes_sans_profil`** (requête de contrôle 19) : valeur pas encore donnée ; si > 0 = comptes créés par les essais d'invitation ratés → proposer un nettoyage
-  4. **Mise en prod** ensuite : projet Supabase à nommer `lichouz-prod` (le guide dit `courses-prod`), fonction créée directement à l'adresse `accepter-invitation` + Verify JWT désactivé, préparer `npm run prod:sql`, requête de contrôle sur la prod, puis v1.0.0
+  4. ✅ (v1.0.0, 15/11/2026) **Mise en prod** : projet Supabase à nommer `lichouz-prod` (le guide dit `courses-prod`), fonction créée directement à l'adresse `accepter-invitation` + Verify JWT désactivé, préparer `npm run prod:sql`, requête de contrôle sur la prod, puis v1.0.0
   5. **Dependabot** : mises à jour ouvertes le 14/11 (typescript, @types/node) — ne pas fusionner avant la v1.0.0, puis vérifier une par une
   6. Petits restes : icône toujours un chariot (logo Lichouz = chantier à décider) ; dossier du projet claude.ai encore nommé `courses-famille/` (cosmétique) ; branches `admin-v1` et `aide` fusionnées, supprimables ; la fonction serveur écrit maintenant la raison des échecs dans ses Logs
 - **Étape 10 : mise en prod → v1.0.0** (guide `supabase/prod/README.md`), après les tests de l'utilisateur sur téléphone
