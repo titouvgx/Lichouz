@@ -1,7 +1,8 @@
 <script lang="ts">
   // « Administration » (#/admin), réservée au super-admin :
   //   - liens « fondateur » (création, suivi, annulation) ;
-  //   - vue d'ensemble en lecture seule : super-familles, familles, nombre de personnes.
+  //   - vue d'ensemble en lecture seule : super-familles, familles, nombre de personnes ;
+  //   - statistiques (admin_stats, migration 20) : uniquement des nombres, aucun contenu.
   // La base refuse tout à qui n'est pas super-admin : l'écran ne fait que le dire.
   import { untrack } from 'svelte'
   import Icon from '../components/Icon.svelte'
@@ -11,8 +12,8 @@
   import { href } from '../lib/router.svelte'
   import { toast } from '../lib/toast.svelte'
   import {
-    fetchInvitations, revokeInvitation, invitationStatus, namesOf, fetchOverview,
-    type InvitationStatus, type SuperFamilyOverview,
+    fetchInvitations, revokeInvitation, invitationStatus, namesOf, fetchOverview, fetchAdminStats,
+    type InvitationStatus, type SuperFamilyOverview, type AdminStats,
   } from '../lib/api/famille'
   import type { Invitation } from '../lib/types'
 
@@ -32,6 +33,11 @@
   let overviewLoading = $state(true)
   let overviewError = $state<string | null>(null)
 
+  // ── Statistiques ──
+  let stats = $state<AdminStats | null>(null)
+  let statsLoading = $state(true)
+  let statsError = $state<string | null>(null)
+
   let inviting = $state(false)
   let revokeTarget = $state<Invitation | null>(null)
   let revoking = $state(false)
@@ -41,6 +47,7 @@
     untrack(() => {
       void loadInvites()
       void loadOverview()
+      void loadStats()
     })
   })
 
@@ -84,6 +91,18 @@
       toast.error(messageOf(e, 'Le lien n’a pas pu être annulé.'))
     } finally {
       revoking = false
+    }
+  }
+
+  async function loadStats() {
+    statsLoading = true
+    statsError = null
+    try {
+      stats = await fetchAdminStats()
+    } catch (e) {
+      statsError = messageOf(e, 'Les statistiques n’ont pas pu être chargées.')
+    } finally {
+      statsLoading = false
     }
   }
 
@@ -302,6 +321,61 @@
             {/each}
           </ul>
         {/if}
+      {/if}
+    </section>
+    <!-- ── Statistiques ── -->
+    <section class="card" aria-labelledby="stats-title">
+      <h2 id="stats-title" class="section-title">
+        <span class="section-icon"><Icon name="list" size={18} /></span> Statistiques
+      </h2>
+      <p class="card-text">Uniquement des nombres : aucun titre de recette ni contenu privé n’est lu.</p>
+
+      {#if statsLoading && !stats}
+        {@render skeleton(3)}
+      {:else if statsError}
+        {@render errorBox(statsError, loadStats)}
+      {:else if stats}
+        {@const r = stats.recettes}
+        {@const ajoutees = r.famille + r.super_famille}
+        <h3 class="stats-sub">Recettes</h3>
+        <div class="totals">
+          <div class="total">
+            <span class="total-n">{r.famille}</span>
+            <span class="total-l">privées</span>
+          </div>
+          <div class="total">
+            <span class="total-n">{r.super_famille}</span>
+            <span class="total-l">partagées</span>
+          </div>
+          <div class="total">
+            <span class="total-n">{r.catalogue}</span>
+            <span class="total-l">catalogue</span>
+          </div>
+        </div>
+        <ul class="stats-list">
+          <li><span>Ajoutées ces 7 derniers jours</span><strong>{r.ajoutees_7j}</strong></li>
+          <li><span>Ajoutées ces 30 derniers jours</span><strong>{r.ajoutees_30j}</strong></li>
+          <li><span>Avec photo (hors catalogue)</span><strong>{r.avec_photo} / {ajoutees}</strong></li>
+        </ul>
+
+        <h3 class="stats-sub">Activité</h3>
+        <ul class="stats-list">
+          <li><span>Repas prévus cette semaine</span><strong>{stats.planning.repas_semaine}</strong></li>
+          <li><span>Familles qui planifient cette semaine</span><strong>{stats.planning.familles_actives}</strong></li>
+          <li><span>Listes de courses en cours</span><strong>{stats.courses.listes_en_cours}</strong></li>
+          <li><span>Courses terminées (30 jours)</span><strong>{stats.courses.terminees_30j}</strong></li>
+        </ul>
+
+        <h3 class="stats-sub">Personnes</h3>
+        <ul class="stats-list">
+          <li><span>Comptes</span><strong>{stats.personnes.total}</strong></li>
+          <li><span>Nouveaux (30 jours)</span><strong>{stats.personnes.nouvelles_30j}</strong></li>
+          <li><span>Liens d’invitation en attente</span><strong>{stats.invitations.en_attente}</strong></li>
+        </ul>
+
+        <button class="link-btn" onclick={loadStats} disabled={statsLoading} aria-busy={statsLoading}>
+          <Icon name="refresh" size={16} /> {statsLoading ? 'Actualisation…' : 'Actualiser'}
+        </button>
       {/if}
     </section>
   {/if}
@@ -546,6 +620,34 @@
   }
 
   .total-l { font-size: 13px; color: var(--text-secondary); }
+
+  .stats-sub {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    margin: 6px 0 -2px;
+  }
+  .stats-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .stats-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px 2px;
+    font-size: 15px;
+    border-bottom: 1px solid var(--border);
+  }
+  .stats-list li:last-child { border-bottom: none; }
+  .stats-list span { color: var(--text-secondary); }
+  .stats-list strong { font-variant-numeric: tabular-nums; color: var(--text); }
 
   .sf-list {
     list-style: none;

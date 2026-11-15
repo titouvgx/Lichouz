@@ -2644,3 +2644,32 @@ describe('Fonctions RPC, vues par un utilisateur connecté', () => {
     expect(o.rows[0].v).toBe(true)
   })
 })
+
+describe('Administration : statistiques (admin_stats)', () => {
+  const STATS = `SELECT public.admin_stats() AS v`
+  const NON_SUPER: Actor[] = ['adminA', 'memberA', 'adminA2', 'memberA2', 'adminB', 'memberB', 'sansProfil', 'founderC']
+
+  attaque('anonyme ne peut pas appeler admin_stats', async (s) => {
+    expectNoExecute(await s.as('anon', STATS), 'anon admin_stats')
+  })
+  for (const actor of NON_SUPER) {
+    attaque(`${ACTOR_LABEL[actor]} n'obtient pas les statistiques`, async (s) => {
+      expectRefused(await s.as(actor, STATS), '42501', `${ACTOR_LABEL[actor]} admin_stats`, /super-admin|Connexion/)
+    })
+  }
+  controle('le super-admin obtient des chiffres égaux aux comptes réels, sans aucun contenu', async (s) => {
+    const o = await s.as('superAdmin', STATS)
+    expect(o.error).toBeUndefined()
+    const v = o.rows[0].v as Record<string, Record<string, number>>
+    expect(v.recettes.famille).toBe(await countRows(s, 'public.recipes', `visibility = 'famille'`))
+    expect(v.recettes.super_famille).toBe(await countRows(s, 'public.recipes', `visibility = 'super_famille'`))
+    expect(v.recettes.catalogue).toBe(await countRows(s, 'public.recipes', `visibility = 'catalogue'`))
+    expect(v.personnes.total).toBe(await countRows(s, 'public.profiles'))
+    expect(v.recettes.famille).toBeGreaterThan(0)
+    expect(v.recettes.super_famille).toBeGreaterThan(0)
+    // Uniquement des nombres : ni titre, ni nom, ni identifiant ne sort.
+    for (const group of Object.values(v)) {
+      for (const val of Object.values(group)) expect(typeof val).toBe('number')
+    }
+  })
+})

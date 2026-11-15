@@ -21,6 +21,14 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+Migration nécessaire : **20** (`20261115120000_admin_stats.sql`), à exécuter AVANT le déploiement.
+
+### Ajouté
+- Administration : section **Statistiques** (super-admin) : recettes privées / partagées / catalogue,
+  ajoutées sur 7 et 30 jours, avec photo ; repas prévus et familles qui planifient cette semaine ;
+  listes de courses en cours et terminées sur 30 jours ; comptes, nouveaux comptes, liens en attente.
+  Calculées par la base (`admin_stats()`) : uniquement des nombres, aucun contenu privé ne sort.
+
 ### Technique
 - `@types/node` 26.6.6 (Dependabot). TypeScript 7 refusé pour l'instant (svelte-check ne le
   prend pas encore en charge) : Dependabot ignore désormais les versions majeures de TypeScript.

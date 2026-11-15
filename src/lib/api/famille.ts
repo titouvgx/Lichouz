@@ -250,6 +250,26 @@ export interface SuperFamilyOverview extends SuperFamily {
   families: (Family & { members: number })[]
 }
 
+/** Statistiques globales (uniquement des nombres), calculées par la base. Super-admin seulement. */
+export interface AdminStats {
+  recettes: { famille: number; super_famille: number; catalogue: number; avec_photo: number; ajoutees_7j: number; ajoutees_30j: number }
+  personnes: { total: number; nouvelles_30j: number }
+  planning: { repas_semaine: number; familles_actives: number }
+  courses: { listes_en_cours: number; terminees_30j: number }
+  invitations: { en_attente: number }
+}
+
+export async function fetchAdminStats(): Promise<AdminStats> {
+  const { data, error } = await db().rpc('admin_stats')
+  if (error) {
+    if (/admin_stats|schema cache|does not exist/i.test(error.message)) {
+      throw new Error('Statistiques indisponibles : la migration 20 n’est pas encore appliquée sur la base.')
+    }
+    throw error
+  }
+  return data as AdminStats
+}
+
 /** Vue d'ensemble pour le super-admin (lecture seule). */
 export async function fetchOverview(): Promise<SuperFamilyOverview[]> {
   const client = db()
