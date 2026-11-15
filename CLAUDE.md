@@ -35,7 +35,7 @@ Svelte 5 (runes uniquement : `$state`, `$derived`, `$effect`, `$props`) + TypeSc
 
 **État des bases** (à tenir à jour) :
 - `courses-test` : 1 à 19 appliquées et vérifiées le 14/11/2026 (513 ingrédients, 50 catalogue dont 49 avec photo, 0 table sans RLS ; contrôle 19 : `supabase/tests/controle_19_admin_famille.sql`, tout à true) ; fonction `accepter-invitation` redéployée (adresse `/accepter-invitation`, Verify JWT désactivé), invitation testée OK
-- `lichouz-prod` : créée le 15/11/2026, migrations 1 à 19 via `npm run prod:sql`, contrôle 1/1/50/0 OK ; Site URL `/Lichouz/` ; fonction `accepter-invitation` à confirmer (URL + Verify JWT désactivé) ; variables GitHub branchées sur la prod → le site public utilise la prod depuis la v1.0.0. `courses-test` : essais seulement (se met en pause après 7 jours)
+- `lichouz-prod` : créée le 15/11/2026, migrations 1 à 19 via `npm run prod:sql`, contrôle 1/1/50/0 OK ; Site URL `/Lichouz/` ; fonction `accepter-invitation` OK (invitation d'un compte de test réussie en prod le 15/11/2026) ; variables GitHub branchées sur la prod → le site public utilise la prod depuis la v1.0.0. `courses-test` : essais seulement (se met en pause après 7 jours)
 
 **Règle** : migration exécutée et vérifiée (requête de contrôle) AVANT de pousser le code qui en dépend. Nouvelle table = RLS par famille + attaques ajoutées dans `tests/rls` avant de pousser. Recettes livrées : `visibility = 'catalogue'`, JSON dans `supabase/recettes/` (jamais les vraies recettes de la famille dans le dépôt public), migrations générées jamais éditées à la main.
 
