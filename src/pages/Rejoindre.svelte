@@ -9,6 +9,7 @@
   import { VERSION_LABEL } from '../lib/version'
   import {
     acceptInvitation,
+    resendConfirmation,
     invitationInfo,
     INVITATION_DAYS,
     type InvitationInfo,
@@ -89,6 +90,39 @@
   let errors = $state<Partial<Record<Field, string>>>({})
   /** Message de bienvenue après la création (le compte est alors connecté). */
   let welcome = $state<string | null>(null)
+  /** Compte créé, adresse à confirmer : l'adresse à laquelle l'e-mail est parti. */
+  let checkMail = $state<string | null>(null)
+  let resending = $state(false)
+  let resendMsg = $state<{ tone: 'ok' | 'error'; text: string } | null>(null)
+  let resendCooldown = $state(0)
+  let cooldownTimer: ReturnType<typeof setInterval> | undefined
+
+  function startCooldown() {
+    resendCooldown = 60
+    clearInterval(cooldownTimer)
+    cooldownTimer = setInterval(() => {
+      resendCooldown -= 1
+      if (resendCooldown <= 0) clearInterval(cooldownTimer)
+    }, 1000)
+  }
+
+  async function handleResend() {
+    if (!checkMail || resending || resendCooldown > 0) return
+    if (!navigator.onLine) {
+      resendMsg = { tone: 'error', text: OFFLINE_MSG }
+      return
+    }
+    resending = true
+    resendMsg = null
+    try {
+      await resendConfirmation(checkMail)
+      resendMsg = { tone: 'ok', text: 'C’est renvoyé. Regarde aussi dans les spams.' }
+      startCooldown()
+    } catch (err) {
+      resendMsg = { tone: 'error', text: err instanceof Error ? err.message : 'L’e-mail n’a pas pu être envoyé.' }
+    }
+    resending = false
+  }
   let redirectTimer: ReturnType<typeof setTimeout> | undefined
 
   let titleEl: HTMLHeadingElement | undefined = $state()
@@ -99,9 +133,12 @@
   let familyInput: HTMLInputElement | undefined = $state()
 
   // Un compte déjà ouvert sur ce téléphone (pas celui qu'on vient de créer)
-  const alreadyConnected = $derived(auth.user != null && !submitting && welcome == null)
+  const alreadyConnected = $derived(auth.user != null && !submitting && welcome == null && checkMail == null)
 
-  onDestroy(() => clearTimeout(redirectTimer))
+  onDestroy(() => {
+    clearTimeout(redirectTimer)
+    clearInterval(cooldownTimer)
+  })
 
   // Solidité du mot de passe : même logique que Mon compte (longueur + variété)
   const strength = $derived.by(() => {
@@ -209,13 +246,21 @@
     const firstName = displayName.trim()
     submitting = true
     try {
-      await acceptInvitation({
+      const result = await acceptInvitation({
         token,
         email: email.trim(),
         password,
         display_name: firstName,
         ...(isFounder ? { family_name: familyName.trim() } : {}),
       })
+      if (result === 'a_confirmer') {
+        checkMail = email.trim().toLowerCase()
+        submitting = false
+        password = ''
+        confirm = ''
+        startCooldown() // l'e-mail vient de partir : pas de renvoi avant une minute
+        return
+      }
       // welcome avant submitting = false : la session vient de s'ouvrir, il ne
       // faut pas afficher « un compte est déjà ouvert sur ce téléphone »
       welcome = isFounder
@@ -258,7 +303,33 @@
     </header>
 
     <section class="auth-card" aria-labelledby="join-title">
-      {#if welcome}
+      {#if checkMail}
+        <div class="status" role="status">
+          <span class="status-icon" data-tone="info"><Icon name="mail" size={28} /></span>
+          <h2 id="join-title">Vérifie ta boîte mail</h2>
+          <p class="status-text">
+            Ton compte est créé. On vient d’envoyer un lien à <strong class="mail-addr">{checkMail}</strong> :
+            ouvre-le pour confirmer que l’adresse est bien à toi. Tu pourras ensuite te connecter.
+          </p>
+          <p class="status-text small">Rien reçu ? Regarde dans les spams. Le lien est valable 1 heure.</p>
+          {#if resendMsg}
+            <p class="resend-msg" data-tone={resendMsg.tone} role={resendMsg.tone === 'error' ? 'alert' : 'status'}>{resendMsg.text}</p>
+          {/if}
+          <div class="actions">
+            <button
+              type="button"
+              class="btn btn-resend btn-main"
+              disabled={resending || resendCooldown > 0}
+              aria-busy={resending}
+              onclick={handleResend}
+            >
+              <Icon name="refresh" size={18} />
+              {resendCooldown > 0 ? `Renvoyer l’e-mail (${resendCooldown} s)` : 'Renvoyer l’e-mail'}
+            </button>
+            <a class="text-link" href={href('login')}>J’ai confirmé : me connecter</a>
+          </div>
+        </div>
+      {:else if welcome}
         <div class="status" role="status">
           <span class="status-icon" data-tone="success"><Icon name="check-circle" size={28} /></span>
           <h2 id="join-title">{welcome}</h2>
@@ -906,6 +977,24 @@
     line-height: 1.5;
     color: var(--text-secondary);
   }
+  .status-text.small { font-size: 14px; margin-top: 10px; }
+  .mail-addr { color: var(--text); font-weight: 600; word-break: break-all; }
+  .resend-msg {
+    margin-top: 12px;
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 10px 14px;
+    border-radius: var(--radius-lg);
+  }
+  .resend-msg[data-tone='ok'] { background: var(--success-bg); color: var(--success); }
+  .resend-msg[data-tone='error'] { background: var(--error-bg); color: #FF9A9D; }
+  .btn-resend {
+    border-radius: var(--radius-lg);
+    border: 1.5px solid var(--border-strong, rgba(255, 255, 255, 0.28));
+    background: transparent;
+    color: var(--primary);
+  }
+  .btn-resend:disabled { opacity: 0.6; cursor: not-allowed; }
 
   .actions {
     margin-top: 20px;

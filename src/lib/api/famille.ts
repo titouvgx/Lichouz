@@ -212,8 +212,15 @@ function hintFor(status: number): string {
   return ''
 }
 
-/** Crée le compte via la fonction serveur, puis connecte la personne. */
-export async function acceptInvitation(input: AcceptInvitationInput): Promise<void> {
+/**
+ * Crée le compte via la fonction serveur, puis essaie de connecter la personne.
+ * - 'connecte' : le compte était confirmé d'office (ancienne fonction serveur) ;
+ * - 'a_confirmer' : l'adresse doit être confirmée (v1.3.0) → l'e-mail de
+ *   confirmation vient d'être demandé, la personne doit cliquer le lien.
+ * Marche avec l'ancienne comme avec la nouvelle fonction : l'ordre de mise en
+ * ligne (site / fonction) n'a pas d'importance.
+ */
+export async function acceptInvitation(input: AcceptInvitationInput): Promise<'connecte' | 'a_confirmer'> {
   const client = db()
   const { data, error } = await client.functions.invoke('accepter-invitation', { body: input })
   if (error) {
@@ -234,7 +241,44 @@ export async function acceptInvitation(input: AcceptInvitationInput): Promise<vo
   }
   if (!(data as { ok?: boolean })?.ok) throw new Error('Le compte n’a pas pu être créé.')
   const { error: e2 } = await client.auth.signInWithPassword({ email: input.email.trim(), password: input.password })
-  if (e2) throw new Error('Compte créé ! Connecte-toi avec ton e-mail et ton mot de passe.')
+  if (!e2) return 'connecte'
+  if ((e2 as { code?: string }).code === 'email_not_confirmed' || /not confirmed/i.test(e2.message)) {
+    try {
+      await resendConfirmation(input.email)
+    } catch {
+      // L'écran « Vérifie ta boîte mail » propose de renvoyer l'e-mail
+    }
+    return 'a_confirmer'
+  }
+  throw new Error('Compte créé ! Connecte-toi avec ton e-mail et ton mot de passe.')
+}
+
+// ────────── Confirmation de l'adresse e-mail ──────────
+
+/**
+ * (Re)envoie l'e-mail « Confirme ton adresse » (modèle « Confirm signup » de
+ * Supabase, lien …/?token_hash=…&type=signup#/confirmer-email).
+ * Supabase ne dit rien si l'adresse est inconnue ou déjà confirmée (pas de fuite) ;
+ * une demande par minute et par adresse au plus.
+ */
+export async function resendConfirmation(email: string): Promise<void> {
+  const { origin, pathname } = window.location
+  const { error } = await db().auth.resend({
+    type: 'signup',
+    email: email.trim().toLowerCase(),
+    options: { emailRedirectTo: `${origin}${pathname}` },
+  })
+  if (!error) return
+  if (/rate|limit|too many|security purposes|seconds/i.test(error.message)) {
+    throw new Error('E-mail déjà envoyé il y a moins d’une minute. Patiente un peu avant de redemander.')
+  }
+  throw new Error('L’e-mail n’a pas pu être envoyé. Réessaie dans un instant.')
+}
+
+/** Valide le lien de confirmation (?token_hash=…&type=signup) : confirme l'adresse et ouvre une session. */
+export async function verifySignupLink(tokenHash: string): Promise<void> {
+  const { error } = await db().auth.verifyOtp({ token_hash: tokenHash, type: 'signup' })
+  if (error) throw new Error('Ce lien a expiré ou a déjà servi. Connecte-toi : l’appli te proposera de renvoyer l’e-mail.')
 }
 
 // ────────── Mot de passe oublié ──────────

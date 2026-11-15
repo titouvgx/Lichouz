@@ -24,6 +24,15 @@ avec un faux Supabase, et le fichier est vérifié par `deno check`.
    appeler la fonction depuis un navigateur ; ce sont les valeurs par défaut).
 6. Prérequis : la migration `20261114100000_familles_invitations.sql` exécutée.
 
+### Mettre à jour une fonction déjà déployée
+
+Edge Functions → `accepter-invitation` → **Code** → remplacer tout le code par le
+nouveau `index.ts` → **Deploy**. Vérifier ensuite que **Verify JWT** est toujours désactivé.
+
+**v1.3.0** : la fonction crée le compte **non confirmé** (`email_confirm: false`). Avant de la
+redéployer : SMTP personnel (Brevo) branché + modèle « Confirm signup » collé (voir
+`supabase/prod/README.md`), sinon les nouveaux comptes ne pourront jamais se connecter.
+
 ### Avec la ligne de commande (alternative)
 
 ```bash

@@ -4,6 +4,7 @@
   import { auth, signIn } from '../lib/auth.svelte'
   import { href } from '../lib/router.svelte'
   import { VERSION_LABEL } from '../lib/version'
+  import { resendConfirmation } from '../lib/api/famille'
 
   let email = $state('')
   let password = $state('')
@@ -26,7 +27,7 @@
     if (raw === 'Email ou mot de passe incorrect.' || m.includes('invalid login credentials'))
       return 'E-mail ou mot de passe incorrect.'
     if (m.includes('email not confirmed'))
-      return "Ton adresse e-mail n'est pas encore confirmée. Ouvre le lien reçu par e-mail, puis réessaie."
+      return "Ton adresse e-mail n'est pas encore confirmée. Ouvre le lien reçu par e-mail (regarde aussi les spams), puis réessaie."
     if (m.includes('rate limit') || m.includes('too many') || m.includes('429'))
       return 'Trop de tentatives. Patiente quelques minutes avant de réessayer.'
     if (m.includes('failed to fetch') || m.includes('network') || m.includes('load failed') || m.includes('fetch'))
@@ -47,6 +48,24 @@
   const emailInvalid = $derived(formError ? formError.field === 'email' : auth.error != null)
   const passwordInvalid = $derived(formError ? formError.field === 'password' : auth.error != null)
 
+  // Adresse pas encore confirmée (Supabase ne le dit qu'avec le BON mot de passe)
+  const notConfirmed = $derived(!formError && !offlineError && !!auth.error && /not confirmed/i.test(auth.error))
+  let resending = $state(false)
+  let resendMsg = $state<{ tone: 'ok' | 'error'; text: string } | null>(null)
+
+  async function handleResend() {
+    if (resending) return
+    resending = true
+    resendMsg = null
+    try {
+      await resendConfirmation(email)
+      resendMsg = { tone: 'ok', text: 'E-mail renvoyé. Regarde aussi dans les spams.' }
+    } catch (err) {
+      resendMsg = { tone: 'error', text: err instanceof Error ? err.message : 'L’e-mail n’a pas pu être envoyé.' }
+    }
+    resending = false
+  }
+
   onMount(() => {
     // Premier champ au clavier/souris. Sur téléphone on évite d'ouvrir le
     // clavier d'office : il masquerait l'écran d'accueil.
@@ -54,6 +73,7 @@
   })
 
   function clearErrors() {
+    resendMsg = null
     formError = null
     offlineError = false
     if (auth.error) auth.error = null
@@ -178,6 +198,14 @@
         {#if errorMessage}
           <p id="login-error" class="error-msg" role="alert">{errorMessage}</p>
         {/if}
+        {#if notConfirmed}
+          <button type="button" class="resend-btn" disabled={resending} aria-busy={resending} onclick={handleResend}>
+            <Icon name="mail" size={16} /> {resending ? 'Envoi…' : 'Renvoyer l’e-mail de confirmation'}
+          </button>
+          {#if resendMsg}
+            <p class="resend-msg" data-tone={resendMsg.tone} role={resendMsg.tone === 'error' ? 'alert' : 'status'}>{resendMsg.text}</p>
+          {/if}
+        {/if}
 
         <button type="submit" class="btn btn-primary btn-login" aria-busy={submitting}>
           {#if submitting}
@@ -203,6 +231,32 @@
 </main>
 
 <style>
+  .resend-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    margin-top: -4px;
+    padding: 0 14px;
+    border-radius: var(--radius-lg);
+    border: 1.5px solid var(--primary);
+    background: transparent;
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 600;
+    touch-action: manipulation;
+  }
+  .resend-btn:disabled { opacity: 0.6; cursor: progress; }
+  .resend-msg {
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 10px 14px;
+    border-radius: var(--radius-lg);
+  }
+  .resend-msg[data-tone='ok'] { background: var(--success-bg); color: var(--success); }
+  .resend-msg[data-tone='error'] { background: var(--error-bg); color: #FF9A9D; }
+
   .login-page {
     min-height: 100svh;
     display: flex;

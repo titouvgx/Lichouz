@@ -26,6 +26,7 @@
   import Rejoindre from './pages/Rejoindre.svelte'
   import MotDePasseOublie from './pages/MotDePasseOublie.svelte'
   import NouveauMotDePasse from './pages/NouveauMotDePasse.svelte'
+  import ConfirmerEmail from './pages/ConfirmerEmail.svelte'
 
   // Pages plein écran, accessibles sans être connecté (invitation, mot de passe).
   // Elles restent affichées même quand une session s'ouvre pendant qu'on y est
@@ -82,6 +83,8 @@
     <Rejoindre />
   {:else if router.current === 'mot-de-passe-oublie'}
     <MotDePasseOublie />
+  {:else if router.current === 'confirmer-email'}
+    <ConfirmerEmail />
   {:else}
     <NouveauMotDePasse />
   {/if}

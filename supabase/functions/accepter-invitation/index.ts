@@ -11,7 +11,9 @@
 // - le jeton est vérifié puis consommé dans la base par consume_invitation()
 //   (atomique : un lien ne sert qu'une fois, même avec deux envois simultanés) ;
 // - si le rattachement échoue, le compte tout juste créé est supprimé ;
-// - seules les adresses de l'appli peuvent l'appeler depuis un navigateur (CORS).
+// - seules les adresses de l'appli peuvent l'appeler depuis un navigateur (CORS) ;
+// - l'adresse e-mail n'est PAS confirmée d'office : connexion impossible tant que
+//   la personne n'a pas cliqué le lien reçu (prouve que l'adresse est à elle).
 //
 // Déploiement : voir supabase/functions/README.md (tableau de bord Supabase,
 // « Verify JWT » désactivé : la personne n'a pas encore de compte).
@@ -159,7 +161,10 @@ if (typeof Deno !== 'undefined') {
       const { data, error } = await admin.auth.admin.createUser({
         email,
         password: motDePasse,
-        email_confirm: true, // le lien d'invitation tient lieu de vérification
+        // Adresse NON confirmée (v1.3.0) : la personne ne peut pas se connecter
+        // avant d'avoir cliqué le lien de l'e-mail « Confirme ton adresse »,
+        // demandé ensuite par le site (auth.resend type 'signup').
+        email_confirm: false,
         user_metadata: { display_name: nom },
       })
       if (error || !data?.user) {

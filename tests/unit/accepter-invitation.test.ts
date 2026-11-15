@@ -94,3 +94,12 @@ describe('accepter-invitation', () => {
     expect(autre.headers.get('Access-Control-Allow-Origin')).toBeNull()
   })
 })
+
+describe('accepter-invitation : confirmation de l’adresse (v1.3.0)', () => {
+  it('le compte est créé NON confirmé (le lien reçu par e-mail le confirmera)', async () => {
+    const { readFileSync } = await import('node:fs')
+    const src = readFileSync(new URL('../../supabase/functions/accepter-invitation/index.ts', import.meta.url), 'utf8')
+    expect(src).toMatch(/email_confirm:\s*false/)
+    expect(src).not.toMatch(/email_confirm:\s*true/)
+  })
+})

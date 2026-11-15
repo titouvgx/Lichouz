@@ -22,6 +22,7 @@ export type Route =
   | 'rejoindre'        // public : #/rejoindre/<jeton> (création de compte par lien)
   | 'mot-de-passe-oublie'  // public : demande d'e-mail de réinitialisation
   | 'nouveau-mot-de-passe' // public : arrivée depuis l'e-mail (?token_hash=…&type=recovery)
+  | 'confirmer-email'      // public : lien « Confirme ton adresse » (?token_hash=…&type=signup)
   | 'introuvable'
 
 /** Les 5 onglets de la tab bar. */
@@ -30,11 +31,11 @@ export type TabRoute = (typeof TAB_ROUTES)[number]
 
 const STATIC_ROUTES: string[] = [
   'login', 'accueil', 'frigo', 'recettes', 'nouvelle-recette', 'semaine', 'courses', 'historique', 'compte',
-  'famille', 'admin', 'aide', 'mot-de-passe-oublie', 'nouveau-mot-de-passe',
+  'famille', 'admin', 'aide', 'mot-de-passe-oublie', 'nouveau-mot-de-passe', 'confirmer-email',
 ]
 
 /** Pages accessibles sans être connecté (en plus de « login »). */
-export const PUBLIC_ROUTES: Route[] = ['rejoindre', 'mot-de-passe-oublie', 'nouveau-mot-de-passe']
+export const PUBLIC_ROUTES: Route[] = ['rejoindre', 'mot-de-passe-oublie', 'nouveau-mot-de-passe', 'confirmer-email']
 const DEFAULT_ROUTE: Route = 'accueil'
 
 interface RouterState {
@@ -50,8 +51,13 @@ function readHash(): RouterState {
   const parts = raw.split('/')
 
   // Arrivée depuis l'e-mail « mot de passe oublié » : ?token_hash=…&type=recovery
-  if (new URLSearchParams(window.location.search).get('type') === 'recovery') {
+  const linkType = new URLSearchParams(window.location.search).get('type')
+  if (linkType === 'recovery') {
     return { current: 'nouveau-mot-de-passe', recipeId: null, token: null }
+  }
+  // Arrivée depuis l'e-mail « Confirme ton adresse » : ?token_hash=…&type=signup
+  if (linkType === 'signup' || linkType === 'email') {
+    return { current: 'confirmer-email', recipeId: null, token: null }
   }
 
   if (raw === '') return { current: DEFAULT_ROUTE, recipeId: null, token: null }
@@ -94,7 +100,7 @@ const ORDER: Record<Route, number> = {
   courses: 30,
   historique: 40,
   compte: 50, famille: 51, admin: 52, aide: 53,
-  rejoindre: -10, 'mot-de-passe-oublie': -9, 'nouveau-mot-de-passe': -9,
+  rejoindre: -10, 'mot-de-passe-oublie': -9, 'nouveau-mot-de-passe': -9, 'confirmer-email': -9,
   introuvable: 60,
 }
 

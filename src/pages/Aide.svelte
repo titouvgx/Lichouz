@@ -127,6 +127,12 @@
       <dd>Elle est sans doute réservée à sa famille. Il peut la passer en « Toutes nos familles » si vos familles sont liées.</dd>
       <dt>La liste ne bouge plus chez moi.</dt>
       <dd>Vérifie le réseau, puis ferme et rouvre l’appli : tout se resynchronise.</dd>
+      <dt>Je n’arrive pas à me connecter juste après avoir créé mon compte.</dt>
+      <dd>
+        Il faut d’abord confirmer ton adresse : ouvre le lien de l’e-mail « Confirme ton adresse pour Lichouz »
+        (regarde aussi dans les spams). Le lien est valable 1 heure. Rien reçu ou lien expiré ? Essaie de te
+        connecter : l’appli te propose « Renvoyer l’e-mail de confirmation ».
+      </dd>
       <dt>Je veux supprimer mon compte.</dt>
       <dd>
         Tout en bas de <a href={href('compte')}>Mon compte</a> : « Supprimer mon compte », puis tape SUPPRIMER

@@ -21,6 +21,25 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [1.3.0] — 2026-11-15
+
+Pas de migration. **Réglages Supabase AVANT la mise en ligne** (voir `supabase/prod/README.md`) :
+SMTP personnel (Brevo) + modèle « Confirm signup » (`supabase/emails/confirm-signup.html`).
+**Puis** redéployer la fonction `accepter-invitation` (l'ordre site / fonction n'a pas d'importance).
+
+### Ajouté
+- **Confirmation de l'adresse e-mail à la création du compte** : après l'invitation, la personne reçoit
+  « Confirme ton adresse pour Lichouz » et ne peut pas se connecter avant d'avoir cliqué le lien
+  (prouve que l'adresse est à elle, évite les fautes de frappe).
+- Écran « Vérifie ta boîte mail » après la création du compte, avec « Renvoyer l'e-mail » (une fois par minute).
+- Page `#/confirmer-email` : le lien confirme l'adresse, ouvre la session et mène à l'accueil.
+- Connexion : si l'adresse n'est pas confirmée, bouton « Renvoyer l'e-mail de confirmation ».
+- Aide : question « Je n'arrive pas à me connecter juste après avoir créé mon compte ».
+
+### Modifié
+- Fonction `accepter-invitation` : compte créé non confirmé (`email_confirm: false`). Les comptes existants
+  restent confirmés.
+
 ## [1.2.0] — 2026-11-15
 
 Migration nécessaire : **21** (`20261115140000_supprimer_mon_compte.sql`), à exécuter AVANT le déploiement,

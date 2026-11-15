@@ -17,6 +17,11 @@ privée / partagée, photo, mot de passe oublié) et toutes les vérifications G
 - **URL Configuration** : **Site URL** = `https://titouvgx.github.io/Lichouz/` (L majuscule, sinon le lien du mail mène à une page 404) ; ajouter la même adresse dans **Redirect URLs**.
 - **Email Templates → Reset Password** : remplacer le lien par
   `{{ .SiteURL }}?token_hash={{ .TokenHash }}&type=recovery#/nouveau-mot-de-passe`
+- **Emails → SMTP Settings** (v1.3.0) : SMTP personnel (Brevo) obligatoire, sinon les e-mails ne partent
+  qu'aux membres de l'équipe du projet, 2 par heure.
+- **Email Templates → Confirm signup** (v1.3.0) : sujet `Confirme ton adresse pour Lichouz`, corps = contenu
+  de `supabase/emails/confirm-signup.html` (lien `{{ .SiteURL }}?token_hash={{ .TokenHash }}&type=signup#/confirmer-email`).
+  Sans ce modèle, le lien de l'e-mail ouvre une page qui ne confirme rien.
 
 ## 3. Ton compte
 **Authentication → Users → Add user** : ton e-mail + un mot de passe (10 caractères minimum),
