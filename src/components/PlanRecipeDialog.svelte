@@ -35,7 +35,7 @@
   let planned = $state<{ label: string; replaced: string | null } | null>(null)
 
   // ── Semaines affichées ──
-  interface DayRow { weekStart: string; dayIdx: number; date: Date; isToday: boolean }
+  interface DayRow { weekStart: string; dayIdx: number; date: Date; isToday: boolean; isPast: boolean }
   interface WeekGroup { weekStart: string; title: string; days: DayRow[] }
 
   const thisMonday = getMonday(new Date())
@@ -52,11 +52,17 @@
       const date = new Date(monday)
       date.setDate(date.getDate() + d)
       const iso = toISODate(date)
-      if (iso < todayStr) continue // jours passés : inutile de les proposer
-      days.push({ weekStart, dayIdx: d, date, isToday: iso === todayStr })
+      // Jours passés : seulement ceux de la semaine en cours (noter après coup ce
+      // qu'on a mangé, pour l'Historique) ; repliés par défaut pour garder
+      // aujourd'hui en haut. Semaines précédentes : onglet Semaine.
+      days.push({ weekStart, dayIdx: d, date, isToday: iso === todayStr, isPast: iso < todayStr })
     }
     return { weekStart, title, days }
   })
+
+  /** Jours déjà passés de la semaine en cours : repliés par défaut. */
+  let showPastDays = $state(false)
+  const pastDaysCount = weeks[0].days.filter((d) => d.isPast).length
 
   // Créneaux déjà pris (chargés en arrière-plan, la liste s'affiche tout de suite)
   let taken = $state<Record<string, MealSlotWithRecipe[]>>({})
@@ -210,12 +216,23 @@
     {#if step === 'plan'}
       <!-- ── Étape 1 : créneaux sur 4 semaines ── -->
       <div class="dlg-scroll">
-        {#each weeks as week (week.weekStart)}
+        {#each weeks as week, w (week.weekStart)}
           {#if week.days.length > 0}
             <h3 class="week-title">{week.title}</h3>
+            {#if w === 0 && pastDaysCount > 0}
+              <button
+                type="button"
+                class="past-toggle"
+                aria-expanded={showPastDays}
+                onclick={() => (showPastDays = !showPastDays)}
+              >
+                <span class="chev" class:open={showPastDays}><Icon name="chevron-down" size={16} /></span>
+                {showPastDays ? 'Masquer les jours passés' : `Jours déjà passés (${pastDaysCount})`}
+              </button>
+            {/if}
             <div class="day-list">
-              {#each week.days as day (day.weekStart + day.dayIdx)}
-                <div class="day-row" class:is-today={day.isToday}>
+              {#each week.days.filter((d) => !d.isPast || showPastDays) as day (day.weekStart + day.dayIdx)}
+                <div class="day-row" class:is-today={day.isToday} class:is-past={day.isPast}>
                   <div class="day-badge">
                     <span class="day-short">{DAY_SHORT[day.dayIdx]}</span>
                     <span class="day-num">{day.date.getDate()}</span>
@@ -458,6 +475,27 @@
   }
 
   .day-row.is-today { border-color: var(--primary); }
+  .day-row.is-past .day-badge { opacity: 0.55; }
+
+  .past-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    margin-bottom: 4px;
+    padding: 0 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    touch-action: manipulation;
+  }
+  .past-toggle .chev { display: inline-flex; transition: transform 0.2s ease; }
+  .past-toggle .chev.open { transform: rotate(180deg); }
+  @media (prefers-reduced-motion: reduce) {
+    .past-toggle .chev { transition: none; }
+  }
 
   .day-badge {
     width: 46px;

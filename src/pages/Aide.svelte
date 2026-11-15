@@ -65,7 +65,7 @@
               <li><strong>Chercher</strong> : tape quelques lettres, peu importe les accents et l’ordre des mots ; filtre par catégorie.</li>
               <li><strong>Ajouter une recette</strong> : bouton « + », avec ingrédients, étapes et photo prise depuis la galerie.</li>
               <li><strong>Qui la voit ?</strong> « Ma famille seulement » (par défaut), ou « Toutes nos familles » pour la partager avec les familles liées à la tienne. Les recettes du <strong>catalogue commun</strong> sont fournies avec l’appli : on peut les utiliser, pas les modifier.</li>
-              <li>Depuis une recette : <strong>Ajouter à ma semaine</strong>, ou <strong>Juste les ingrédients</strong> pour les mettre dans la liste sans la planifier.</li>
+              <li>Depuis une recette : <strong>Ajouter à ma semaine</strong>, ou <strong>Juste les ingrédients</strong> pour les mettre dans la liste sans la planifier. Oublié de noter un repas ? « Jours déjà passés » permet de remplir les jours précédents de la semaine en cours.</li>
             </ul>
           {:else if s.id === 'semaine'}
             <ul>

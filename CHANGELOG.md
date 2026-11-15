@@ -21,6 +21,16 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [1.3.1] — 2026-11-15
+
+Pas de migration, aucun réglage Supabase.
+
+### Modifié
+- Fenêtre « Quand la cuisiner ? » (depuis une recette, l'Accueil ou « Qu'est-ce qu'on mange ? ») :
+  les jours déjà passés de la semaine en cours sont proposés, repliés sous « Jours déjà passés (n) »
+  (aujourd'hui reste en haut). Permet de noter après coup ce qu'on a mangé (Historique juste).
+  Semaines précédentes : toujours par l'onglet Semaine.
+
 ## [1.3.0] — 2026-11-15
 
 Pas de migration. **Réglages Supabase AVANT la mise en ligne** (voir `supabase/prod/README.md`) :
