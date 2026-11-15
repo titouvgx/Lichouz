@@ -21,6 +21,10 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+### Technique
+- `@types/node` 26.6.6 (Dependabot). TypeScript 7 refusé pour l'instant (svelte-check ne le
+  prend pas encore en charge) : Dependabot ignore désormais les versions majeures de TypeScript.
+
 ## [1.0.0] — 2026-11-15 — Première version en production (base `lichouz-prod`)
 
 Installation d'une base neuve : migrations **1 à 19** via `npm run prod:sql` (guide `supabase/prod/README.md`),

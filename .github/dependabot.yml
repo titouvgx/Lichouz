@@ -9,6 +9,11 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    ignore:
+      # TypeScript 7 : svelte-check 4.x n'accepte que TypeScript 5 ou 6 (conflit npm
+      # au 15/11/2026). Retirer cette règle quand svelte-check annonce TypeScript 7.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
     groups:
       outils-de-build:
         dependency-type: development
