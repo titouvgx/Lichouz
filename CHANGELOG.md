@@ -21,6 +21,8 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [1.1.0] — 2026-11-15
+
 Migration nécessaire : **20** (`20261115120000_admin_stats.sql`), à exécuter AVANT le déploiement.
 
 ### Ajouté
