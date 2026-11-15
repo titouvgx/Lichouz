@@ -1,4 +1,7 @@
 <script lang="ts">
+  import {
+    RECIPE_TITLE_MAX, INGREDIENT_NAME_MAX, INGREDIENT_UNIT_MAX, STEP_TEXT_MAX, INGREDIENTS_MAX, STEPS_MAX,
+  } from '../lib/limits'
   import { onDestroy, tick } from 'svelte'
   import { flip } from 'svelte/animate'
   import Icon from '../components/Icon.svelte'
@@ -303,6 +306,10 @@
 
   // ── Ingrédients ──
   function addIngredient(focus = true) {
+    if (ingredients.length >= INGREDIENTS_MAX) {
+      announce = `${INGREDIENTS_MAX} ingrédients au maximum.`
+      return
+    }
     const row = newIng()
     ingredients.push(row)
     if (focus) focusField(`[data-ing="${row.key}"][data-f="qty"]`)
@@ -384,6 +391,10 @@
 
   // ── Étapes ──
   function addStep() {
+    if (steps.length >= STEPS_MAX) {
+      announce = `${STEPS_MAX} étapes au maximum.`
+      return
+    }
     const row = newStep()
     steps.push(row)
     focusField(`[data-step="${row.key}"][data-f="text"]`)
@@ -803,7 +814,7 @@
             placeholder="Ex : Poulet rôti aux herbes"
             autocapitalize="sentences"
             enterkeyhint="next"
-            maxlength="120"
+            maxlength={RECIPE_TITLE_MAX}
             required
             aria-invalid={errors.title ? 'true' : undefined}
             aria-describedby={errors.title ? 'rf-title-err' : undefined}
@@ -957,6 +968,7 @@
                   type="text"
                   class="input cell"
                   placeholder="g, cl…"
+                  maxlength={INGREDIENT_UNIT_MAX}
                   enterkeyhint="next"
                   autocapitalize="none"
                   autocomplete="off"
@@ -972,6 +984,7 @@
                   class="input cell"
                   class:error={nameErr}
                   placeholder="Ex : beurre"
+                  maxlength={INGREDIENT_NAME_MAX}
                   enterkeyhint="next"
                   autocapitalize="none"
                   autocomplete="off"
@@ -1063,9 +1076,13 @@
           {/each}
         </ul>
 
-        <button type="button" class="btn-add" onclick={() => addIngredient()}>
-          <Icon name="plus" size={18} strokeWidth={2.5} /> Ajouter un ingrédient
-        </button>
+        {#if ingredients.length < INGREDIENTS_MAX}
+          <button type="button" class="btn-add" onclick={() => addIngredient()}>
+            <Icon name="plus" size={18} strokeWidth={2.5} /> Ajouter un ingrédient
+          </button>
+        {:else}
+          <p class="limit-note">{INGREDIENTS_MAX} ingrédients au maximum.</p>
+        {/if}
       </section>
 
       <!-- ── Étapes ── -->
@@ -1116,16 +1133,24 @@
                 aria-label="Étape {i + 1}"
                 data-step={step.key}
                 data-f="text"
+                maxlength={STEP_TEXT_MAX}
                 bind:value={step.instruction}
                 use:autogrow={step.instruction}
               ></textarea>
+              {#if step.instruction.length > STEP_TEXT_MAX - 100}
+                <p class="limit-note" aria-live="polite">{step.instruction.length} / {STEP_TEXT_MAX} caractères</p>
+              {/if}
             </li>
           {/each}
         </ol>
 
-        <button type="button" class="btn-add" onclick={addStep}>
-          <Icon name="plus" size={18} strokeWidth={2.5} /> Ajouter une étape
-        </button>
+        {#if steps.length < STEPS_MAX}
+          <button type="button" class="btn-add" onclick={addStep}>
+            <Icon name="plus" size={18} strokeWidth={2.5} /> Ajouter une étape
+          </button>
+        {:else}
+          <p class="limit-note">{STEPS_MAX} étapes au maximum.</p>
+        {/if}
       </section>
 
       <!-- ── Barre d'enregistrement ── -->
@@ -1176,6 +1201,12 @@
 {/if}
 
 <style>
+  .limit-note {
+    margin: 6px 2px 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
   .page {
     padding: var(--gutter);
     padding-top: calc(var(--gutter) + env(safe-area-inset-top, 0px));

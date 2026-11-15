@@ -83,3 +83,29 @@ describe('comparaison des noms', () => {
     expect(sameProduct('', 'sel')).toBe(false)
   })
 })
+
+describe('v1.4.0 : produits proches et arrondi à la pièce', () => {
+  it('« beurre » n\'est pas « beurre de cacahuète » (ni lait / lait de coco)', async () => {
+    const { sameProduct } = await import('../../src/lib/quantities')
+    expect(sameProduct('Beurre', 'Beurre de cacahuète')).toBe(false)
+    expect(sameProduct('lait', 'Lait de coco')).toBe(false)
+    expect(sameProduct('crème', 'Crème de marrons')).toBe(false)
+    expect(sameProduct('pâtes', 'pâte à crêpes')).toBe(false)
+  })
+  it('les variétés restent le même produit', async () => {
+    const { sameProduct } = await import('../../src/lib/quantities')
+    expect(sameProduct('huile', "Huile d'olive")).toBe(true)
+    expect(sameProduct('huile', 'huile de tournesol')).toBe(true)
+    expect(sameProduct('Sel', 'sel de Guérande')).toBe(true)
+    expect(sameProduct('sel', 'sel fin')).toBe(true)
+    expect(sameProduct('beurre', 'beurre doux')).toBe(true)
+  })
+  it('unités à la pièce', async () => {
+    const { isCountUnit, formatQuantity } = await import('../../src/lib/quantities')
+    for (const u of ['', 'gousses', 'Tranche', 'pièces', 'boîte', 'bocaux', 'œufs']) expect(isCountUnit(u), u).toBe(true)
+    for (const u of ['g', 'cl', 'c. à soupe', 'pincée', 'cuillère']) expect(isCountUnit(u), u).toBe(false)
+    const q = { terms: [{ amount: 1.5, unit: '' }, { amount: 0.2, unit: 'kg' }], free: [] }
+    expect(formatQuantity(q, { roundCounts: true })).toBe('2 + 200 g')
+    expect(formatQuantity(q)).toBe('1,5 + 200 g')
+  })
+})

@@ -18,8 +18,10 @@
   import { fetchShoppingCategories } from '../lib/api/recipes'
   import {
     fetchActiveList, fetchListItems, generateListFromPlan, regenerateList,
-    toggleItem, addExtraItem, removeItem, completeList,
+    toggleItem, addExtraItem, removeItem, completeList, shareListText,
   } from '../lib/api/shopping'
+  import { fetchRecipeTitles } from '../lib/api/recipes'
+  import { LIST_ITEM_NAME_MAX, LIST_ITEM_QTY_MAX } from '../lib/limits'
   import {
     loadCachedList, saveCachedList, queueToggle, applyPending, flushPending,
     pendingToggles, isNetworkError,
@@ -201,6 +203,46 @@
     }
     return [...map.values()].sort((a, b) => (a.category?.position ?? 999) - (b.category?.position ?? 999))
   })
+
+  // ── À quelles recettes sert chaque article (migration 22) ──
+  let recipeTitles = $state(new Map<string, string>())
+  function sourcesOf(item: ShoppingListItemWithCategory): string[] {
+    const ids = item.source_recipe_ids?.length ? item.source_recipe_ids : item.source_recipe_id ? [item.source_recipe_id] : []
+    return ids.map((id) => recipeTitles.get(id)).filter((t): t is string => !!t)
+  }
+  $effect(() => {
+    const missing = new Set<string>()
+    for (const it of items) {
+      for (const id of it.source_recipe_ids ?? (it.source_recipe_id ? [it.source_recipe_id] : [])) {
+        if (!recipeTitles.has(id)) missing.add(id)
+      }
+    }
+    if (missing.size === 0 || offline) return
+    fetchRecipeTitles([...missing])
+      .then((found) => {
+        if (found.size === 0) return
+        const next = new Map(recipeTitles)
+        for (const [id, t] of found) next.set(id, t)
+        recipeTitles = next
+      })
+      .catch(() => { /* pas bloquant : les articles restent affichés sans recettes */ })
+  })
+
+  // ── Partager la liste (WhatsApp, SMS… via le menu de partage du téléphone) ──
+  async function shareList() {
+    const text = shareListText(toBuy, 'Liste de courses Lichouz')
+    try {
+      if (navigator.share) {
+        await navigator.share({ text })
+        return
+      }
+      await navigator.clipboard.writeText(text)
+      toast.success('Liste copiée : colle-la dans ton message')
+    } catch (e: any) {
+      if (e?.name === 'AbortError') return // partage annulé
+      toast.error('Partage impossible sur ce téléphone')
+    }
+  }
 
   // « Sûrement déjà à la maison » ne compte pas : ni dans « N à prendre », ni dans la barre
   const total = $derived(items.length - atHome.length)
@@ -484,10 +526,14 @@
         </h2>
         <ul class="rows">
           {#each group.items as item (item.id)}
+            {@const from = sourcesOf(item)}
             <li class="row" animate:flip={{ duration: d(220) }} out:fly={{ x: 60, duration: d(180) }}>
               <button class="row-main" onclick={() => toggle(item)} aria-label="Mettre {item.name} dans le chariot">
                 <span class="box" aria-hidden="true"></span>
-                <span class="row-name">{item.name}</span>
+                <span class="row-text">
+                  <span class="row-name">{item.name}</span>
+                  {#if from.length > 0}<span class="row-from">pour {from.join(' · ')}</span>{/if}
+                </span>
                 {#if item.is_extra}<span class="badge">ajouté</span>{/if}
                 {#if item.quantity}<span class="row-qty">{item.quantity}</span>{/if}
               </button>
@@ -513,9 +559,10 @@
         <h2 class="add-title">Ajouter un article</h2>
         <!-- svelte-ignore a11y_autofocus -->
         <input class="input" placeholder="Nom (ex : papier toilette)" bind:value={newItemName} autofocus
+          maxlength={LIST_ITEM_NAME_MAX}
           onkeydown={(e) => { if (e.key === 'Enter') addItem() }} />
         <div class="add-row">
-          <input class="input" placeholder="Quantité" bind:value={newItemQty} />
+          <input class="input" placeholder="Quantité" bind:value={newItemQty} maxlength={LIST_ITEM_QTY_MAX} />
           <select class="input" bind:value={newItemCat} aria-label="Rayon">
             <option value="">Sans rayon</option>
             {#each categories as cat (cat.id)}
@@ -613,9 +660,13 @@
       <button class="btn btn-primary" onclick={() => (confirm = 'complete')} disabled={busy}>
         <Icon name="check" /> Terminer les courses
       </button>
+      <button class="btn btn-outline" onclick={shareList} disabled={toBuy.length === 0}>
+        <Icon name="share" /> Partager la liste
+      </button>
       <button class="btn btn-outline" onclick={() => (confirm = 'regenerate')} disabled={busy}>
         <Icon name="refresh" /> Mettre à jour depuis le planning
       </button>
+      <p class="frozen-hint">La liste ne change pas toute seule : modifier une recette ou le planning ne la touche pas tant que tu ne la mets pas à jour.</p>
     </div>
   {/if}
 </div>
@@ -833,6 +884,30 @@
     0% { transform: scale(0.7); }
     60% { transform: scale(1.12); }
     100% { transform: scale(1); }
+  }
+
+  .row-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .row-from {
+    font-size: 13px;
+    line-height: 1.35;
+    color: var(--text-secondary);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+  .frozen-hint {
+    margin: 2px 4px 0;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--text-secondary);
   }
 
   .row-name {

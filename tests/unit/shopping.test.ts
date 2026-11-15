@@ -1,7 +1,7 @@
 // Tests de la génération et de la mise à jour de la liste de courses,
 // et du classement « Qu'est-ce qu'on mange ? » (calculs purs, sans base de données)
 import { describe, expect, it } from 'vitest'
-import { aggregateSlots, buildRegeneratedItems, type PlannedSlot } from '../../src/lib/api/shopping'
+import { aggregateSlots, buildRegeneratedItems, shareListText, type PlannedSlot } from '../../src/lib/api/shopping'
 import { isProbablyAtHome, rankByFridge } from '../../src/lib/api/household'
 import type { PantryItem, ShoppingListItem } from '../../src/lib/types'
 
@@ -65,9 +65,10 @@ describe('buildRegeneratedItems : mise à jour sans perte', () => {
   it('numérote après les ajouts à la main', () => {
     expect(fresh.map((i) => i.position)).toEqual([8, 9, 10])
   })
-  it('n\'envoie pas la colonne « needed » si personne ne l\'utilise (base sans migration 13)', () => {
+  it('envoie toujours « needed » et les recettes d\'origine (fonction replace_planned_items, migration 22)', () => {
     const sans = buildRegeneratedItems('liste-1', agg, current.map((i) => ({ ...i, needed: false })))
-    expect(sans.every((i) => !('needed' in i))).toBe(true)
+    expect(sans.every((i) => i.needed === false)).toBe(true)
+    expect(sans.every((i) => i.source_recipe_ids.length === 1 && i.source_recipe_ids[0] === 'r1')).toBe(true)
   })
   it('écrit les quantités au format français', () => {
     expect(fresh.find((i) => i.name === 'Lait')!.quantity).toBe('1 l')
@@ -104,5 +105,44 @@ describe('rankByFridge : « Qu\'est-ce qu\'on mange ? »', () => {
   it('écarte une recette qui n\'utilise rien du frigo (le sel du placard ne suffit pas)', () => {
     expect(rankByFridge(ings, ['oeuf'], ['sel']).some((m) => m.recipeId === 'pates')).toBe(false)
     expect(rankByFridge(ings, [], ['sel'])).toEqual([])
+  })
+})
+
+describe('Lot A (v1.4.0) : recettes d\'origine, arrondi à la pièce, partage', () => {
+  it('garde TOUTES les recettes qui demandent un ingrédient, sans doublon', () => {
+    const agg = aggregateSlots([
+      { portions: 4, recipes: recette('gratin', 4, [['Comté', 100, 'g']]) },
+      { portions: 4, recipes: recette('pates', 4, [['comté', 50, 'g']]) },
+      { portions: 2, recipes: recette('gratin', 4, [['Comté', 100, 'g']]) },
+    ])
+    expect(agg.get('comte')!.source_recipe_ids).toEqual(['gratin', 'pates'])
+    expect(agg.get('comte')!.source_recipe_id).toBe('gratin')
+  })
+  it('arrondit au supérieur ce qui se compte, après addition', () => {
+    // 3 œufs pour 4, servis à 2 = 1,5 ; deux fois → 3 (pas 2 + 2 = 4)
+    const agg = aggregateSlots([
+      { portions: 2, recipes: recette('r1', 4, [['Œufs', 3, null], ['Farine', 125, 'g']]) },
+      { portions: 2, recipes: recette('r2', 4, [['oeufs', 3, null]]) },
+      { portions: 3, recipes: recette('r3', 4, [['Ail', 3, 'gousses'], ['Huile', 3, 'c. à soupe']]) },
+    ])
+    const fresh = buildRegeneratedItems('l', agg, [])
+    const q = (n: string) => fresh.find((i) => i.name.toLowerCase() === n)!.quantity
+    expect(q('œufs')).toBe('3')
+    expect(q('ail')).toBe('3 gousses') // 2,25 → 3
+    expect(q('huile')).toBe('2,25 c. à soupe') // les cuillères ne s'arrondissent pas
+    expect(q('farine')).toBe('62,5 g')
+  })
+  it('texte à partager : à prendre seulement, par rayon dans l\'ordre du magasin', () => {
+    const fruits = { id: 'f', name: 'Fruits et légumes', color: '', icon: '', position: 1 }
+    const cremerie = { id: 'c', name: 'Crèmerie', color: '', icon: '', position: 2 }
+    const text = shareListText([
+      { name: 'Comté', quantity: '200 g', checked: false, position: 0, shopping_categories: cremerie },
+      { name: 'Tomates', quantity: '500 g', checked: false, position: 2, shopping_categories: fruits },
+      { name: 'Ail', quantity: null, checked: false, position: 1, shopping_categories: fruits },
+      { name: 'Oignons', quantity: '3', checked: true, position: 3, shopping_categories: fruits },
+      { name: 'Piles', quantity: null, checked: false, position: 4, shopping_categories: null },
+    ], 'Courses')
+    expect(text).toBe('Courses\n\nFruits et légumes\n- Ail\n- Tomates (500 g)\n\nCrèmerie\n- Comté (200 g)\n\nSans rayon\n- Piles')
+    expect(shareListText([], 'Courses')).toBe('Courses\n\nTout est pris.')
   })
 })

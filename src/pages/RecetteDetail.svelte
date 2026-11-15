@@ -9,7 +9,7 @@
   import CookMode from '../components/CookMode.svelte'
   import { router, href, navigate } from '../lib/router.svelte'
   import { profileState } from '../lib/profile.svelte'
-  import { fetchRecipe, deleteRecipe } from '../lib/api/recipes'
+  import { fetchRecipe, setRecipeArchived } from '../lib/api/recipes'
   import { formatIngredient } from '../lib/quantities'
   import { sizedImage } from '../lib/images'
   import { toast } from '../lib/toast.svelte'
@@ -112,15 +112,23 @@
     portions = Math.min(MAX_PORTIONS, Math.max(MIN_PORTIONS, n))
   }
 
-  async function handleDelete() {
+  const isArchived = $derived(!!recipe?.archived_at)
+
+  async function setArchived(archived: boolean) {
     if (!recipe || deleting) return
     deleting = true
     try {
-      await deleteRecipe(recipe.id)
-      toast.success('Recette supprimée')
-      navigate('recettes')
+      await setRecipeArchived(recipe.id, archived)
+      if (archived) {
+        toast.success('Recette archivée')
+        navigate('recettes')
+      } else {
+        recipe.archived_at = null
+        toast.success('Recette restaurée')
+      }
     } catch (e: any) {
-      toast.error(e?.message ?? 'Suppression impossible')
+      toast.error(e?.message ?? 'Action impossible')
+    } finally {
       deleting = false
       showDeleteConfirm = false
     }
@@ -284,9 +292,9 @@
           <a href={href('editer-recette', recipe.id)} class="admin-btn">
             <Icon name="pencil" size={18} /> Modifier
           </a>
-          {#if canDelete}
+          {#if canDelete && !isArchived}
             <button class="admin-btn danger" onclick={() => (showDeleteConfirm = true)}>
-              <Icon name="trash" size={18} /> Supprimer
+              <Icon name="trash" size={18} /> Archiver
             </button>
           {/if}
         </div>
@@ -294,6 +302,14 @@
     </div>
 
     <!-- ── Barre d'actions au pouce (collée au-dessus de la barre d'onglets) ── -->
+    {#if isArchived}
+    <div class="action-bar archived-bar" role="status">
+      <span>Recette archivée : elle n'apparaît plus dans les listes.</span>
+      {#if canDelete}
+        <button class="act secondary" onclick={() => setArchived(false)} disabled={deleting}>Restaurer</button>
+      {/if}
+    </div>
+    {:else}
     <div class="action-bar">
       <button class="act primary" onclick={() => (dialogMode = 'plan')}>
         <Icon name="calendar" size={19} /> Ajouter à ma semaine
@@ -302,17 +318,18 @@
         <Icon name="cart" size={20} /> <span>Ingrédients</span>
       </button>
     </div>
+    {/if}
 
     {#if showDeleteConfirm}
       <ConfirmDialog
-        title="Supprimer cette recette ?"
-        confirmLabel="Supprimer"
+        title="Archiver cette recette ?"
+        confirmLabel="Archiver"
         danger
         busy={deleting}
-        onconfirm={handleDelete}
+        onconfirm={() => setArchived(true)}
         oncancel={() => (showDeleteConfirm = false)}
       >
-        « {recipe.title} » sera définitivement supprimée, avec ses photos.
+        « {recipe.title} » disparaîtra des listes et de la recherche. Elle reste dans les plannings et l’historique, et un administrateur pourra la restaurer depuis « Recettes archivées ».
       </ConfirmDialog>
     {/if}
 
@@ -802,6 +819,14 @@
     border: 1px solid var(--border-strong);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   }
+
+  .archived-bar {
+    align-items: center;
+    padding-left: 14px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .archived-bar span { flex: 1; min-width: 0; }
 
   .act {
     display: inline-flex;

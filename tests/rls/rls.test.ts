@@ -1658,13 +1658,14 @@ describe('Recettes : visibilité famille / super-famille / catalogue', () => {
   attaque('membre A (non admin) ne supprime pas une recette de son propre foyer', async (s) => {
     await attemptOnRow(s, 'memberA', { table: 'public.recipes', id: ID.recA }, `DELETE FROM public.recipes WHERE id = $1 RETURNING id`, [ID.recA])
   })
-  controle('admin A supprime une recette de son foyer', async (s) => {
-    expectOk(await s.as('adminA', `DELETE FROM public.recipes WHERE id = $1 RETURNING id`, [ID.recA]), 'suppression', 1)
+  // Migration 22 : plus de suppression directe, on archive (voir plus bas)
+  attaque('admin A supprime directement une recette de son foyer (archiver à la place)', async (s) => {
+    await attemptOnRow(s, 'adminA', { table: 'public.recipes', id: ID.recA }, `DELETE FROM public.recipes WHERE id = $1 RETURNING id`, [ID.recA])
   })
-  controle('super-admin supprime n\'importe quelle recette (foyer B, autre super-famille ; catalogue)', async (s) => {
+  attaque('super-admin supprime directement une recette (foyer B ; catalogue)', async (s) => {
     const c = await catalogue(s)
-    expectOk(await s.as('superAdmin', `DELETE FROM public.recipes WHERE id = $1 RETURNING id`, [ID.recB]), 'recette B', 1)
-    expectOk(await s.as('superAdmin', `DELETE FROM public.recipes WHERE id = $1 RETURNING id`, [c.recipes]), 'catalogue', 1)
+    await attemptOnRow(s, 'superAdmin', { table: 'public.recipes', id: ID.recB }, `DELETE FROM public.recipes WHERE id = $1 RETURNING id`, [ID.recB])
+    await attemptOnRow(s, 'superAdmin', { table: 'public.recipes', id: c.recipes }, `DELETE FROM public.recipes WHERE id = $1 RETURNING id`, [c.recipes])
   })
   controle('membre A supprime un ingrédient et une étape de sa recette', async (s) => {
     expectOk(await s.as('memberA', `DELETE FROM public.recipe_ingredients WHERE id = $1 RETURNING id`, [ID.ingA]), 'ingrédient', 1)
@@ -2803,5 +2804,100 @@ describe('Mon compte : supprimer son propre compte (delete_my_account)', () => {
     expect(result(await deleteMe(s, 'memberB', 'oups'))).toBe('mot_de_passe_incorrect')
     expect(result(await deleteMe(s, 'memberB', MDP))).toBe('supprime')
     expect(await countRows(s, 'private.account_deletion_attempts', 'user_id = $1', [ID.memberB])).toBe(0)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════
+describe('Migration 22 : recettes archivées, limites de texte, liste recalculée en une transaction', () => {
+  const ARCHIVE = `UPDATE public.recipes SET archived_at = now() WHERE id = $1 RETURNING id`
+  const RESTORE = `UPDATE public.recipes SET archived_at = NULL WHERE id = $1 RETURNING id`
+  const REPLACE = `SELECT public.replace_planned_items($1, $2, $3::jsonb) AS n`
+  const item = (name: string, extra: Record<string, unknown> = {}) => ({ name, quantity: '1', position: 0, ...extra })
+
+  attaque('un membre (non admin) archive une recette de son foyer', async (s) => {
+    await refusedOnRow(s, 'memberA', { table: 'public.recipes', id: ID.recA }, ARCHIVE, [ID.recA], '42501', /administrateur/)
+  })
+  attaque('admin B archive une recette du foyer A', async (s) => {
+    await attemptOnRow(s, 'adminB', { table: 'public.recipes', id: ID.recA }, ARCHIVE, [ID.recA])
+  })
+  attaque('admin A archive une recette du catalogue', async (s) => {
+    const c = await catalogue(s)
+    await attemptOnRow(s, 'adminA', { table: 'public.recipes', id: c.recipes }, ARCHIVE, [c.recipes])
+  })
+  attaque('un membre restaure une recette archivée par son admin', async (s) => {
+    await s.su(`UPDATE public.recipes SET archived_at = now() WHERE id = $1`, [ID.recA])
+    await refusedOnRow(s, 'memberA', { table: 'public.recipes', id: ID.recA }, RESTORE, [ID.recA], '42501')
+  })
+  attaque('un membre crée une recette déjà archivée', async (s) => {
+    expectRefused(await s.as('memberA',
+      `INSERT INTO public.recipes (family_id, title, created_by, archived_at) VALUES ($1, 'X', $2, now()) RETURNING id`,
+      [ID.famA, ID.memberA]), '42501', 'insertion archivée')
+  })
+  controle('admin A archive puis restaure sa recette ; le créneau du planning reste', async (s) => {
+    expectOk(await s.as('adminA', ARCHIVE, [ID.recA]), 'archivage', 1)
+    expect(await countRows(s, 'public.meal_slots', 'recipe_id = $1', [ID.recA])).toBe(1)
+    expectOk(await s.as('memberA', `SELECT id FROM public.recipes WHERE id = $1`, [ID.recA]), 'toujours lisible', 1)
+    expectOk(await s.as('adminA', RESTORE, [ID.recA]), 'restauration', 1)
+  })
+  controle('super-admin archive une recette du catalogue', async (s) => {
+    const c = await catalogue(s)
+    expectOk(await s.as('superAdmin', ARCHIVE, [c.recipes]), 'archivage catalogue', 1)
+  })
+
+  structure('titre de recette > 120 caractères refusé', async (s) => {
+    expectRefused(await s.as('memberA', `UPDATE public.recipes SET title = repeat('a', 121) WHERE id = $1 RETURNING id`, [ID.recA]), '23514', 'titre trop long')
+    expectOk(await s.as('memberA', `UPDATE public.recipes SET title = repeat('a', 120) WHERE id = $1 RETURNING id`, [ID.recA]), 'titre de 120', 1)
+  })
+  structure('étape > 1 000 caractères et ingrédient > 80 refusés', async (s) => {
+    expectRefused(await s.as('memberA', `UPDATE public.recipe_steps SET instruction = repeat('a', 1001) WHERE id = $1 RETURNING id`, [ID.stepA]), '23514', 'étape')
+    expectRefused(await s.as('memberA', `UPDATE public.recipe_ingredients SET name = repeat('a', 81) WHERE id = $1 RETURNING id`, [ID.ingA]), '23514', 'ingrédient')
+  })
+  structure('61e ingrédient et 41e étape refusés, même en une seule insertion', async (s) => {
+    expectRefused(await s.as('memberA',
+      `INSERT INTO public.recipe_ingredients (recipe_id, name, position) SELECT $1, 'i' || g, g FROM generate_series(1, 60) g RETURNING id`,
+      [ID.recA]), '23514', '60 de plus (61 au total)')
+    expect(await countRows(s, 'public.recipe_ingredients', 'recipe_id = $1', [ID.recA])).toBe(1)
+    expectOk(await s.as('memberA',
+      `INSERT INTO public.recipe_ingredients (recipe_id, name, position) SELECT $1, 'i' || g, g FROM generate_series(1, 59) g RETURNING id`,
+      [ID.recA]), '59 de plus (60 au total)', 59)
+    expectRefused(await s.as('memberA',
+      `INSERT INTO public.recipe_steps (recipe_id, instruction, position) SELECT $1, 'e' || g, g FROM generate_series(1, 40) g RETURNING id`,
+      [ID.recA]), '23514', '40 de plus (41 au total)')
+  })
+  structure('article de liste > 80 caractères refusé', async (s) => {
+    expectRefused(await s.as('memberA', `UPDATE public.shopping_list_items SET name = repeat('a', 81) WHERE id = $1 RETURNING id`, [ID.itemA]), '23514', 'article')
+  })
+
+  attaque('un anonyme recalcule une liste', async (s) => {
+    expectNoExecute(await s.as('anon', REPLACE, [ID.listA, ID.planA, '[]']), 'anonyme')
+  })
+  attaque('admin A recalcule la liste du foyer B', async (s) => {
+    await refusedOnRow(s, 'adminA', { table: 'public.shopping_list_items', id: ID.itemB }, REPLACE,
+      [ID.listB, ID.planB, JSON.stringify([item('Pirate')])], '42501', /introuvable/)
+  })
+  attaque('membre A rattache sa liste au planning du foyer B en la recalculant', async (s) => {
+    expectRefused(await s.as('memberA', REPLACE, [ID.listA, ID.planB, '[]']), '42501', 'planning B')
+    expect(await countRows(s, 'public.shopping_lists', 'id = $1 AND meal_plan_id = $2', [ID.listA, ID.planA])).toBe(1)
+  })
+  attaque('membre A cite une recette du foyer B comme origine d\'un article', async (s) => {
+    expectRefused(await s.as('memberA',
+      `INSERT INTO public.shopping_list_items (shopping_list_id, name, source_recipe_ids) VALUES ($1, 'X', ARRAY[$2]::uuid[]) RETURNING id`,
+      [ID.listA, ID.recB]), '42501', 'origine B')
+  })
+  attaque('recalcul refusé à mi-chemin : la liste reste intacte (tout ou rien)', async (s) => {
+    const before = await countRows(s, 'public.shopping_list_items', 'shopping_list_id = $1', [ID.listA])
+    expectRefused(await s.as('memberA', REPLACE,
+      [ID.listA, ID.planA, JSON.stringify([item('Bon'), item('Espion', { source_recipe_ids: [ID.recB] })])]), '42501', 'origine B')
+    expect(await countRows(s, 'public.shopping_list_items', 'shopping_list_id = $1', [ID.listA])).toBe(before)
+    expect(await countRows(s, 'public.shopping_list_items', 'id = $1', [ID.itemA])).toBe(1)
+  })
+  controle('membre A recalcule sa liste : articles du planning remplacés, ajouts à la main gardés', async (s) => {
+    await s.su(`INSERT INTO public.shopping_list_items (shopping_list_id, name, is_extra) VALUES ($1, 'Ajout main', true)`, [ID.listA])
+    const o = await s.as('memberA', REPLACE,
+      [ID.listA, ID.planA, JSON.stringify([item('Tomates', { source_recipe_id: ID.recA, source_recipe_ids: [ID.recA, ID.recAshared], checked: true, checked_by: ID.adminA })])])
+    expectOk(o, 'recalcul', 1)
+    expect(await countRows(s, 'public.shopping_list_items', `shopping_list_id = $1 AND name = 'Ajout main'`, [ID.listA])).toBe(1)
+    expect(await countRows(s, 'public.shopping_list_items', `shopping_list_id = $1 AND name = 'Tomates' AND checked AND cardinality(source_recipe_ids) = 2`, [ID.listA])).toBe(1)
+    expect(await countRows(s, 'public.shopping_list_items', 'id = $1', [ID.itemA])).toBe(0)
   })
 })

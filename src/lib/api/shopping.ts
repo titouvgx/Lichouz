@@ -129,6 +129,8 @@ export interface AggregatedIngredient {
   quantity: Quantity
   shopping_category_id: string | null
   source_recipe_id: string | null
+  /** Toutes les recettes qui demandent cet ingrédient (sans doublon, dans l'ordre du planning) */
+  source_recipe_ids: string[]
 }
 
 /**
@@ -184,12 +186,14 @@ export function aggregateSlots(slots: PlannedSlot[]): Map<string, AggregatedIngr
       const existing = aggregated.get(key)
       if (existing) {
         existing.quantity = addQuantities(existing.quantity, qty)
+        if (!existing.source_recipe_ids.includes(recipe.id)) existing.source_recipe_ids.push(recipe.id)
       } else {
         aggregated.set(key, {
           name: ing.name.trim(),
           quantity: qty,
           shopping_category_id: ing.shopping_category_id,
           source_recipe_id: recipe.id,
+          source_recipe_ids: [recipe.id],
         })
       }
     }
@@ -218,9 +222,10 @@ export async function generateListFromPlan(
   const items = [...aggregated.values()].map((ing, i) => ({
     shopping_list_id: list.id,
     name: ing.name,
-    quantity: formatQuantity(ing.quantity),
+    quantity: formatQuantity(ing.quantity, { roundCounts: true }),
     shopping_category_id: ing.shopping_category_id,
     source_recipe_id: ing.source_recipe_id,
+    source_recipe_ids: ing.source_recipe_ids,
     is_extra: false,
     checked: false,
     position: i,
@@ -256,14 +261,13 @@ export function buildRegeneratedItems(
     return {
       shopping_list_id: listId,
       name: ing.name,
-      quantity: formatQuantity(ing.quantity),
+      quantity: formatQuantity(ing.quantity, { roundCounts: true }),
       shopping_category_id: ing.shopping_category_id,
       source_recipe_id: ing.source_recipe_id,
+      source_recipe_ids: ing.source_recipe_ids,
       is_extra: false,
       checked: !!was,
-      // Colonne envoyée seulement si utile : l'appli marche encore si la
-      // migration « household » n'a pas été exécutée
-      ...(neededBefore.size > 0 ? { needed: neededBefore.has(key) } : {}),
+      needed: neededBefore.has(key),
       checked_by: was?.checked_by ?? null,
       checked_at: was?.checked_at ?? null,
       position: position++,
@@ -277,31 +281,23 @@ export function buildRegeneratedItems(
  *   - les articles ajoutés à la main (is_extra) sont gardés tels quels
  *   - les articles issus du planning sont recalculés, et ceux qui étaient
  *     déjà cochés le restent
+ * Tout ou rien (migration 22) : la base remplace les articles en UNE
+ * transaction (replace_planned_items). Une coupure réseau ne peut plus
+ * laisser une liste vidée à moitié.
  * @returns le nombre d'articles issus du planning après recalcul
  */
 export async function regenerateList(listId: string, planId: string): Promise<number> {
   if (!supabase) throw new Error('Supabase non configuré')
-
   const aggregated = await aggregatePlanIngredients(planId)
   const current = await fetchListItems(listId)
-
   const fresh = buildRegeneratedItems(listId, aggregated, current)
-
-  // Remplacer uniquement les articles issus du planning
-  const { error: delErr } = await supabase
-    .from('shopping_list_items')
-    .delete()
-    .eq('shopping_list_id', listId)
-    .eq('is_extra', false)
-  if (delErr) throw delErr
-
-  if (fresh.length > 0) {
-    const { error: insErr } = await supabase.from('shopping_list_items').insert(fresh)
-    if (insErr) throw insErr
-  }
-
-  await supabase.from('shopping_lists').update({ meal_plan_id: planId }).eq('id', listId)
-  return fresh.length
+  const { data, error } = await supabase.rpc('replace_planned_items', {
+    p_list_id: listId,
+    p_plan_id: planId,
+    p_items: fresh.map(({ shopping_list_id: _ignored, ...item }) => item),
+  })
+  if (error) throw error
+  return typeof data === 'number' ? data : fresh.length
 }
 
 // ────────── Actions sur les articles ──────────
@@ -410,23 +406,28 @@ export async function addIngredientsToList(
   let nextPos = existingItems.reduce((m, it) => Math.max(m, it.position), -1) + 1
 
   const toInsert: any[] = []
-  const toUpdate: { id: string; quantity: string | null }[] = []
+  const toUpdate: { id: string; quantity: string | null; source_recipe_ids: string[] }[] = []
 
   for (const ing of ingredients) {
     const qty = fromIngredient(ing.quantity, ing.unit, scale)
     const existing = existingByKey.get(ingredientKey(ing.name))
     if (existing) {
+      const sources = existing.source_recipe_ids ?? []
       toUpdate.push({
         id: existing.id,
-        quantity: formatQuantity(addQuantities(parseQuantity(existing.quantity), qty)),
+        // Arrondi après addition ; si l'article était déjà arrondi, on peut
+        // compter une pièce de trop, jamais une de moins.
+        quantity: formatQuantity(addQuantities(parseQuantity(existing.quantity), qty), { roundCounts: true }),
+        source_recipe_ids: sources.includes(recipeId) ? sources : [...sources, recipeId],
       })
     } else {
       toInsert.push({
         shopping_list_id: list.id,
         name: ing.name.trim(),
-        quantity: formatQuantity(qty),
+        quantity: formatQuantity(qty, { roundCounts: true }),
         shopping_category_id: ing.shopping_category_id,
         source_recipe_id: recipeId,
+        source_recipe_ids: [recipeId],
         is_extra: asExtra,
         checked: false,
         position: nextPos++,
@@ -437,7 +438,7 @@ export async function addIngredientsToList(
   for (const upd of toUpdate) {
     const { error } = await supabase
       .from('shopping_list_items')
-      .update({ quantity: upd.quantity })
+      .update({ quantity: upd.quantity, source_recipe_ids: upd.source_recipe_ids })
       .eq('id', upd.id)
     if (error) throw error
   }
@@ -496,4 +497,28 @@ export async function deleteList(listId: string): Promise<void> {
   if (!data || data.length === 0) {
     throw new Error('Suppression refusée : seul un administrateur du foyer peut supprimer une liste.')
   }
+}
+
+// ────────── Partage (WhatsApp, SMS…) ──────────
+
+/**
+ * Texte de la liste à partager : articles encore à prendre, par rayon (dans
+ * l'ordre du magasin), sans les cochés. Calcul pur (testé).
+ */
+export function shareListText(
+  items: Pick<ShoppingListItemWithCategory, 'name' | 'quantity' | 'checked' | 'position' | 'shopping_categories'>[],
+  title = 'Liste de courses',
+): string {
+  const groups = new Map<string, { name: string; order: number; lines: { pos: number; text: string }[] }>()
+  for (const it of items) {
+    if (it.checked) continue
+    const cat = it.shopping_categories
+    const key = cat?.id ?? '__none__'
+    if (!groups.has(key)) groups.set(key, { name: cat?.name ?? 'Sans rayon', order: cat?.position ?? 999, lines: [] })
+    groups.get(key)!.lines.push({ pos: it.position, text: `- ${it.name}${it.quantity ? ` (${it.quantity})` : ''}` })
+  }
+  const blocks = [...groups.values()]
+    .sort((a, b) => a.order - b.order)
+    .map((g) => [g.name, ...g.lines.sort((a, b) => a.pos - b.pos).map((l) => l.text)].join('\n'))
+  return blocks.length ? `${title}\n\n${blocks.join('\n\n')}` : `${title}\n\nTout est pris.`
 }

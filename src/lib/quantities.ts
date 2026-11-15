@@ -97,9 +97,36 @@ export function addQuantities(a: Quantity, b: Quantity): Quantity {
   return { terms: mergeTerms([...a.terms, ...b.terms]), free }
 }
 
-/** Texte final, ou null si rien à afficher. */
-export function formatQuantity(q: Quantity): string | null {
-  const parts = [...mergeTerms(q.terms).map(prettyTerm), ...q.free]
+/**
+ * Unités « à la pièce » (comparées sans accents, au singulier) : on n'achète
+ * pas 1,5 œuf ni 2,25 gousses. Les cuillères, pincées, g, cl… ne sont PAS
+ * arrondies.
+ */
+const COUNT_UNITS = new Set([
+  '', 'piece', 'unite', 'gousse', 'tranche', 'pave', 'boite', 'sachet', 'botte', 'tete',
+  'filet', 'cuisse', 'escalope', 'brique', 'pot', 'paquet', 'barquette', 'bocal', 'bocau',
+  'feuille', 'branche', 'brin', 'rouleau', 'tablette', 'tube', 'oeuf', 'boule', 'baguette',
+  'citron', 'oignon', 'echalote', 'carotte', 'pomme', 'tomate', 'courgette', 'aubergine', 'poivron',
+])
+
+/** Vrai si l'unité se compte à la pièce (« », « gousses », « Tranche »…). */
+export function isCountUnit(unit: string): boolean {
+  const u = normalizeText(unit).replace(/œ/g, 'oe').replace(/\.$/, '')
+  if (COUNT_UNITS.has(u)) return true
+  const singular = u.length > 3 && /[sx]$/.test(u) ? u.slice(0, -1) : u
+  return COUNT_UNITS.has(singular)
+}
+
+/**
+ * Texte final, ou null si rien à afficher.
+ * roundCounts : arrondit au supérieur ce qui se compte à la pièce (liste de
+ * courses), APRÈS l'addition : 1,5 œuf + 1,5 œuf = 3 œufs, pas 4.
+ */
+export function formatQuantity(q: Quantity, opts: { roundCounts?: boolean } = {}): string | null {
+  const terms = mergeTerms(q.terms).map((t) =>
+    opts.roundCounts && isCountUnit(t.unit) ? { ...t, amount: Math.ceil(t.amount - 1e-9) } : t,
+  )
+  const parts = [...terms.map(prettyTerm), ...q.free]
   return parts.length ? parts.join(' + ') : null
 }
 
@@ -115,7 +142,8 @@ export function normalizeText(text: string): string {
 
 /** Clé de regroupement d'un ingrédient : minuscules, sans accents ni espaces superflus. */
 export function ingredientKey(name: string): string {
-  return normalizeText(name)
+  // « Œufs » et « oeufs » sont le même article
+  return normalizeText(name).replace(/œ/g, 'oe').replace(/æ/g, 'ae')
 }
 
 /**
@@ -132,7 +160,19 @@ export function matchKey(name: string): string {
     .join(' ')
 }
 
-/** Vrai si deux noms désignent le même produit (« sel » ≈ « sel fin », « huile d'olive » ≈ « huile »). */
+/**
+ * Bases dont « de … » désigne une simple variété du même produit :
+ * « huile d'olive » est de l'huile, « sel de Guérande » du sel. Pour les autres,
+ * « de … » fait un AUTRE produit : « beurre de cacahuète » n'est pas du beurre,
+ * « lait de coco » pas du lait, « crème de marrons » pas de la crème.
+ */
+const VARIETY_BASES = new Set(['huile', 'sel', 'sucre', 'farine', 'vinaigre', 'moutarde', 'riz'])
+const COMPLEMENT = /^(de|du|des|d'|a|au|aux|en) ?/
+
+/**
+ * Vrai si deux noms désignent le même produit (« sel » ≈ « sel fin »,
+ * « huile d'olive » ≈ « huile »), mais « beurre » ≠ « beurre de cacahuète ».
+ */
 export function sameProduct(a: string, b: string): boolean {
   const ka = matchKey(a)
   const kb = matchKey(b)
@@ -143,5 +183,8 @@ export function sameProduct(a: string, b: string): boolean {
   const ra = ingredientKey(a).replace(/[’‘]/g, "'")
   const rb = ingredientKey(b).replace(/[’‘]/g, "'")
   const [short, long] = ra.length <= rb.length ? [ra, rb] : [rb, ra]
-  return long.startsWith(short + ' ') || long.startsWith(short + "'")
+  if (!(long.startsWith(short + ' ') || long.startsWith(short + "'"))) return false
+  const rest = long.slice(short.length + 1)
+  if (COMPLEMENT.test(rest) && !VARIETY_BASES.has(matchKey(short))) return false
+  return true
 }

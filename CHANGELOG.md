@@ -21,6 +21,46 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [1.4.0] — 2026-11-15
+
+**Migration 22 à exécuter AVANT la mise en ligne** :
+`supabase/migrations/20261116100000_archives_limites_liste.sql`, puis la requête de contrôle
+`supabase/tests/controle_22_archives_limites_liste.sql` (une ligne, tout à `true`).
+Aucun réglage Supabase. Appliquée et contrôlée sur `courses-test` le 15/11/2026.
+
+### Ajouté
+- **Liste de courses** : sous chaque article, les recettes qui en ont besoin
+  (« pour Gratin de courgettes · Spaghetti à la tomate »).
+- **Partager la liste** (WhatsApp, SMS, note…) : ce qui reste à prendre, par rayon, via le menu
+  de partage du téléphone (copie dans le presse-papiers si le téléphone ne sait pas partager).
+- **Recettes archivées** : « Supprimer » devient « Archiver » (admin de la famille, ou super-admin).
+  La recette disparaît des listes, de la recherche et des recettes du jour, mais reste dans les
+  plannings, l'historique et les listes. « Recettes archivées » (bas de la page Recettes) pour la
+  retrouver et la **restaurer**.
+
+### Modifié
+- Ce qui se compte à la pièce est **arrondi au-dessus** dans la liste (pas de « 1,5 œuf »),
+  après l'addition des recettes. Les g, cl, cuillères, pincées ne sont pas arrondis.
+- « Œufs » et « oeufs » sont reconnus comme le même article.
+- Petit texte sous les boutons de la liste : elle ne change pas toute seule tant qu'on ne la met
+  pas à jour (elle était déjà « figée » : l'idée « figer la liste » est donc abandonnée).
+- Aide mise à jour.
+
+### Corrigé
+- « Mettre à jour depuis le planning » est maintenant **tout ou rien** (une seule transaction dans
+  la base) : une coupure réseau ne peut plus laisser une liste vidée à moitié.
+- « Beurre de cacahuète » n'est plus pris pour du « beurre » (ni « lait de coco » pour du lait)
+  dans le placard et le frigo ; « huile d'olive » reste de l'huile.
+
+### Sécurité
+- **Limites de longueur** des recettes, appliquées par la base ET le formulaire : titre 120,
+  ingrédient 80, unité 20, étape 1 000 caractères, 60 ingrédients et 40 étapes par recette ;
+  article de liste 80 (quantité 120).
+- Plus aucune suppression directe de recette par l'API : avant, supprimer une recette effaçait
+  ses créneaux dans le planning de toutes les familles.
+- Une recette citée comme « origine » d'un article doit être lisible par la famille.
+- Banc RLS : 892 attaques bloquées, 199 contrôles positifs, 17 contrôles de structure.
+
 ## [1.3.1] — 2026-11-15
 
 Pas de migration, aucun réglage Supabase.

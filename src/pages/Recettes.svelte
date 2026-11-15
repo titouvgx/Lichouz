@@ -6,6 +6,7 @@
   import {
     fetchRecipeCategories,
     fetchRecipeIndex,
+    fetchArchivedRecipes,
     fetchRecipesByIds,
     filterRecipeIndex,
     RECIPES_PAGE_SIZE,
@@ -25,6 +26,24 @@
   let loadingMore = $state(false)
   let error = $state<string | null>(null)
   let reloadTick = $state(0)
+
+  // Recettes archivées (migration 22) : visibles par les admins, pour les restaurer
+  const canSeeArchives = $derived(
+    profileState.profile?.role === 'admin' || !!profileState.context?.isSuperAdmin,
+  )
+  let archived = $state<RecipeWithCategory[] | null>(null)
+  let archivedLoading = $state(false)
+  async function toggleArchived() {
+    if (archived) { archived = null; return }
+    archivedLoading = true
+    try {
+      archived = await fetchArchivedRecipes()
+    } catch (e: any) {
+      error = e.message
+    } finally {
+      archivedLoading = false
+    }
+  }
 
   /** Recettes complètes déjà chargées (évite de redemander les mêmes). */
   const cache = new Map<string, RecipeWithCategory>()
@@ -307,6 +326,25 @@
     {/if}
   {/if}
 
+  {#if canSeeArchives && !indexLoading}
+    <section class="archives">
+      <button class="btn btn-outline" onclick={toggleArchived} disabled={archivedLoading} aria-expanded={!!archived}>
+        {archived ? 'Masquer les recettes archivées' : 'Recettes archivées'}
+      </button>
+      {#if archived}
+        {#if archived.length === 0}
+          <p class="archives-empty">Aucune recette archivée.</p>
+        {:else}
+          <ul>
+            {#each archived as r (r.id)}
+              <li><a href={href('recette', r.id)}>{r.title}</a></li>
+            {/each}
+          </ul>
+        {/if}
+      {/if}
+    </section>
+  {/if}
+
   <!-- FAB : ajouter une recette (au-dessus de la barre d'onglets) -->
   <a href="#/nouvelle-recette" class="fab" aria-label="Nouvelle recette">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
@@ -316,6 +354,24 @@
 </div>
 
 <style>
+  .archives {
+    margin: 28px 0 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .archives ul { list-style: none; margin: 0; padding: 0; width: 100%; }
+  .archives li a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    text-decoration: none;
+  }
+  .archives-empty { margin: 0; color: var(--text-secondary); font-size: 14px; }
+
   .page {
     padding: var(--gutter);
     padding-top: calc(var(--gutter) + env(safe-area-inset-top, 0px));

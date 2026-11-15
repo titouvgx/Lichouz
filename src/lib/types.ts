@@ -73,6 +73,8 @@ export interface Recipe {
   created_by: string | null
   created_at: string
   updated_at: string
+  /** Date d'archivage (migration 22) ; null ou absent = recette active */
+  archived_at?: string | null
 }
 
 /** Recette enrichie avec sa catégorie (jointure) */
@@ -153,6 +155,8 @@ export interface ShoppingListItem {
   quantity: string | null
   shopping_category_id: string | null
   source_recipe_id: string | null
+  /** Toutes les recettes qui demandent l'article (migration 22) */
+  source_recipe_ids?: string[]
   is_extra: boolean
   checked: boolean
   checked_by: string | null

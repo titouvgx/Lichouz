@@ -125,6 +125,7 @@ export async function fetchRecipes(
   const { data, error } = await supabase
     .from('recipes')
     .select('*, recipe_categories(*)')
+    .is('archived_at', null)
     .order('title')
     .range(offset, offset + limit)
 
@@ -175,6 +176,7 @@ export async function fetchRecipeIndex(): Promise<RecipeIndexEntry[]> {
     const { data, error } = await supabase
       .from('recipes')
       .select('id, title, category_id')
+      .is('archived_at', null)
       .order('title')
       .order('id')
       .range(from, from + INDEX_CHUNK - 1)
@@ -215,6 +217,16 @@ export async function fetchRecipesByIds(ids: string[]): Promise<RecipeWithCatego
   if (error) throw error
   const byId = new Map((data ?? []).map((r) => [r.id, r as RecipeWithCategory]))
   return ids.map((id) => byId.get(id)).filter((r): r is RecipeWithCategory => !!r)
+}
+
+/** Titres de recettes par id (archivées comprises), pour « à quoi sert cet article ». */
+export async function fetchRecipeTitles(ids: string[]): Promise<Map<string, string>> {
+  const titles = new Map<string, string>()
+  if (!supabase || ids.length === 0) return titles
+  const { data, error } = await supabase.from('recipes').select('id, title').in('id', ids.slice(0, 300))
+  if (error) throw error
+  for (const r of data ?? []) titles.set(r.id, r.title)
+  return titles
 }
 
 // ────────── Détail d'une recette ──────────
@@ -423,42 +435,41 @@ export async function updateRecipe(
   }
 }
 
-// ────────── Suppression ──────────
+// ────────── Archives (plus de suppression) ──────────
 
-export async function deleteRecipe(recipeId: string): Promise<void> {
+/**
+ * Archive (ou restaure) une recette. Une recette n'est plus jamais supprimée :
+ * la supprimer effaçait aussi ses créneaux dans le planning de toutes les
+ * familles. Archivée, elle disparaît des listes et de la recherche, mais reste
+ * dans les plannings, l'historique et les listes de courses.
+ * Droits (vérifiés par la base) : admin de la famille propriétaire, hors
+ * catalogue, ou super-admin.
+ */
+export async function setRecipeArchived(recipeId: string, archived: boolean): Promise<void> {
   if (!supabase) throw new Error('Supabase non configuré')
-
-  // URL de la photo, lue avant la suppression de la ligne
-  const { data: current } = await supabase
+  const { data, error } = await supabase
     .from('recipes')
-    .select('image_url')
-    .eq('id', recipeId)
-    .maybeSingle()
-
-  const { data: deleted, error } = await supabase
-    .from('recipes')
-    .delete()
+    .update({ archived_at: archived ? new Date().toISOString() : null })
     .eq('id', recipeId)
     .select('id')
   if (error) throw error
-
-  // RLS filtre silencieusement un DELETE non autorisé : 0 ligne, pas d'erreur.
-  // On le dit plutôt que d'afficher « supprimée » à tort.
-  if (!deleted || deleted.length === 0) {
-    throw new Error("Suppression refusée : seul un administrateur du foyer qui a créé la recette peut la supprimer.")
+  // RLS filtre silencieusement une modification non autorisée : 0 ligne.
+  if (!data || data.length === 0) {
+    throw new Error("Action refusée : seul un administrateur de la famille qui a créé la recette peut l'archiver.")
   }
+}
 
-  await deleteRecipeImage(current?.image_url)
-  // Vider aussi tout le dossier de la recette : récupère les photos restées
-  // orphelines après un échec précédent. Jamais bloquant.
-  try {
-    const bucket = supabase.storage.from(RECIPE_PHOTOS_BUCKET)
-    const { data: files } = await bucket.list(recipeId, { limit: 100 })
-    const paths = (files ?? []).filter((f) => f.id).map((f) => `${recipeId}/${f.name}`)
-    if (paths.length > 0) await bucket.remove(paths)
-  } catch (e) {
-    console.warn('Nettoyage des photos de la recette impossible :', e)
-  }
+/** Recettes archivées visibles par la personne (les plus récentes d'abord). */
+export async function fetchArchivedRecipes(): Promise<RecipeWithCategory[]> {
+  if (!supabase) return []
+  const { data, error } = await supabase
+    .from('recipes')
+    .select('*, recipe_categories(*)')
+    .not('archived_at', 'is', null)
+    .order('archived_at', { ascending: false })
+    .limit(200)
+  if (error) throw error
+  return (data ?? []) as RecipeWithCategory[]
 }
 
 // ────────── Recettes du jour (page d'accueil) ──────────
@@ -488,6 +499,7 @@ export async function fetchDailyRecipes(
   const { data: idRows, error: idErr } = await supabase
     .from('recipes')
     .select('id')
+    .is('archived_at', null)
     .order('id') // ordre stable, indispensable pour que le tirage soit reproductible
 
   if (idErr) throw idErr
