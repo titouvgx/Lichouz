@@ -85,6 +85,23 @@ export async function removeMember(memberId: string): Promise<void> {
   if (error) throw error
 }
 
+export type DeleteMyAccountResult = 'supprime' | 'mot_de_passe_incorrect' | 'trop_d_essais'
+
+/**
+ * Supprime le compte de la personne connectée (delete_my_account, migration 21).
+ * Mot de passe vérifié par la base (5 erreurs en 15 min → bloqué 15 min).
+ * Refus (erreur avec message lisible) : super-admin, fondateur, dernier admin
+ * d'une famille qui a encore des membres. Ses recettes restent (auteur vide).
+ */
+export async function deleteMyAccount(password: string): Promise<DeleteMyAccountResult> {
+  const { data, error } = await db().rpc('delete_my_account', { p_password: password })
+  if (error) throw error
+  if (data !== 'supprime' && data !== 'mot_de_passe_incorrect' && data !== 'trop_d_essais') {
+    throw new Error('Réponse inattendue du serveur : rien n’a été confirmé.')
+  }
+  return data
+}
+
 /**
  * Supprime une famille VIDE (0 membre, 0 lien en attente), avec son planning,
  * ses listes et ses recettes. Fondateur ou super-admin ; vérifié par la base

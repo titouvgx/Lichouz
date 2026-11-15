@@ -25,3 +25,12 @@ export function markWelcomeSeen(userId: string): void {
   }
   welcome.closedThisLaunch = true
 }
+
+/** Compte supprimé : oublie aussi le choix « Ne plus afficher » de cette personne. */
+export function forgetWelcome(userId: string): void {
+  try {
+    localStorage.removeItem(key(userId))
+  } catch {
+    // rien à faire
+  }
+}

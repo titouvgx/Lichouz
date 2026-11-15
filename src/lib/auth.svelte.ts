@@ -66,10 +66,18 @@ export async function signIn(email: string, password: string): Promise<void> {
   }
 }
 
-/** Déconnexion. */
-export async function signOut(): Promise<void> {
+/**
+ * Déconnexion.
+ * @param scope 'local' : oublie la session sur ce téléphone sans appeler le
+ *   serveur (compte qui vient d'être supprimé : il n'y a plus de session à fermer).
+ */
+export async function signOut(scope: 'global' | 'local' = 'global'): Promise<void> {
   if (!supabase) return
-  await supabase.auth.signOut()
+  try {
+    await supabase.auth.signOut({ scope })
+  } catch {
+    // session déjà invalide : on nettoie quand même côté téléphone
+  }
   auth.user = null
   auth.session = null
 }

@@ -10,12 +10,14 @@
     cancelLabel?: string
     danger?: boolean
     busy?: boolean
+    /** Bouton de confirmation grisé (ex. : saisie de confirmation incomplète). */
+    confirmDisabled?: boolean
     onconfirm: () => void
     oncancel: () => void
     children?: Snippet
   }
   let {
-    title, confirmLabel, cancelLabel = 'Annuler', danger = false, busy = false,
+    title, confirmLabel, cancelLabel = 'Annuler', danger = false, busy = false, confirmDisabled = false,
     onconfirm, oncancel, children,
   }: Props = $props()
 
@@ -49,7 +51,7 @@
     {#if children}<div class="cd-body">{@render children()}</div>{/if}
     <div class="cd-actions">
       <button class="btn btn-outline" onclick={oncancel} disabled={busy}>{cancelLabel}</button>
-      <button class="btn cd-confirm" class:danger onclick={onconfirm} disabled={busy}>
+      <button class="btn cd-confirm" class:danger onclick={onconfirm} disabled={busy || confirmDisabled}>
         {busy ? 'Un instant…' : confirmLabel}
       </button>
     </div>

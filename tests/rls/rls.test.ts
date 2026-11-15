@@ -2673,3 +2673,135 @@ describe('Administration : statistiques (admin_stats)', () => {
     }
   })
 })
+
+describe('Mon compte : supprimer son propre compte (delete_my_account)', () => {
+  const DELETE_ME = `SELECT public.delete_my_account($1) AS v`
+  const MDP = 'bon-mot-de-passe-42'
+  /** Mot de passe bcrypt (comme Supabase Auth), coût 4 pour la vitesse du banc. */
+  const setPassword = (s: Scenario, uid: string, pwd: string) =>
+    s.su(`UPDATE auth.users SET encrypted_password = extensions.crypt($2, extensions.gen_salt('bf', 4)) WHERE id = $1`, [uid, pwd])
+  const exists = async (s: Scenario, uid: string) => ({
+    profil: !!(await profileOf(s, uid)),
+    compte: (await countRows(s, 'auth.users', 'id = $1', [uid])) === 1,
+  })
+  const deleteMe = (s: Scenario, actor: Actor, pwd: string) => s.as(actor, DELETE_ME, [pwd])
+  /** Refus attendu ET le compte reste intact. */
+  async function deleteRefused(s: Scenario, actor: Actor, uid: string, code: string, message: RegExp) {
+    await setPassword(s, uid, MDP)
+    const before = await snapshot(s, 'public.profiles', 'id', uid)
+    expectRefused(await deleteMe(s, actor, MDP), code, `${ACTOR_LABEL[actor]} delete_my_account`, message)
+    expect(await snapshot(s, 'public.profiles', 'id', uid), 'le profil a changé').toBe(before)
+    expect(await exists(s, uid)).toEqual({ profil: !!before, compte: true })
+  }
+  const result = (o: Outcome) => {
+    expect(o.error, fmt(o)).toBeUndefined()
+    return o.rows[0].v as string
+  }
+
+  attaque('anonyme ne peut pas appeler delete_my_account', async (s) => {
+    expectNoExecute(await s.as('anon', DELETE_ME, [MDP]), 'anon delete_my_account')
+  })
+  attaque('connecté sans profil : refusé, compte intact', async (s) => {
+    await deleteRefused(s, 'sansProfil', ID.sansProfil, '42501', /Profil introuvable/)
+  })
+  attaque('le super-admin ne supprime pas son compte (transmettre son rôle d\'abord)', async (s) => {
+    await deleteRefused(s, 'superAdmin', ID.superAdmin, '23514', /super-admin/)
+  })
+  attaque('le fondateur de SB ne supprime pas son compte', async (s) => {
+    await deleteRefused(s, 'adminB', ID.adminB, '23514', /fondateur/)
+  })
+  attaque('le dernier admin d\'une famille qui a encore des membres ne part pas', async (s) => {
+    await deleteRefused(s, 'adminA', ID.adminA, '23514', /dernier admin/)
+    await deleteRefused(s, 'adminA2', ID.adminA2, '23514', /dernier admin/)
+  })
+  attaque('mauvais mot de passe : rien n\'est supprimé, l\'essai est compté', async (s) => {
+    await setPassword(s, ID.memberA, MDP)
+    expect(result(await deleteMe(s, 'memberA', 'pas-le-bon'))).toBe('mot_de_passe_incorrect')
+    expect(result(await deleteMe(s, 'memberA', ''))).toBe('mot_de_passe_incorrect')
+    expect(await exists(s, ID.memberA)).toEqual({ profil: true, compte: true })
+    expect(await countRows(s, 'private.account_deletion_attempts', 'user_id = $1', [ID.memberA])).toBe(2)
+  })
+  attaque('le mot de passe d\'un autre ne sert à rien : la fonction n\'agit que sur soi', async (s) => {
+    await setPassword(s, ID.memberA, MDP)
+    await setPassword(s, ID.memberB, 'mdp-de-B')
+    expect(result(await deleteMe(s, 'memberA', 'mdp-de-B'))).toBe('mot_de_passe_incorrect')
+    expect(await exists(s, ID.memberA)).toEqual({ profil: true, compte: true })
+    expect(await exists(s, ID.memberB)).toEqual({ profil: true, compte: true })
+  })
+  attaque('après 5 erreurs en 15 min, même le bon mot de passe est refusé (pas de devinette)', async (s) => {
+    await setPassword(s, ID.memberA, MDP)
+    for (let i = 0; i < 5; i++) expect(result(await deleteMe(s, 'memberA', `faux-${i}`))).toBe('mot_de_passe_incorrect')
+    expect(result(await deleteMe(s, 'memberA', MDP))).toBe('trop_d_essais')
+    expect(await exists(s, ID.memberA)).toEqual({ profil: true, compte: true })
+  })
+  attaque('compte sans mot de passe enregistré : refusé', async (s) => {
+    await s.su(`UPDATE auth.users SET encrypted_password = NULL WHERE id = $1`, [ID.memberA])
+    expect(result(await deleteMe(s, 'memberA', MDP))).toBe('mot_de_passe_incorrect')
+    expect(await exists(s, ID.memberA)).toEqual({ profil: true, compte: true })
+  })
+  attaque('les essais ratés sont invisibles et intouchables depuis l\'API (schéma private)', async (s) => {
+    await setPassword(s, ID.memberA, MDP)
+    await deleteMe(s, 'memberA', 'faux')
+    for (const actor of ['anon', 'memberA', 'adminA', 'superAdmin'] as const) {
+      for (const sql of [
+        `SELECT * FROM private.account_deletion_attempts`,
+        `DELETE FROM private.account_deletion_attempts RETURNING id`,
+        `INSERT INTO private.account_deletion_attempts (user_id) VALUES ('${ID.memberB}') RETURNING id`,
+      ]) {
+        expectRefused(await s.as(actor, sql), '42501', `${actor} ${sql.slice(0, 6)}`, /permission denied for schema private/)
+      }
+    }
+    expect(await countRows(s, 'private.account_deletion_attempts', 'user_id = $1', [ID.memberA])).toBe(1)
+  })
+
+  controle('le membre A supprime son compte : profil et compte partis, ses recettes restent', async (s) => {
+    await setPassword(s, ID.memberA, MDP)
+    await s.su(`UPDATE public.meal_slots SET cook_id = $1 WHERE id = $2`, [ID.memberA, ID.slotA])
+    await s.su(`UPDATE public.shopping_list_items SET checked_by = $1 WHERE id = $2`, [ID.memberA, ID.itemA])
+    const recettes = await countRows(s, 'public.recipes')
+    expect(result(await deleteMe(s, 'memberA', MDP))).toBe('supprime')
+    expect(await exists(s, ID.memberA)).toEqual({ profil: false, compte: false })
+    const r = await s.su(`SELECT created_by FROM public.recipes WHERE id = $1`, [ID.recAshared])
+    expect(r, 'la recette existe toujours').toHaveLength(1)
+    expect(r[0].created_by).toBeNull()
+    expect(await countRows(s, 'public.recipes')).toBe(recettes)
+    expect((await s.su(`SELECT cook_id FROM public.meal_slots WHERE id = $1`, [ID.slotA]))[0].cook_id).toBeNull()
+    expect((await s.su(`SELECT checked_by FROM public.shopping_list_items WHERE id = $1`, [ID.itemA]))[0].checked_by).toBeNull()
+    // Les autres n'ont rien perdu
+    expect(await exists(s, ID.adminA)).toEqual({ profil: true, compte: true })
+    expect(await countRows(s, 'public.families', 'id = $1', [ID.famA])).toBe(1)
+  })
+  controle('après suppression, l\'ancien jeton ne lit plus rien', async (s) => {
+    await setPassword(s, ID.memberA, MDP)
+    expect(result(await deleteMe(s, 'memberA', MDP))).toBe('supprime')
+    for (const t of ['public.profiles', 'public.recipes', 'public.meal_plans', 'public.shopping_lists', 'public.families']) {
+      expectBlocked(await s.asUid(ID.memberA, `SELECT 1 FROM ${t}`), `lecture ${t}`)
+    }
+  })
+  controle('un admin part quand un autre admin reste ; ses liens en attente partent avec lui', async (s) => {
+    await s.su(`UPDATE public.profiles SET role = 'admin' WHERE id = $1`, [ID.memberA])
+    await setPassword(s, ID.adminA, MDP)
+    const r = await newInvitation(s, 'adminA', 'membre', ID.famA, 'member')
+    expect(result(await deleteMe(s, 'adminA', MDP))).toBe('supprime')
+    expect(await exists(s, ID.adminA)).toEqual({ profil: false, compte: false })
+    expect(await countRows(s, 'public.invitations', 'id = $1', [r.id])).toBe(0)
+  })
+  controle('un admin seul dans sa famille part : la famille reste, vide (le fondateur la supprimera)', async (s) => {
+    await s.su(`DELETE FROM public.profiles WHERE id = $1`, [ID.memberA2])
+    await setPassword(s, ID.adminA2, MDP)
+    expect(result(await deleteMe(s, 'adminA2', MDP))).toBe('supprime')
+    expect(await countRows(s, 'public.families', 'id = $1', [ID.famA2])).toBe(1)
+    expect(await countRows(s, 'public.profiles', 'family_id = $1', [ID.famA2])).toBe(0)
+  })
+  controle('le membre A2 part alors que son admin reste', async (s) => {
+    await setPassword(s, ID.memberA2, MDP)
+    expect(result(await deleteMe(s, 'memberA2', MDP))).toBe('supprime')
+    expect(await exists(s, ID.adminA2)).toEqual({ profil: true, compte: true })
+  })
+  controle('bon mot de passe après une erreur : accepté (sous la limite)', async (s) => {
+    await setPassword(s, ID.memberB, MDP)
+    expect(result(await deleteMe(s, 'memberB', 'oups'))).toBe('mot_de_passe_incorrect')
+    expect(result(await deleteMe(s, 'memberB', MDP))).toBe('supprime')
+    expect(await countRows(s, 'private.account_deletion_attempts', 'user_id = $1', [ID.memberB])).toBe(0)
+  })
+})

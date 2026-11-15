@@ -8,6 +8,8 @@
   import { navigate, href } from '../lib/router.svelte'
   import { toast } from '../lib/toast.svelte'
   import { VERSION_LABEL } from '../lib/version'
+  import { deleteMyAccount } from '../lib/api/famille'
+  import { forgetWelcome } from '../lib/bienvenue.svelte'
 
   let displayName = $state('')
   let newPassword = $state('')
@@ -141,6 +143,65 @@
     toast.success(removed > 0
       ? 'Données hors connexion effacées. La liste sera rechargée depuis internet.'
       : 'Rien à effacer sur ce téléphone.')
+  }
+
+  // ── Supprimer mon compte (migration 21, delete_my_account) ──
+  const CONFIRM_WORD = 'SUPPRIMER'
+  let confirmDelete = $state(false)
+  let deleteWord = $state('')
+  let deletePassword = $state('')
+  let showDeletePassword = $state(false)
+  let deleting = $state(false)
+  let deleteError = $state<string | null>(null)
+
+  // Blocages connus d'avance (la base vérifie de toute façon, y compris « dernier admin »)
+  const deleteBlocked = $derived(
+    profileState.context?.isSuperAdmin
+      ? 'Tu es super-admin : ton compte ne peut pas être supprimé depuis l’appli (il faut d’abord transmettre ce rôle, dans Supabase).'
+      : profileState.context?.isFounder
+        ? 'Tu es fondateur de ta super-famille : ton compte ne peut pas être supprimé depuis l’appli. Demande d’abord au super-admin de transmettre ton rôle.'
+        : null,
+  )
+  const deleteReady = $derived(deleteWord.trim().toUpperCase() === CONFIRM_WORD && deletePassword.length > 0)
+
+  function askDelete() {
+    deleteWord = ''
+    deletePassword = ''
+    showDeletePassword = false
+    deleteError = null
+    confirmDelete = true
+  }
+
+  async function handleDeleteAccount() {
+    if (!deleteReady || deleting || !auth.user) return
+    deleting = true
+    deleteError = null
+    const userId = auth.user.id
+    try {
+      const r = await deleteMyAccount(deletePassword)
+      if (r === 'mot_de_passe_incorrect') {
+        deleteError = 'Mot de passe incorrect. Ton compte n’a pas été supprimé.'
+        deletePassword = ''
+      } else if (r === 'trop_d_essais') {
+        deleteError = 'Trop d’essais ratés. Réessaie dans 15 minutes. Ton compte n’a pas été supprimé.'
+        deletePassword = ''
+      } else {
+        // Supprimé côté serveur : on oublie tout sur ce téléphone
+        confirmDelete = false
+        deletePassword = ''
+        clearProfile(true)
+        forgetWelcome(userId)
+        await signOut('local')
+        navigate('login')
+        toast.success('Ton compte a été supprimé. Merci d’avoir utilisé Lichouz !')
+      }
+    } catch (e: any) {
+      deleteError = e?.message
+        ? `${e.message}. Ton compte n’a pas été supprimé.`
+        : 'Impossible de joindre le serveur. Ton compte n’a pas été supprimé.'
+    } finally {
+      deleting = false
+    }
   }
 
   const userEmail = $derived(auth.user?.email ?? '')
@@ -325,6 +386,22 @@
     </button>
   </div>
 
+  <!-- Supprimer mon compte : tout en bas, à part -->
+  <section class="delete-zone" aria-labelledby="delete-title">
+    <h2 id="delete-title" class="delete-title">Supprimer mon compte</h2>
+    {#if deleteBlocked}
+      <p class="delete-text">{deleteBlocked}</p>
+    {:else}
+      <p class="delete-text">
+        Ton compte et ton accès disparaissent pour de bon. Les recettes que tu as écrites
+        restent dans ta famille, sans ton nom.
+      </p>
+      <button class="btn btn-delete" onclick={askDelete}>
+        <Icon name="trash" size={18} /> Supprimer mon compte
+      </button>
+    {/if}
+  </section>
+
   <p class="app-version">Lichouz · {VERSION_LABEL}</p>
 </div>
 
@@ -338,6 +415,65 @@
   >
     La liste de courses gardée sur ce téléphone sera effacée. Tu devras te reconnecter
     avec ton e-mail et ton mot de passe.
+  </ConfirmDialog>
+{/if}
+
+{#if confirmDelete}
+  <ConfirmDialog
+    title="Supprimer ton compte ?"
+    confirmLabel="Supprimer définitivement"
+    danger
+    busy={deleting}
+    confirmDisabled={!deleteReady}
+    onconfirm={handleDeleteAccount}
+    oncancel={() => { if (!deleting) confirmDelete = false }}
+  >
+    <ul class="delete-list">
+      <li><strong>Supprimé :</strong> ton compte, ton nom, tes liens d’invitation en attente.</li>
+      <li><strong>Gardé :</strong> tes recettes (sans ton nom), le planning et les listes de ta famille.</li>
+      <li>Impossible d’annuler. Pour revenir, il faudra une nouvelle invitation.</li>
+    </ul>
+    <div class="delete-form">
+    <div class="field">
+      <label for="delete-word" class="label-text">Tape <strong>{CONFIRM_WORD}</strong> pour confirmer</label>
+      <input
+        id="delete-word"
+        type="text"
+        class="input"
+        autocomplete="off"
+        autocapitalize="characters"
+        spellcheck="false"
+        bind:value={deleteWord}
+        oninput={() => (deleteError = null)}
+      />
+    </div>
+    <div class="field">
+      <label for="delete-password" class="label-text">Ton mot de passe</label>
+      <div class="input-wrap">
+        <input
+          id="delete-password"
+          type={showDeletePassword ? 'text' : 'password'}
+          class="input input-has-toggle"
+          autocomplete="current-password"
+          autocapitalize="off"
+          spellcheck="false"
+          bind:value={deletePassword}
+          oninput={() => (deleteError = null)}
+          onkeydown={(e) => { if (e.key === 'Enter') handleDeleteAccount() }}
+        />
+        <button
+          type="button"
+          class="eye-btn"
+          aria-label={showDeletePassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+          aria-pressed={showDeletePassword}
+          onclick={() => (showDeletePassword = !showDeletePassword)}
+        >
+          <Icon name={showDeletePassword ? 'eye-off' : 'eye'} size={20} />
+        </button>
+      </div>
+    </div>
+    {#if deleteError}<p class="field-error" role="alert">{deleteError}</p>{/if}
+    </div>
   </ConfirmDialog>
 {/if}
 
@@ -659,6 +795,49 @@
     touch-action: manipulation;
   }
 
+  /* ── Supprimer mon compte ── */
+  .delete-zone {
+    margin-top: 8px;
+    padding: 16px 18px;
+    border-radius: var(--radius-xl);
+    border: 1px solid color-mix(in srgb, var(--error) 45%, transparent);
+    background: rgba(9, 24, 50, 0.55);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .delete-title {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    color: #FF9A9D;
+    margin: 0;
+  }
+  .delete-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+  .btn-delete {
+    min-height: 48px;
+    border-radius: var(--radius-lg);
+    border: 1.5px solid color-mix(in srgb, var(--error) 70%, transparent);
+    background: transparent;
+    color: #FF9A9D;
+    font-size: 15px;
+    touch-action: manipulation;
+  }
+  .delete-list {
+    margin: 0 0 12px;
+    padding-left: 18px;
+    display: grid;
+    gap: 6px;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .delete-form { display: grid; gap: 12px; text-align: left; }
+  .delete-zone + .app-version { margin-top: 12px; }
+
   /* Version de l'appli (voir src/lib/version.ts) */
   .app-version {
     margin: 20px 0 4px;
@@ -679,6 +858,7 @@
     .eye-btn:hover { color: var(--text); background: var(--surface); }
     .btn-save:hover { opacity: 0.9; }
     .btn-logout:hover { background: var(--error-bg); }
+    .btn-delete:hover { background: var(--error-bg); }
   }
 
   @media (min-width: 900px) {

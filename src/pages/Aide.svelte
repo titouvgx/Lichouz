@@ -127,6 +127,13 @@
       <dd>Elle est sans doute réservée à sa famille. Il peut la passer en « Toutes nos familles » si vos familles sont liées.</dd>
       <dt>La liste ne bouge plus chez moi.</dt>
       <dd>Vérifie le réseau, puis ferme et rouvre l’appli : tout se resynchronise.</dd>
+      <dt>Je veux supprimer mon compte.</dt>
+      <dd>
+        Tout en bas de <a href={href('compte')}>Mon compte</a> : « Supprimer mon compte », puis tape SUPPRIMER
+        et ton mot de passe. C’est définitif. Tes recettes restent dans ta famille, sans ton nom. Si tu es le
+        dernier admin d’une famille qui a d’autres membres, nomme d’abord un autre admin ; un fondateur doit d’abord
+        demander au super-admin de transmettre son rôle.
+      </dd>
       <dt>Qui voit mes données ?</dt>
       <dd>Seulement les membres de ta famille (et les familles liées pour les recettes partagées). Ton e-mail n’est montré à personne.</dd>
     </dl>

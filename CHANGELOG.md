@@ -21,6 +21,23 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [1.2.0] — 2026-11-15
+
+Migration nécessaire : **21** (`20261115140000_supprimer_mon_compte.sql`), à exécuter AVANT le déploiement,
+puis la requête de contrôle `supabase/tests/controle_21_supprimer_mon_compte.sql` (tout à true).
+
+### Ajouté
+- Mon compte : **Supprimer mon compte**, tout en bas. Confirmation en tapant « SUPPRIMER » **et** son
+  mot de passe (vérifié par la base, pas seulement par l'appli). Après suppression, l'appli efface ce
+  qu'elle gardait sur le téléphone et revient à l'écran de connexion.
+- Fonction `delete_my_account` : refuse le super-admin, le fondateur, et le dernier admin d'une famille
+  qui a encore d'autres membres. Les recettes de la personne restent (auteur vide), comme pour « Retirer ».
+  Une personne seule dans sa famille peut partir : la famille reste, vide (le fondateur la supprime ensuite).
+- Anti-devinette : 5 mots de passe faux en 15 minutes → suppression bloquée 15 minutes
+  (table cachée `private.account_deletion_attempts`, jamais exposée par l'API).
+- Aide : question « Je veux supprimer mon compte ».
+- Banc RLS : 10 attaques et 6 contrôles positifs de plus (880 attaques bloquées, 198 contrôles).
+
 ## [1.1.0] — 2026-11-15
 
 Migration nécessaire : **20** (`20261115120000_admin_stats.sql`), à exécuter AVANT le déploiement.
