@@ -11,6 +11,7 @@
   import { auth } from '../lib/auth.svelte'
   import { profileState } from '../lib/profile.svelte'
   import { normalizeText } from '../lib/quantities'
+  import { BUDGETS, MAX_THEMES, ORIGINES, REGIMES, THEMES, cleanKeys } from '../lib/etiquettes'
   import {
     fetchRecipe,
     fetchRecipeCategories,
@@ -69,6 +70,24 @@
   // État du formulaire
   let title = $state('')
   let categoryId = $state('')
+  // Étiquettes (migration 25) : liste fixe
+  let diets: string[] = $state([])
+  let origin = $state('')
+  let themes: string[] = $state([])
+  let budget: number | null = $state(null)
+
+  function toggleDiet(key: string) {
+    if (diets.includes(key)) {
+      diets = diets.filter((d) => d !== key && !(key === 'vegetarien' && d === 'vegan'))
+    } else {
+      // Vegan ⇒ végétarien
+      diets = cleanKeys([...diets, key, ...(key === 'vegan' ? ['vegetarien'] : [])], REGIMES)
+    }
+  }
+  function toggleTheme(key: string) {
+    if (themes.includes(key)) themes = themes.filter((t) => t !== key)
+    else if (themes.length < MAX_THEMES) themes = cleanKeys([...themes, key], THEMES)
+  }
   let prepTimeMin = $state<number | null>(null)
   let defaultPortions = $state<number | null>(4)
   // Qui voit la recette : sa famille (défaut, le plus prudent) ou toute la super-famille
@@ -162,6 +181,10 @@
           visibility = r.visibility === 'super_famille' ? 'super_famille' : 'famille'
           title = r.title
           categoryId = r.category_id ?? ''
+          diets = cleanKeys(r.diets ?? [], REGIMES)
+          origin = ORIGINES.some((o) => o.key === r.origin) ? (r.origin as string) : ''
+          themes = cleanKeys(r.themes ?? [], THEMES)
+          budget = r.budget ?? null
           prepTimeMin = r.prep_time_min
           defaultPortions = r.default_portions
           currentImageUrl = recipeImageSrc(r.image_url)
@@ -224,6 +247,7 @@
     return JSON.stringify({
       t: title.trim(),
       c: categoryId,
+      g: [diets, origin, themes, budget],
       p: prepTimeMin ?? null,
       d: defaultPortions ?? null,
       v: visibility,
@@ -567,6 +591,7 @@
       visibility,
       ingredients: validIngredients,
       steps: validSteps,
+      tags: { diets, origin: origin || null, themes, budget },
     }
 
     saving = true
@@ -902,6 +927,73 @@
               onkeydown={nextOnEnter(`[data-ing="${ingredients[0]?.key}"][data-f="qty"]`)}
             />
             {#if errors.prep}<p class="field-err" id="rf-prep-err">{errors.prep}</p>{/if}
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Étiquettes (migration 25) ── -->
+      <section class="card" aria-labelledby="rf-tags-title">
+        <h2 class="section-title" id="rf-tags-title"><Icon name="tag" size={18} /> Étiquettes <span class="optional">facultatif</span></h2>
+
+        <div class="field" role="group" aria-labelledby="rf-diet-label">
+          <span class="label-text" id="rf-diet-label">Régime</span>
+          <div class="chip-select">
+            {#each REGIMES as r (r.key)}
+              <button
+                type="button"
+                class="chip-option"
+                class:selected={diets.includes(r.key)}
+                aria-pressed={diets.includes(r.key)}
+                onclick={() => toggleDiet(r.key)}
+              >{r.label}</button>
+            {/each}
+          </div>
+          <p class="vis-hint">Indicatif : en cas d’allergie, vérifie toujours les emballages (bouillon, sauces…).</p>
+        </div>
+
+        <div class="field">
+            <label class="label-text" for="rf-origin">Origine</label>
+            <select id="rf-origin" class="input" bind:value={origin}>
+              <option value="">Aucune</option>
+              {#each ['France', 'Monde'] as groupe (groupe)}
+                <optgroup label={groupe}>
+                  {#each ORIGINES.filter((o) => o.groupe === groupe) as o (o.key)}
+                    <option value={o.key}>{o.label}</option>
+                  {/each}
+                </optgroup>
+              {/each}
+            </select>
+        </div>
+          <div class="field" role="group" aria-labelledby="rf-budget-label">
+            <span class="label-text" id="rf-budget-label">Budget</span>
+            <div class="chip-select budget-select">
+              {#each BUDGETS as b (b.value)}
+                <button
+                  type="button"
+                  class="chip-option"
+                  class:selected={budget === b.value}
+                  aria-pressed={budget === b.value}
+                  aria-label={b.long}
+                  title={b.long}
+                  onclick={() => (budget = budget === b.value ? null : b.value)}
+                >{b.label}</button>
+              {/each}
+            </div>
+          </div>
+
+        <div class="field" role="group" aria-labelledby="rf-theme-label">
+          <span class="label-text" id="rf-theme-label">Thèmes <span class="optional">{themes.length}/{MAX_THEMES}</span></span>
+          <div class="chip-select">
+            {#each THEMES as t (t.key)}
+              <button
+                type="button"
+                class="chip-option"
+                class:selected={themes.includes(t.key)}
+                aria-pressed={themes.includes(t.key)}
+                disabled={!themes.includes(t.key) && themes.length >= MAX_THEMES}
+                onclick={() => toggleTheme(t.key)}
+              >{t.label}</button>
+            {/each}
           </div>
         </div>
       </section>
@@ -1437,6 +1529,11 @@
   }
 
   .chip-option:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .chip-option:disabled { opacity: 0.45; cursor: default; }
+  .budget-select { flex-wrap: nowrap; gap: 6px; }
+  .budget-select .chip-option { flex: 1; padding: 0 8px; white-space: nowrap; }
+  .optional { font-family: var(--font-body); font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-left: 4px; }
+  select.input { padding: 12px 14px; min-height: 48px; }
 
   /* ── Ingrédients ── */
   .col-heads {

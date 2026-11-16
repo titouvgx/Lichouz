@@ -2,6 +2,7 @@
 // Toutes les requêtes Supabase pour le CRUD recettes.
 
 import { supabase } from '../supabase'
+import { matchesTags, NO_FILTERS, tagWords, type RecipeTags, type TagFilters } from '../etiquettes'
 import { pickSeeded } from '../random'
 import { normalizeText } from '../quantities'
 import {
@@ -150,12 +151,14 @@ export async function fetchRecipes(
 /** Taille des blocs lus pour l'index (PostgREST plafonne souvent à 1000 lignes). */
 const INDEX_CHUNK = 1000
 
-export interface RecipeIndexEntry {
+export interface RecipeIndexEntry extends Partial<RecipeTags> {
   id: string
   title: string
   category_id: string | null
   /** Titre normalisé pour la recherche (voir searchKey) */
   key: string
+  /** Libellés des étiquettes normalisés (on trouve « vegan » ou « bretagne » en tapant) */
+  tagKey?: string
 }
 
 /**
@@ -172,11 +175,11 @@ export function searchKey(text: string): string {
 export async function fetchRecipeIndex(): Promise<RecipeIndexEntry[]> {
   if (!supabase) return []
 
-  const rows: { id: string; title: string; category_id: string | null }[] = []
+  const rows: ({ id: string; title: string; category_id: string | null } & RecipeTags)[] = []
   for (let from = 0; ; from += INDEX_CHUNK) {
     const { data, error } = await supabase
       .from('recipes')
-      .select('id, title, category_id')
+      .select('id, title, category_id, diets, origin, themes, budget')
       .is('archived_at', null)
       .order('title')
       .order('id')
@@ -188,7 +191,17 @@ export async function fetchRecipeIndex(): Promise<RecipeIndexEntry[]> {
   }
 
   return rows
-    .map((r) => ({ id: r.id, title: r.title, category_id: r.category_id, key: searchKey(r.title) }))
+    .map((r) => ({
+      id: r.id,
+      title: r.title,
+      category_id: r.category_id,
+      diets: r.diets ?? [],
+      origin: r.origin ?? null,
+      themes: r.themes ?? [],
+      budget: r.budget ?? null,
+      key: searchKey(r.title),
+      tagKey: searchKey(tagWords(r)),
+    }))
     .sort((a, b) => a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' }) || a.id.localeCompare(b.id))
 }
 
@@ -200,11 +213,14 @@ export function filterRecipeIndex(
   index: RecipeIndexEntry[],
   query: string,
   categoryId: string | null,
+  tags: TagFilters = NO_FILTERS,
 ): RecipeIndexEntry[] {
   const words = searchKey(query).split(' ').filter(Boolean)
   return index.filter((r) =>
     (!categoryId || r.category_id === categoryId) &&
-    words.every((w) => r.key.includes(w)),
+    // Titre : n'importe où ; étiquettes : début de mot, 4 lettres au moins (« les » ne trouve pas « Les enfants adorent »)
+    words.every((w) => r.key.includes(w) || (w.length >= 4 && !!r.tagKey && ` ${r.tagKey}`.includes(` ${w}`))) &&
+    matchesTags(r, tags),
   )
 }
 
@@ -283,6 +299,7 @@ export async function createRecipe(
       prep_time_min: form.prep_time_min,
       default_portions: form.default_portions,
       created_by: userId,
+      ...(form.tags ?? {}),
     })
     .select('id')
     .single()
@@ -376,6 +393,7 @@ export async function updateRecipe(
     default_portions: form.default_portions,
   }
   if (form.visibility) patch.visibility = form.visibility
+  if (form.tags) Object.assign(patch, form.tags)
   if (photo.kind !== 'keep') patch.image_url = newUrl
 
   const { error: recipeErr } = await supabase

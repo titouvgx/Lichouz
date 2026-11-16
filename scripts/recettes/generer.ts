@@ -15,6 +15,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { cleTitre, valider, type FichierRecettes, type Recette } from './format.ts'
+import { MAX_THEMES, ORIGINES, REGIMES, THEMES } from '../../src/lib/etiquettes.ts'
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url))
 export const DOSSIER_RECETTES = process.env.RECETTES_DIR || join(ROOT, 'supabase', 'recettes')
@@ -22,6 +23,8 @@ export const DOSSIER_MIGRATIONS = join(ROOT, 'supabase', 'migrations')
 export const FICHIER_MIGRATION = '20261113170000_recettes_v1.sql'
 export const FICHIER_PHOTOS = 'photos.json'
 export const FICHIER_MIGRATION_PHOTOS = '20261114110000_recettes_photos.sql'
+export const FICHIER_ETIQUETTES = 'etiquettes.json'
+export const FICHIER_MIGRATION_ETIQUETTES = '20261116170100_recettes_etiquettes.sql'
 
 /** Photo Unsplash (même règle que la contrainte recipes_image_url_origin, format figé). */
 export const URL_PHOTO = /^https:\/\/images\.unsplash\.com\/photo-[A-Za-z0-9_-]+\?w=800&h=600&fit=crop&auto=format$/
@@ -49,7 +52,7 @@ export function lireRecettes(): { corrections: Recette[]; nouvelles: Recette[]; 
   const corrections: Recette[] = []
   const nouvelles: Recette[] = []
   const erreurs: string[] = []
-  const fichiers = readdirSync(DOSSIER_RECETTES).filter((f) => f.endsWith('.json') && f !== FICHIER_PHOTOS).sort()
+  const fichiers = readdirSync(DOSSIER_RECETTES).filter((f) => f.endsWith('.json') && f !== FICHIER_PHOTOS && f !== FICHIER_ETIQUETTES).sort()
   for (const f of fichiers) {
     const contenu = JSON.parse(readFileSync(join(DOSSIER_RECETTES, f), 'utf8')) as FichierRecettes
     erreurs.push(...valider(contenu, f))
@@ -263,6 +266,94 @@ END $$;
 `
 }
 
+export interface EtiquettesRecette {
+  title: string
+  diets: string[]
+  origin: string | null
+  themes: string[]
+  budget: number | null
+}
+
+/** Étiquettes des recettes du catalogue (supabase/recettes/etiquettes.json). */
+export function lireEtiquettes(): { etiquettes: EtiquettesRecette[]; erreurs: string[] } {
+  let etiquettes: EtiquettesRecette[] = []
+  try {
+    etiquettes = (JSON.parse(readFileSync(join(DOSSIER_RECETTES, FICHIER_ETIQUETTES), 'utf8')) as { etiquettes: EtiquettesRecette[] }).etiquettes
+  } catch {
+    return { etiquettes: [], erreurs: [`${FICHIER_ETIQUETTES} absent ou illisible`] }
+  }
+  const erreurs: string[] = []
+  const { corrections, nouvelles } = lireRecettes()
+  const titres = new Set([...corrections, ...nouvelles].map((r) => r.title))
+  const regimes = new Set(REGIMES.map((e) => e.key))
+  const origines = new Set(ORIGINES.map((e) => e.key))
+  const themes = new Set(THEMES.map((e) => e.key))
+  const vus = new Set<string>()
+  for (const e of etiquettes) {
+    const t = `« ${e.title} »`
+    if (!titres.has(e.title)) erreurs.push(`étiquettes pour un titre inconnu : ${t}`)
+    if (vus.has(e.title)) erreurs.push(`deux entrées pour ${t}`)
+    vus.add(e.title)
+    for (const d of e.diets) if (!regimes.has(d)) erreurs.push(`régime inconnu « ${d} » pour ${t}`)
+    if (new Set(e.diets).size !== e.diets.length) erreurs.push(`régime en double pour ${t}`)
+    if (e.diets.includes('vegan') && !e.diets.includes('vegetarien')) erreurs.push(`vegan sans végétarien pour ${t}`)
+    if (e.origin !== null && !origines.has(e.origin)) erreurs.push(`origine inconnue « ${e.origin} » pour ${t}`)
+    for (const th of e.themes) if (!themes.has(th)) erreurs.push(`thème inconnu « ${th} » pour ${t}`)
+    if (new Set(e.themes).size !== e.themes.length) erreurs.push(`thème en double pour ${t}`)
+    if (e.themes.length > MAX_THEMES) erreurs.push(`plus de ${MAX_THEMES} thèmes pour ${t}`)
+    if (e.budget !== null && ![1, 2, 3].includes(e.budget)) erreurs.push(`budget invalide pour ${t}`)
+  }
+  for (const t of titres) if (!vus.has(t)) erreurs.push(`pas d'entrée d'étiquettes pour « ${t} »`)
+  return { etiquettes, erreurs }
+}
+
+export function genererEtiquettesSQL(): string {
+  const { etiquettes, erreurs } = lireEtiquettes()
+  if (erreurs.length) throw new Error('Étiquettes invalides :\n' + erreurs.join('\n'))
+  const arr = (a: string[]) => (a.length ? `ARRAY[${a.map(q).join(', ')}]::text[]` : `'{}'::text[]`)
+  const lignes = etiquettes
+    .map((e) => `    (${q(e.title)}, ${arr(e.diets)}, ${e.origin === null ? 'NULL::text' : q(e.origin)}, ${arr(e.themes)}, ${e.budget === null ? 'NULL::smallint' : `${e.budget}::smallint`})`)
+    .join(',\n')
+  return `-- ============================================================
+-- Migration : étiquettes des recettes du catalogue commun
+-- ============================================================
+-- FICHIER GÉNÉRÉ par scripts/recettes/generer.ts à partir de
+-- supabase/recettes/etiquettes.json — NE PAS MODIFIER À LA MAIN (npm run recettes).
+--
+-- ${etiquettes.length} recettes. Ne touche QUE les recettes du catalogue
+-- (visibility = 'catalogue') et seulement les champs encore vides : une étiquette
+-- posée dans l'appli (par le super-admin) n'est jamais écrasée.
+-- Nécessite la migration 25 (colonnes diets, origin, themes, budget). Idempotente.
+-- ============================================================
+
+DO $$
+DECLARE
+  v_n integer;
+BEGIN
+  WITH e(title, diets, origin, themes, budget) AS (
+    VALUES
+${lignes}
+  ), upd AS (
+    UPDATE public.recipes r
+       SET diets  = CASE WHEN cardinality(r.diets) = 0 THEN e.diets ELSE r.diets END,
+           origin = coalesce(r.origin, e.origin),
+           themes = CASE WHEN cardinality(r.themes) = 0 THEN e.themes ELSE r.themes END,
+           budget = coalesce(r.budget, e.budget)
+      FROM e
+     WHERE r.title = e.title
+       AND r.visibility = 'catalogue'
+       AND ((cardinality(r.diets) = 0 AND cardinality(e.diets) > 0)
+         OR (r.origin IS NULL AND e.origin IS NOT NULL)
+         OR (cardinality(r.themes) = 0 AND cardinality(e.themes) > 0)
+         OR (r.budget IS NULL AND e.budget IS NOT NULL))
+    RETURNING 1
+  )
+  SELECT count(*) INTO v_n FROM upd;
+  RAISE NOTICE 'recettes_etiquettes : % recette(s) étiquetée(s)', v_n;
+END $$;
+`
+}
+
 // Exécution directe : écrit la migration
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const sql = await genererSQL()
@@ -271,5 +362,9 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   if (lirePhotos().photos.length) {
     writeFileSync(join(DOSSIER_MIGRATIONS, FICHIER_MIGRATION_PHOTOS), genererPhotosSQL())
     console.log(`Écrit : supabase/migrations/${FICHIER_MIGRATION_PHOTOS}`)
+  }
+  if (lireEtiquettes().etiquettes.length) {
+    writeFileSync(join(DOSSIER_MIGRATIONS, FICHIER_MIGRATION_ETIQUETTES), genererEtiquettesSQL())
+    console.log(`Écrit : supabase/migrations/${FICHIER_MIGRATION_ETIQUETTES}`)
   }
 }

@@ -10,6 +10,7 @@
     | 'grip' | 'chef' | 'mail' | 'eye' | 'eye-off' | 'flame' | 'share' | 'settings' | 'home'
     | 'alert-circle' | 'key'
     | 'link' | 'copy' | 'shield' | 'user-plus'
+    | 'tag' | 'filter'
 
   interface Props {
     name: IconName
@@ -35,7 +36,11 @@
   aria-label={label}
   aria-hidden={label ? undefined : 'true'}
 >
-  {#if name === 'clock'}
+  {#if name === 'tag'}
+    <path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z" /><circle cx="7.5" cy="7.5" r="1.5" />
+  {:else if name === 'filter'}
+    <path d="M4 6h16M7 12h10M10 18h4" />
+  {:else if name === 'clock'}
     <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
   {:else if name === 'users'}
     <circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" />

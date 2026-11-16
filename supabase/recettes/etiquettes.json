@@ -1,0 +1,629 @@
+{
+  "_lisez_moi": "Étiquettes des recettes du catalogue (liste fixe : src/lib/etiquettes.ts). Régimes posés à la main à partir des ingrédients, prudents : bouillon en cube et fromages au présure animale (parmesan, pecorino, gruyère, reblochon) = ni « végétarien » strict ni « sans gluten » garantis. Généré en migration par npm run recettes ; ne remplit que les champs encore vides.",
+  "etiquettes": [
+    {
+      "title": "Bœuf bourguignon",
+      "diets": [],
+      "origin": "bourgogne",
+      "themes": [
+        "reconfort",
+        "hiver",
+        "fetes"
+      ],
+      "budget": 3
+    },
+    {
+      "title": "Poulet rôti",
+      "diets": [
+        "sans_gluten",
+        "sans_porc"
+      ],
+      "origin": "france",
+      "themes": [
+        "reconfort",
+        "fetes"
+      ],
+      "budget": 2
+    },
+    {
+      "title": "Quiche lorraine",
+      "diets": [],
+      "origin": "lorraine",
+      "themes": [
+        "enfants",
+        "pique_nique"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Pâte à crêpes",
+      "diets": [
+        "vegetarien",
+        "sans_porc"
+      ],
+      "origin": "bretagne",
+      "themes": [
+        "enfants",
+        "etudiant",
+        "fetes"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Gratin dauphinois",
+      "diets": [
+        "vegetarien",
+        "sans_gluten",
+        "sans_porc"
+      ],
+      "origin": "dauphine",
+      "themes": [
+        "reconfort",
+        "hiver"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Hachis parmentier",
+      "diets": [
+        "sans_gluten",
+        "sans_porc"
+      ],
+      "origin": "france",
+      "themes": [
+        "reconfort",
+        "enfants",
+        "hiver"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Tartiflette",
+      "diets": [
+        "sans_gluten"
+      ],
+      "origin": "savoie",
+      "themes": [
+        "reconfort",
+        "hiver"
+      ],
+      "budget": 2
+    },
+    {
+      "title": "Mousse au chocolat",
+      "diets": [
+        "vegetarien",
+        "sans_gluten",
+        "sans_porc"
+      ],
+      "origin": "france",
+      "themes": [
+        "enfants",
+        "fetes"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Pâtes à la carbonara",
+      "diets": [],
+      "origin": "italie",
+      "themes": [
+        "etudiant"
+      ],
+      "budget": 2
+    },
+    {
+      "title": "Soupe à l'oignon gratinée",
+      "diets": [
+        "sans_porc"
+      ],
+      "origin": "france",
+      "themes": [
+        "hiver",
+        "reconfort"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Ratatouille",
+      "diets": [
+        "vegetarien",
+        "vegan",
+        "sans_gluten",
+        "sans_lactose",
+        "sans_porc"
+      ],
+      "origin": "provence",
+      "themes": [
+        "films",
+        "ete",
+        "leger"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Tarte aux pommes",
+      "diets": [
+        "vegetarien",
+        "sans_porc"
+      ],
+      "origin": "france",
+      "themes": [
+        "enfants",
+        "fetes"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Fondant au chocolat",
+      "diets": [
+        "vegetarien",
+        "sans_porc"
+      ],
+      "origin": "france",
+      "themes": [
+        "enfants",
+        "fetes"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Saumon en papillote",
+      "diets": [
+        "sans_gluten",
+        "sans_lactose",
+        "sans_porc"
+      ],
+      "origin": "france",
+      "themes": [
+        "leger"
+      ],
+      "budget": 2
+    },
+    {
+      "title": "Velouté de potiron",
+      "diets": [
+        "sans_porc"
+      ],
+      "origin": "france",
+      "themes": [
+        "hiver",
+        "leger"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Lasagnes bolognaise",
+      "diets": [
+        "sans_porc"
+      ],
+      "origin": "italie",
+      "themes": [
+        "enfants",
+        "reconfort",
+        "fetes"
+      ],
+      "budget": 2
+    },
+    {
+      "title": "Salade niçoise",
+      "diets": [
+        "sans_gluten",
+        "sans_lactose",
+        "sans_porc"
+      ],
+      "origin": "provence",
+      "themes": [
+        "ete",
+        "leger",
+        "pique_nique"
+      ],
+      "budget": 2
+    },
+    {
+      "title": "Croque-monsieur",
+      "diets": [],
+      "origin": "france",
+      "themes": [
+        "enfants",
+        "etudiant"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Blanquette de veau",
+      "diets": [
+        "sans_porc"
+      ],
+      "origin": "france",
+      "themes": [
+        "reconfort",
+        "hiver",
+        "fetes"
+      ],
+      "budget": 3
+    },
+    {
+      "title": "Omelette aux champignons",
+      "diets": [
+        "vegetarien",
+        "sans_gluten",
+        "sans_porc"
+      ],
+      "origin": "france",
+      "themes": [
+        "etudiant",
+        "leger"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Pot-au-feu",
+      "diets": [
+        "sans_gluten",
+        "sans_lactose",
+        "sans_porc"
+      ],
+      "origin": "france",
+      "themes": [
+        "hiver",
+        "reconfort"
+      ],
+      "budget": 2
+    },
+    {
+      "title": "Poulet basquaise",
+      "diets": [
+        "sans_gluten",
+        "sans_lactose"
+      ],
+      "origin": "pays_basque",
+      "themes": [
+        "ete"
+      ],
+      "budget": 2
+    },
+    {
+      "title": "Chili con carne",
+      "diets": [
+        "sans_lactose",
+        "sans_porc"
+      ],
+      "origin": "mexique",
+      "themes": [
+        "etudiant",
+        "hiver"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Curry de poulet au lait de coco",
+      "diets": [
+        "sans_gluten",
+        "sans_lactose",
+        "sans_porc"
+      ],
+      "origin": "inde",
+      "themes": [],
+      "budget": 2
+    },
+    {
+      "title": "Gratin de pâtes au jambon",
+      "diets": [],
+      "origin": "france",
+      "themes": [
+        "enfants",
+        "etudiant",
+        "reconfort"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Endives au jambon",
+      "diets": [],
+      "origin": "nord",
+      "themes": [
+        "hiver",
+        "reconfort"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Boulettes de bœuf à la sauce tomate",
+      "diets": [
+        "sans_porc"
+      ],
+      "origin": "italie",
+      "themes": [
+        "enfants"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Couscous au poulet et merguez",
+      "diets": [
+        "sans_porc"
+      ],
+      "origin": "maghreb",
+      "themes": [
+        "fetes"
+      ],
+      "budget": 2
+    },
+    {
+      "title": "Risotto aux champignons",
+      "diets": [
+        "sans_porc"
+      ],
+      "origin": "italie",
+      "themes": [
+        "reconfort"
+      ],
+      "budget": 2
+    },
+    {
+      "title": "Petit salé aux lentilles",
+      "diets": [
+        "sans_gluten",
+        "sans_lactose"
+      ],
+      "origin": "auvergne",
+      "themes": [
+        "hiver"
+      ],
+      "budget": 2
+    },
+    {
+      "title": "Rôti de porc aux pommes de terre",
+      "diets": [],
+      "origin": "france",
+      "themes": [
+        "fetes"
+      ],
+      "budget": 2
+    },
+    {
+      "title": "Galettes de sarrasin complètes",
+      "diets": [
+        "sans_gluten"
+      ],
+      "origin": "bretagne",
+      "themes": [
+        "enfants"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Pizza maison",
+      "diets": [],
+      "origin": "italie",
+      "themes": [
+        "enfants",
+        "fetes"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Moules marinières",
+      "diets": [
+        "sans_gluten",
+        "sans_porc"
+      ],
+      "origin": "nord",
+      "themes": [
+        "ete"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Dahl de lentilles corail",
+      "diets": [
+        "vegetarien",
+        "vegan",
+        "sans_lactose",
+        "sans_porc"
+      ],
+      "origin": "inde",
+      "themes": [
+        "etudiant",
+        "leger"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Cabillaud au four et sauce vierge",
+      "diets": [
+        "sans_gluten",
+        "sans_lactose",
+        "sans_porc"
+      ],
+      "origin": "provence",
+      "themes": [
+        "leger",
+        "ete"
+      ],
+      "budget": 3
+    },
+    {
+      "title": "Wok de nouilles au poulet et aux légumes",
+      "diets": [
+        "sans_lactose",
+        "sans_porc"
+      ],
+      "origin": "chine",
+      "themes": [],
+      "budget": 2
+    },
+    {
+      "title": "Tomates farcies",
+      "diets": [],
+      "origin": "provence",
+      "themes": [
+        "ete",
+        "enfants"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Soupe poireaux-pommes de terre",
+      "diets": [
+        "vegetarien",
+        "sans_porc"
+      ],
+      "origin": "france",
+      "themes": [
+        "hiver",
+        "leger"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Taboulé",
+      "diets": [
+        "vegetarien",
+        "vegan",
+        "sans_lactose",
+        "sans_porc"
+      ],
+      "origin": "moyen_orient",
+      "themes": [
+        "ete",
+        "pique_nique",
+        "leger"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Œufs mimosa",
+      "diets": [
+        "vegetarien",
+        "sans_gluten",
+        "sans_lactose",
+        "sans_porc"
+      ],
+      "origin": "france",
+      "themes": [
+        "pique_nique",
+        "fetes"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Salade de pâtes",
+      "diets": [
+        "sans_lactose",
+        "sans_porc"
+      ],
+      "origin": null,
+      "themes": [
+        "ete",
+        "pique_nique",
+        "etudiant"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Purée de pommes de terre",
+      "diets": [
+        "vegetarien",
+        "sans_gluten",
+        "sans_porc"
+      ],
+      "origin": "france",
+      "themes": [
+        "enfants",
+        "reconfort"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Riz pilaf",
+      "diets": [
+        "sans_porc"
+      ],
+      "origin": null,
+      "themes": [],
+      "budget": 1
+    },
+    {
+      "title": "Légumes rôtis au four",
+      "diets": [
+        "vegetarien",
+        "vegan",
+        "sans_gluten",
+        "sans_lactose",
+        "sans_porc"
+      ],
+      "origin": null,
+      "themes": [
+        "leger",
+        "barbecue"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Gâteau au yaourt",
+      "diets": [
+        "vegetarien",
+        "sans_porc"
+      ],
+      "origin": "france",
+      "themes": [
+        "enfants"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Clafoutis aux cerises",
+      "diets": [
+        "vegetarien",
+        "sans_porc"
+      ],
+      "origin": "limousin",
+      "themes": [
+        "ete"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Riz au lait",
+      "diets": [
+        "vegetarien",
+        "sans_gluten",
+        "sans_porc"
+      ],
+      "origin": "france",
+      "themes": [
+        "enfants",
+        "reconfort"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Crumble aux pommes",
+      "diets": [
+        "vegetarien",
+        "sans_porc"
+      ],
+      "origin": "royaume_uni",
+      "themes": [
+        "hiver",
+        "reconfort"
+      ],
+      "budget": 1
+    },
+    {
+      "title": "Cookies aux pépites de chocolat",
+      "diets": [
+        "vegetarien",
+        "sans_porc"
+      ],
+      "origin": "etats_unis",
+      "themes": [
+        "enfants",
+        "pique_nique"
+      ],
+      "budget": 1
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { DOSSIER_MIGRATIONS, FICHIER_MIGRATION, FICHIER_MIGRATION_PHOTOS, genererPhotosSQL, genererSQL, lirePhotos, lireRecettes } from '../../scripts/recettes/generer.ts'
+import { DOSSIER_MIGRATIONS, FICHIER_MIGRATION, FICHIER_MIGRATION_ETIQUETTES, FICHIER_MIGRATION_PHOTOS, genererEtiquettesSQL, genererPhotosSQL, genererSQL, lireEtiquettes, lirePhotos, lireRecettes } from '../../scripts/recettes/generer.ts'
 
 describe('recettes livrées avec l\'appli', () => {
   const { corrections, nouvelles, erreurs } = lireRecettes()
@@ -45,5 +45,14 @@ describe('recettes livrées avec l\'appli', () => {
   it('la migration des photos est à jour (sinon : npm run recettes)', () => {
     const actuel = readFileSync(join(DOSSIER_MIGRATIONS, FICHIER_MIGRATION_PHOTOS), 'utf8')
     expect(actuel === genererPhotosSQL(), 'migration des photos différente de photos.json : lancer « npm run recettes »').toBe(true)
+  })
+
+  it('étiquettes du catalogue : une entrée valide par recette', () => {
+    expect(lireEtiquettes().erreurs).toEqual([])
+  })
+
+  it('la migration des étiquettes est à jour (sinon : npm run recettes)', () => {
+    const actuel = readFileSync(join(DOSSIER_MIGRATIONS, FICHIER_MIGRATION_ETIQUETTES), 'utf8')
+    expect(actuel === genererEtiquettesSQL(), 'migration des étiquettes différente de etiquettes.json : lancer « npm run recettes »').toBe(true)
   })
 })

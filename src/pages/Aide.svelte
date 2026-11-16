@@ -62,7 +62,9 @@
             <p>Si un repas est prévu aujourd’hui, l’accueil l’affiche (« Ce soir : … ») avec la personne qui cuisine.</p>
           {:else if s.id === 'recettes'}
             <ul>
-              <li><strong>Chercher</strong> : tape quelques lettres, peu importe les accents et l’ordre des mots ; filtre par catégorie.</li>
+              <li><strong>Chercher</strong> : tape quelques lettres, peu importe les accents et l’ordre des mots ; filtre par catégorie. La recherche trouve aussi les étiquettes (« vegan », « Bretagne »…).</li>
+              <li><strong>Filtres</strong> : à côté de la recherche, trie par régime (toutes les cases cochées), budget (au plus), thème (au moins un) ou origine. Touche une étiquette sous la recherche pour la retirer.</li>
+              <li><strong>Étiquettes</strong> : dans le formulaire d’une recette (régime, origine, budget, jusqu’à 5 thèmes). Qui peut modifier la recette peut changer ses étiquettes ; une recette partagée a les mêmes étiquettes pour toutes les familles. Les régimes sont <strong>indicatifs</strong> : en cas d’allergie, vérifie toujours les emballages.</li>
               <li><strong>Ajouter une recette</strong> : bouton « + », avec ingrédients, étapes et photo prise depuis la galerie.</li>
               <li><strong>Qui la voit ?</strong> « Ma famille seulement » (par défaut), ou « Toutes nos familles » pour la partager avec les familles liées à la tienne. Les recettes du <strong>catalogue commun</strong> sont fournies avec l’appli : on peut les utiliser, pas les modifier.</li>
               <li><strong>Mes recettes</strong> (dans <a href={href('mes-recettes')}>Mon compte</a>) : les recettes que tu as créées, pour les modifier, les partager avec toutes vos familles ou les garder pour la tienne, et les archiver.</li>

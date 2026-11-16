@@ -616,6 +616,7 @@ describe('Structure du schéma et fidélité du banc', () => {
       (await s.su<{ v: boolean }>(`SELECT has_function_privilege($1, $2, 'EXECUTE') AS v`, [role, fn]))[0].v
     const expected: [string, { anon: boolean; authenticated: boolean; service_role?: boolean }][] = [
       ['public.create_invitation(text, uuid, text, text, text)', { anon: false, authenticated: true }],
+      ['public.tags_in_list(text[], text[])', { anon: true, authenticated: true }],
       ['public.revoke_invitation(uuid)', { anon: false, authenticated: true }],
       ['public.create_family(text, uuid)', { anon: false, authenticated: true }],
       ['public.invitation_info(text)', { anon: true, authenticated: true }],
@@ -3076,3 +3077,85 @@ describe('Migration 24 : invitation liée à une adresse e-mail, photos orphelin
     expectOk(await s.as('memberA', `DELETE FROM storage.objects WHERE name = $1 RETURNING id`, [ORPHAN]), 'suppression', 1)
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════
+describe('Migration 25 : étiquettes des recettes (liste fixe, mêmes droits que modifier)', () => {
+  const TAG = `UPDATE public.recipes SET diets = $2::text[], origin = $3, themes = $4::text[], budget = $5 WHERE id = $1 RETURNING id`
+  const ok = [['vegetarien', 'sans_porc'], 'bretagne', ['enfants', 'hiver'], 2] as const
+  const bad: [string, unknown[], RegExp][] = [
+    ['un régime inconnu', [['pirate'], null, [], null], /recipes_diets_list/],
+    ['un régime en double', [['vegan', 'vegan'], null, [], null], /recipes_diets_list/],
+    ['un régime vide (NULL) dans la liste', [['vegan', null], null, [], null], /recipes_diets_list/],
+    ['une origine hors liste', [[], 'atlantide', [], null], /recipes_origin_list/],
+    ['une origine avec majuscule', [[], 'Bretagne', [], null], /recipes_origin_list/],
+    ['un thème inconnu', [[], null, ['<script>'], null], /recipes_themes_list/],
+    ['un thème en double', [[], null, ['ete', 'ete'], null], /recipes_themes_list/],
+    ['6 thèmes', [[], null, ['films', 'fetes', 'etudiant', 'enfants', 'reconfort', 'leger'], null], /recipes_themes_list/],
+    ['un budget de 4', [[], null, [], 4], /recipes_budget_range/],
+    ['un budget de 0', [[], null, [], 0], /recipes_budget_range/],
+  ]
+  for (const [label, params, re] of bad) {
+    attaque(`membre A met ${label} sur sa recette`, async (s) => {
+      await refusedOnRow(s, 'memberA', { table: 'public.recipes', id: ID.recA }, TAG, [ID.recA, ...params], '23514', re)
+    })
+  }
+  attaque('membre A crée une recette avec un régime inconnu', async (s) => {
+    const before = await countRows(s, 'public.recipes')
+    const o = await s.as('memberA',
+      `INSERT INTO public.recipes (family_id, title, created_by, diets) VALUES ($1, 'Étiquette pirate', auth.uid(), ARRAY['pirate']) RETURNING id`,
+      [ID.famA])
+    expectRefused(o, '23514', 'régime inconnu', /recipes_diets_list/)
+    expect(await countRows(s, 'public.recipes')).toBe(before)
+  })
+  attaque('membre A met diets à NULL', async (s) => {
+    await refusedOnRow(s, 'memberA', { table: 'public.recipes', id: ID.recA },
+      `UPDATE public.recipes SET diets = NULL WHERE id = $1 RETURNING id`, [ID.recA], '23502', /diets/)
+  })
+  attaque('admin B étiquette une recette du foyer A', async (s) => {
+    await attemptOnRow(s, 'adminB', { table: 'public.recipes', id: ID.recA }, TAG, [ID.recA, ...ok])
+  })
+  attaque('admin A étiquette une recette du catalogue', async (s) => {
+    const c = await catalogue(s)
+    await attemptOnRow(s, 'adminA', { table: 'public.recipes', id: c.recipes }, TAG, [c.recipes, ...ok])
+  })
+  attaque('un inconnu (anon) étiquette une recette', async (s) => {
+    await attemptOnRow(s, 'anon', { table: 'public.recipes', id: ID.recA }, TAG, [ID.recA, ...ok])
+  })
+
+  controle('membre A étiquette sa recette puis enlève tout', async (s) => {
+    expectOk(await s.as('memberA', TAG, [ID.recA, ...ok]), 'étiquettes', 1)
+    const r = await s.su<{ diets: string[]; origin: string; themes: string[]; budget: number }>(
+      `SELECT diets, origin, themes, budget FROM public.recipes WHERE id = $1`, [ID.recA])
+    expect(r[0]).toEqual({ diets: ['vegetarien', 'sans_porc'], origin: 'bretagne', themes: ['enfants', 'hiver'], budget: 2 })
+    expectOk(await s.as('memberA', TAG, [ID.recA, [], null, [], null]), 'sans étiquette', 1)
+  })
+  controle('membre A crée une recette étiquetée (5 thèmes)', async (s) => {
+    expectOk(await s.as('memberA',
+      `INSERT INTO public.recipes (family_id, title, created_by, diets, origin, themes, budget)
+       VALUES ($1, 'Étiquetée', auth.uid(), ARRAY['vegan', 'vegetarien'], 'inde', ARRAY['films', 'fetes', 'etudiant', 'enfants', 'leger'], 1) RETURNING id`,
+      [ID.famA]), 'création', 1)
+  })
+  controle('super-admin étiquette une recette du catalogue', async (s) => {
+    const c = await catalogue(s)
+    expectOk(await s.as('superAdmin', TAG, [c.recipes, ...ok]), 'catalogue', 1)
+  })
+  controle('membre B lit les étiquettes posées sur le catalogue (Bœuf bourguignon)', async (s) => {
+    const c = await catalogue(s)
+    const o = await s.as('memberB',
+      `SELECT origin, themes, budget FROM public.recipes WHERE id = $1`, [c.recipes])
+    expectOk(o, 'lecture', 1)
+    expect((o as { rows: unknown[] }).rows[0]).toEqual({ origin: 'bourgogne', themes: ['reconfort', 'hiver', 'fetes'], budget: 3 })
+  })
+  structure('8 types de plat, dans l\'ordre', async (s) => {
+    const r = await s.su<{ name: string }>(`SELECT name FROM public.recipe_categories ORDER BY position, name`)
+    expect(r.map((x) => x.name)).toEqual(['Apéritif', 'Entrée', 'Plat', 'Accompagnement', 'Sauce', 'Dessert', 'Petit-déj & goûter', 'Boisson & cocktail'])
+  })
+  structure('les 50 recettes du catalogue ont reçu leurs étiquettes', async (s) => {
+    const r = await s.su<{ n: number; sans_origine: number }>(
+      `SELECT count(*)::int AS n, count(*) FILTER (WHERE origin IS NULL)::int AS sans_origine
+         FROM public.recipes WHERE visibility = 'catalogue' AND (cardinality(themes) > 0 OR budget IS NOT NULL)`)
+    expect(r[0].n).toBe(50)
+    expect(r[0].sans_origine).toBe(3)
+  })
+})
+

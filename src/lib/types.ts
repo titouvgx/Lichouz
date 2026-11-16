@@ -77,6 +77,11 @@ export interface Recipe {
   updated_at: string
   /** Date d'archivage (migration 22) ; null ou absent = recette active */
   archived_at?: string | null
+  /** Étiquettes (migration 25, liste fixe : src/lib/etiquettes.ts) */
+  diets?: string[]
+  origin?: string | null
+  themes?: string[]
+  budget?: number | null
 }
 
 /** Recette enrichie avec sa catégorie (jointure) */
@@ -197,6 +202,8 @@ export interface RecipeFormData {
   visibility?: Exclude<RecipeVisibility, 'catalogue'>
   ingredients: RecipeIngredientInput[]
   steps: RecipeStepInput[]
+  /** Étiquettes (migration 25) ; absent = inchangées */
+  tags?: { diets: string[]; origin: string | null; themes: string[]; budget: number | null }
 }
 
 // ---------- Vie du foyer ----------

@@ -21,6 +21,26 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [1.8.0] — 2026-11-16
+
+**Migrations 25 et 25 bis à exécuter AVANT la mise en ligne**, dans l'ordre :
+`supabase/migrations/20261116170000_etiquettes.sql` puis
+`supabase/migrations/20261116170100_recettes_etiquettes.sql` (générée par `npm run recettes`),
+puis la requête de contrôle `supabase/tests/controle_25_etiquettes.sql` (une ligne, tout à `true`).
+L'ancien site reste compatible (colonnes nouvelles avec valeurs par défaut).
+
+### Ajouté
+- Étiquettes des recettes (lot V1-2), **liste fixe** vérifiée par la base : régimes (végétarien,
+  vegan, sans gluten, sans lactose, sans porc), origine (région de France ou pays), thèmes
+  (5 au plus, dont « Inspirées de films »), budget € / €€ / €€€. Mêmes droits que modifier la recette.
+- Écran Recettes : bouton « Filtres » (fenêtre du bas), filtres actifs retirables d'un appui,
+  gardés pendant la session ; la recherche trouve aussi les étiquettes (début de mot, 4 lettres).
+- Fiche recette : étiquettes affichées sous les infos.
+- 50 recettes du catalogue étiquetées (`supabase/recettes/etiquettes.json`, régimes prudents :
+  bouillon en cube et fromages à présure animale exclus de « végétarien » / « sans gluten »).
+- Types de plat : Apéritif, Sauce, Petit-déj & goûter, Boisson & cocktail (nouvel ordre).
+- Banc RLS : 15 attaques, 4 contrôles et 2 vérifications de structure en plus (valeurs hors liste, doublons, budget, droits ; 933 / 212 / 21).
+
 ## [1.7.0] — 2026-11-16
 
 **Migration 24 à exécuter AVANT la mise en ligne** :

@@ -13,6 +13,11 @@
     type RecipeIndexEntry,
   } from '../lib/api/recipes'
   import type { RecipeWithCategory, RecipeCategory } from '../lib/types'
+  import FiltersDialog from '../components/FiltersDialog.svelte'
+  import {
+    BUDGETS, NO_FILTERS, ORIGINES, REGIMES, THEMES, cleanKeys, countFilters, origineLabel, regimeLabel, themeLabel,
+    type TagFilters,
+  } from '../lib/etiquettes'
 
   // ── Données ──
   // index : TOUTES les recettes en version légère (id, titre, catégorie).
@@ -55,6 +60,42 @@
   let query = $state('') // recherche appliquée (après le délai)
   let selectedCategory = $state<string | null>(null)
 
+  // Filtres par étiquettes (v1.8.0), gardés pendant la session (retour depuis une fiche)
+  const FILTERS_KEY = 'lichouz:filtres-recettes'
+  function loadFilters(): TagFilters {
+    try {
+      const f = JSON.parse(sessionStorage.getItem(FILTERS_KEY) ?? 'null')
+      if (!f) return { ...NO_FILTERS }
+      return {
+        diets: cleanKeys(Array.isArray(f.diets) ? f.diets : [], REGIMES),
+        origins: cleanKeys(Array.isArray(f.origins) ? f.origins : [], ORIGINES),
+        themes: cleanKeys(Array.isArray(f.themes) ? f.themes : [], THEMES),
+        budgetMax: BUDGETS.some((b) => b.value === f.budgetMax) ? f.budgetMax : null,
+      }
+    } catch {
+      return { ...NO_FILTERS }
+    }
+  }
+  let tagFilters = $state<TagFilters>(loadFilters())
+  let filtersOpen = $state(false)
+  const activeFilters = $derived(countFilters(tagFilters))
+  $effect(() => {
+    const json = JSON.stringify(tagFilters)
+    try { sessionStorage.setItem(FILTERS_KEY, json) } catch { /* stockage indisponible : tant pis */ }
+  })
+  const usedOrigins = $derived(new Set(index.map((r) => r.origin).filter((o): o is string => !!o)))
+
+  /** Puces des filtres actifs (un appui les retire). */
+  const activeChips = $derived.by(() => {
+    const f = tagFilters
+    const out: { label: string; remove: () => void }[] = []
+    for (const d of f.diets) out.push({ label: regimeLabel(d), remove: () => (tagFilters = { ...tagFilters, diets: tagFilters.diets.filter((x) => x !== d) }) })
+    if (f.budgetMax) out.push({ label: `Budget ≤ ${BUDGETS.find((b) => b.value === f.budgetMax)?.label}`, remove: () => (tagFilters = { ...tagFilters, budgetMax: null }) })
+    for (const t of f.themes) out.push({ label: themeLabel(t), remove: () => (tagFilters = { ...tagFilters, themes: tagFilters.themes.filter((x) => x !== t) }) })
+    for (const o of f.origins) out.push({ label: origineLabel(o), remove: () => (tagFilters = { ...tagFilters, origins: tagFilters.origins.filter((x) => x !== o) }) })
+    return out
+  })
+
   // Délai de 250 ms pendant la frappe ; effacer s'applique tout de suite.
   $effect(() => {
     const value = search.trim()
@@ -95,9 +136,9 @@
   const noFamily = $derived(!profileState.loading && !profileState.profile?.family_id)
 
   // Toute la base filtrée (instantané, côté client)
-  const matches = $derived(filterRecipeIndex(index, query, selectedCategory))
+  const matches = $derived(filterRecipeIndex(index, query, selectedCategory, tagFilters))
   const hasMore = $derived(shown.length < matches.length)
-  const isFiltered = $derived(!!query || !!selectedCategory)
+  const isFiltered = $derived(!!query || !!selectedCategory || activeFilters > 0)
 
   /** Charge (si besoin) les recettes complètes d'une liste d'id. */
   async function resolve(ids: string[]): Promise<RecipeWithCategory[]> {
@@ -164,6 +205,7 @@
     search = ''
     query = ''
     selectedCategory = null
+    tagFilters = { ...NO_FILTERS }
   }
 
   function formatTime(min: number | null): string {
@@ -192,7 +234,8 @@
     {/if}
   </header>
 
-  <!-- Barre de recherche -->
+  <!-- Barre de recherche + filtres -->
+  <div class="search-row">
   <div class="search-bar" role="search">
     <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
       <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -200,7 +243,7 @@
     <input
       type="search"
       class="search-input"
-      placeholder="Rechercher une recette…"
+      placeholder="Rechercher…"
       aria-label="Rechercher une recette"
       autocomplete="off"
       enterkeyhint="search"
@@ -212,6 +255,30 @@
       </button>
     {/if}
   </div>
+  <button
+    class="filter-btn"
+    class:on={activeFilters > 0}
+    onclick={() => (filtersOpen = true)}
+    aria-haspopup="dialog"
+    aria-label={activeFilters > 0 ? `Filtres (${activeFilters} actif${activeFilters > 1 ? 's' : ''})` : 'Filtres'}
+  >
+    <Icon name="filter" size={20} />
+    <span class="filter-txt">Filtres</span>
+    {#if activeFilters > 0}<span class="filter-count" aria-hidden="true">{activeFilters}</span>{/if}
+  </button>
+  </div>
+
+  {#if activeChips.length > 0}
+    <ul class="active-filters" aria-label="Filtres actifs">
+      {#each activeChips as c (c.label)}
+        <li>
+          <button class="active-chip" onclick={c.remove} aria-label="Retirer le filtre {c.label}">
+            {c.label} <Icon name="x" size={14} />
+          </button>
+        </li>
+      {/each}
+    </ul>
+  {/if}
 
   <!-- Puces de catégorie (défilement horizontal sur téléphone) -->
   {#if categories.length > 0}
@@ -275,7 +342,7 @@
       </svg>
       <p class="state-title">Aucun résultat</p>
       <p class="state-text">
-        {#if query}Aucune recette ne correspond à « {query} »{:else}Aucune recette dans cette catégorie{/if}{#if query && selectedCategory} dans cette catégorie{/if}.
+        {#if query}Aucune recette ne correspond à « {query} »{:else if activeFilters > 0}Aucune recette ne correspond à ces filtres{:else}Aucune recette dans cette catégorie{/if}{#if (query || activeFilters > 0) && selectedCategory} dans cette catégorie{/if}{#if query && activeFilters > 0} avec ces filtres{/if}.
       </p>
       <button class="btn btn-outline state-btn" onclick={clearFilters}>Tout afficher</button>
     </div>
@@ -351,6 +418,9 @@
       <path d="M12 5v14M5 12h14"/>
     </svg>
   </a>
+  {#if filtersOpen}
+    <FiltersDialog bind:filters={tagFilters} resultCount={matches.length} {usedOrigins} onclose={() => (filtersOpen = false)} />
+  {/if}
 </div>
 
 <style>
@@ -396,11 +466,76 @@
   }
 
   /* ── Recherche ── */
+  .search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    max-width: 640px;
+  }
+
   .search-bar {
     position: relative;
-    margin-bottom: 12px;
-    max-width: 560px;
+    flex: 1;
+    min-width: 0;
   }
+
+  .filter-btn {
+    flex-shrink: 0;
+    min-height: 48px;
+    min-width: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-xl);
+    background: rgba(9, 24, 50, 0.6);
+    color: var(--text);
+    font: 600 15px var(--font-body);
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .filter-btn.on { border-color: var(--primary); color: var(--primary); }
+  .filter-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .filter-count {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: var(--primary);
+    color: var(--on-primary);
+    font-size: 12px;
+    line-height: 20px;
+    text-align: center;
+  }
+  @media (max-width: 360px) { .filter-txt { display: none; } }
+
+  .active-filters {
+    list-style: none;
+    margin: 0 0 12px;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .active-chip {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px 0 12px;
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--primary) 14%, transparent);
+    color: var(--text);
+    font: 600 13px var(--font-body);
+    cursor: pointer;
+    touch-action: manipulation;
+    position: relative;
+  }
+  /* zone de tap ≥ 44 px sans grossir la puce */
+  .active-chip::after { content: ''; position: absolute; inset: -4px 0; }
 
   .search-icon {
     position: absolute;

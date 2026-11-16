@@ -10,6 +10,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.8.0',
+    date: '2026-11-16',
+    items: [
+      'Recettes : bouton « Filtres » pour trier par régime (végétarien, vegan, sans gluten…), budget, thème ou origine.',
+      'Chaque recette peut recevoir ses étiquettes dans le formulaire ; les 50 recettes du catalogue sont déjà étiquetées.',
+      'Nouveaux types : apéritif, sauce, petit-déj & goûter, boisson & cocktail.',
+      'La recherche trouve aussi les étiquettes : tape « vegan » ou « Bretagne ».',
+    ],
+  },
+  {
     version: '1.7.0',
     date: '2026-11-16',
     items: [

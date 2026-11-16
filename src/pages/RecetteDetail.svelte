@@ -14,6 +14,7 @@
   import { sizedImage } from '../lib/images'
   import { toast } from '../lib/toast.svelte'
   import type { RecipeDetail } from '../lib/types'
+  import { budgetLabel, cleanKeys, origineLabel, regimeLabel, REGIMES, themeLabel, THEMES, BUDGETS } from '../lib/etiquettes'
 
   const MIN_PORTIONS = 1
   const MAX_PORTIONS = 30
@@ -83,6 +84,16 @@
 
   const defaultPortions = $derived(recipe?.default_portions || 4)
   const scale = $derived(portions / defaultPortions)
+  // Étiquettes (migration 25), dans l'ordre de la liste de référence
+  const tagChips = $derived.by(() => {
+    if (!recipe) return []
+    const out: { label: string; title?: string }[] = []
+    for (const d of cleanKeys(recipe.diets ?? [], REGIMES)) out.push({ label: regimeLabel(d) })
+    if (recipe.origin) out.push({ label: origineLabel(recipe.origin), title: 'Origine' })
+    for (const t of cleanKeys(recipe.themes ?? [], THEMES)) out.push({ label: themeLabel(t) })
+    if (recipe.budget) out.push({ label: budgetLabel(recipe.budget), title: BUDGETS.find((b) => b.value === recipe!.budget)?.long })
+    return out
+  })
   const catColor = $derived(recipe?.recipe_categories?.color ?? 'var(--primary)')
 
   const gotCount = $derived(recipe ? recipe.recipe_ingredients.filter((i) => gotIng[i.id]).length : 0)
@@ -184,6 +195,13 @@
             </li>
           {/if}
         </ul>
+        {#if tagChips.length > 0}
+          <ul class="tags" aria-label="Étiquettes">
+            {#each tagChips as t (t.label)}
+              <li class="tag" title={t.title}>{t.label}</li>
+            {/each}
+          </ul>
+        {/if}
         {#if recipe.recipe_steps.length > 0}
           <button class="cook-btn" onclick={() => (cookOpen = true)}>
             <Icon name="chef" size={20} />
@@ -489,6 +507,23 @@
   }
 
   .chip :global(.icon) { color: var(--primary); }
+
+  .tags {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tag {
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+  }
 
   .chip .dot {
     width: 10px;
