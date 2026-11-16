@@ -1,182 +1,513 @@
 /* ============================================================
-   Design System — « Mer »
-   Palette « mer » (bleu nuit) · Cyan #5CC8D8 · Corail #FF6B35 · Outfit + DM Sans
+   Design System — « Brutal beurre » (v1.9.0)
+   Fond beurre · encre noire · orange · zéro arrondi · ombres franches
+   Police unique : Bricolage Grotesque (OFL, hébergée avec le site)
+   Détails et règles : docs/design.md
    ============================================================ */
 
 :root {
-  /* Palette « mer » : l'appli est posée sur une photo de mer sombre
-     (AppBackdrop), elle est donc toujours en tons bleu nuit, texte clair. */
+  /* ── Palette de base (ne pas utiliser directement dans les écrans :
+        passer par les rôles plus bas) ── */
+  --butter: #FFE9A8;
+  --ink: #1A1A1A;
+  --paper: #FFFFFF;
+  --orange: #F06A3B;
 
-  /* Couleurs principales */
-  --primary: #5CC8D8;
-  --primary-light: rgba(92, 200, 216, 0.14);
-  --on-primary: #06223A;      /* texte posé SUR le cyan (le blanc y serait illisible) */
-  --accent: #FF6B35;
-  --accent-shadow: rgba(255, 107, 53, 0.35);
+  /* ── Rôles ─────────────────────────────────────────────── */
+  --page: var(--butter);          /* fond de l'appli (sous le motif) */
+  --surface: var(--paper);        /* cartes, listes, barre d'onglets */
+  --surface-hover: #FFF6D6;       /* survol souris / ligne appuyée */
+  --surface-sunken: #FFF2C7;      /* zone en creux (puce inactive, piste) */
+  --bg: var(--paper);             /* fenêtres, champs de saisie (opaques) */
+  --bg-raised: var(--paper);
 
-  /* Surfaces
-     --bg        : opaque (fenêtres, champs de saisie)
-     --bg-raised : barre d'onglets, pastilles
-     --surface   : cartes posées sur la photo (translucides) */
-  --bg: #10264A;
-  --bg-raised: rgba(9, 24, 50, 0.88);
-  --surface: rgba(255, 255, 255, 0.14);
-  --surface-hover: rgba(255, 255, 255, 0.2);
+  --text: var(--ink);
+  --text-secondary: #4D4A42;      /* 7,4:1 sur beurre, 8,9:1 sur blanc */
+  --text-placeholder: #6B675C;    /* 5,7:1 sur blanc */
+  --text-on-band: var(--butter);  /* texte sur bandeau noir */
 
-  /* Texte */
-  --text: #EEF3FA;
-  --text-secondary: #B9C7DA;
-  --text-placeholder: #6F819C;
+  --line: var(--ink);             /* toutes les bordures */
+  --line-w: 2px;                  /* bordure standard */
+  --line-thin: 1px;               /* séparateur entre lignes d'une liste */
+  --band: var(--ink);             /* bandeau (en-tête de rayon, de section) */
+  /* Anciens noms gardés (utilisés dans les écrans pas encore repris) */
+  --border: var(--line);
+  --border-strong: var(--line);
+  --accent-shadow: transparent;
 
-  /* Bordures */
-  --border: rgba(255, 255, 255, 0.16);
-  --border-strong: rgba(255, 255, 255, 0.26);
+  --accent: var(--orange);        /* action principale, onglet actif, case cochée */
+  --on-accent: var(--ink);        /* texte SUR l'orange (le blanc ne fait que 3,1:1) */
+  --primary: var(--ink);          /* liens, actions secondaires */
+  --on-primary: var(--butter);
+  --primary-light: rgba(26, 26, 26, 0.08);
+  --highlight: #FFD966;           /* surlignage (aujourd'hui, sélection) */
 
-  /* Feedback */
-  --success: #3DD97A;
-  --success-bg: rgba(61, 217, 122, 0.13);
-  --on-success: #052B16;
-  --error: #E5484D;
-  --error-bg: rgba(229, 72, 77, 0.15);
+  --success: #1A6E3E;             /* texte vert : ≥ 4,5:1 sur beurre et blanc */
+  --success-bg: #D8F2DF;
+  --on-success: var(--ink);
+  --error: #B3261E;               /* 5,4:1 sur beurre, 6,5:1 sur blanc */
+  --error-bg: #FFE1DC;
+  --on-error: #FFFFFF;            /* texte sur fond rouge (6,5:1) */
 
-  /* Catégories recettes */
-  --cat-entree: #7AA0C4;
-  --cat-plat: #E8994A;
-  --cat-accomp: #5EAA84;
-  --cat-dessert: #BA6A9A;
+  /* Catégories de recettes (fonds de pastille, texte noir dessus ≥ 9:1) */
+  --cat-entree: #8EC5FF;
+  --cat-plat: #FFB627;
+  --cat-accomp: #7BD389;
+  --cat-dessert: #FF9EC7;
 
-  /* Typographie */
-  --font-display: 'Outfit Variable', 'Outfit', system-ui, -apple-system, sans-serif;
-  --font-body: 'DM Sans Variable', 'DM Sans', system-ui, -apple-system, sans-serif;
+  /* ── Ombres franches (jamais floues) ── */
+  --shadow-color: var(--ink);
+  --shadow-sm: 3px 3px 0 var(--shadow-color);
+  --shadow-md: 4px 4px 0 var(--shadow-color);
+  --shadow-lg: 6px 6px 0 var(--shadow-color);
+  --press: 3px;                   /* enfoncement d'un bouton appuyé */
 
-  /* Rayons */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
-  --radius-fab: 16px;
+  /* ── Fenêtres ── */
+  --overlay: rgba(20, 20, 20, 0.86);
 
-  /* Espacement */
-  --gutter: 20px;
-  --tap: 48px;
+  /* ── Motif de fond (pluie d'aliments) ── */
+  --motif-color: var(--ink);
+  --motif-opacity: 0.17;
+  --motif-accent-opacity: 0.5;
 
-  /* État */
-  color-scheme: dark;
+  /* ── Typographie ── */
+  --font-display: 'Bricolage Grotesque Variable', 'Bricolage Grotesque', system-ui, -apple-system, sans-serif;
+  --font-body: var(--font-display);
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-base: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 28px;
+  --fs-3xl: 38px;
+  --fw-regular: 450;
+  --fw-medium: 600;
+  --fw-bold: 800;
+  --tracking-caps: 0.06em;
+
+  /* ── Formes : tout est carré ──
+     Les anciens noms (--radius-*) restent pour ne rien casser : ils valent 0. */
+  --radius: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-fab: 0;
+
+  /* ── Espacements (grille de 4 px) ── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --gutter: 18px;
+  --tap: 48px;                    /* zone de tap confortable (minimum absolu : 44 px) */
+
+  /* ── Mouvement : sec et net, jamais mou ── */
+  --dur-fast: 90ms;
+  --dur-base: 180ms;
+  --dur-sheet: 260ms;
+  --dur-page: 260ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-snap: cubic-bezier(0.3, 1.4, 0.5, 1);   /* petit claquement (case, onglet) */
+  --ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+
+  /* ── État ── */
+  color-scheme: light dark;
   font-family: var(--font-body);
+  font-weight: var(--fw-regular);
+  font-optical-sizing: auto;
   color: var(--text);
-  background: var(--bg);
+  background: var(--page);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Mode sombre : suit le réglage du téléphone ──────────────
+   Même style brut, couleurs inversées. Contrastes vérifiés :
+   crème/noir 14,9:1 · crème/anthracite 13:1 · gris clair/anthracite 7,2:1
+   · noir/orange 5,7:1. Les ombres noires seraient invisibles :
+   elles passent en ocre. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: var(--ink);
+    --surface: #262626;
+    --surface-hover: #303030;
+    --surface-sunken: #1F1F1F;
+    --bg: #262626;
+    --bg-raised: #262626;
+
+    --text: #F2EDE4;
+    --text-secondary: #B8B2A6;
+    --text-placeholder: #A39D90;
+    --text-on-band: var(--ink);
+
+    --line: #F2EDE4;
+    --band: var(--butter);
+
+    --primary: #F2EDE4;
+    --on-primary: var(--ink);
+    --primary-light: rgba(242, 237, 228, 0.1);
+    --highlight: #5A4A12;
+
+    --success: #6FE09B;
+    --success-bg: #173D27;
+    --error: #FF8A80;
+    --error-bg: #4A1F1B;
+    --on-error: var(--ink);
+
+    --shadow-color: #9C7A1E;
+    --overlay: rgba(0, 0, 0, 0.82);
+
+    --motif-color: #F2EDE4;
+    --motif-opacity: 0.13;
+    --motif-accent-opacity: 0.42;
+  }
 }
 
 /* ── Reset ─────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100dvh; }
-/* Seul <html> a une couleur de fond (visible le temps que la photo charge).
-   <body> doit rester transparent : sinon il se peint PAR-DESSUS la photo
-   de fond (AppBackdrop, en z-index négatif). */
-html { background: var(--bg); }
+/* Seul <html> a une couleur de fond. <body> doit rester transparent :
+   sinon il se peint PAR-DESSUS le motif de fond (AppBackdrop, z-index négatif). */
+html { background: var(--page); }
 body { background: transparent; }
-body { font-size: 16px; line-height: 1.5; }
+body { font-size: var(--fs-base); line-height: 1.45; }
 
 h1, h2, h3 {
   font-family: var(--font-display);
-  font-weight: 700;
-  line-height: 1.15;
+  font-weight: var(--fw-bold);
+  line-height: 1.08;
   margin: 0;
   letter-spacing: -0.02em;
 }
 
-h1 { font-size: 32px; font-weight: 800; }
-h2 { font-size: 20px; }
-h3 { font-size: 17px; }
+/* Le grand titre de chaque écran : majuscules, très gras */
+h1 { font-size: var(--fs-3xl); text-transform: uppercase; letter-spacing: -0.03em; }
+h2 { font-size: var(--fs-xl); }
+h3 { font-size: var(--fs-lg); }
 
 a { color: inherit; text-decoration: none; }
-
 p { margin: 0; }
+
+::selection { background: var(--accent); color: var(--on-accent); }
+
+/* Focus clavier : cadre épais bien visible, carré */
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
 
 /* ── Utilitaires ───────────────────────────────────────────── */
 .text-primary { color: var(--primary); }
 .text-secondary { color: var(--text-secondary); }
 .text-accent { color: var(--accent); }
 
+/* Texte réservé aux lecteurs d'écran */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* ── Boutons ───────────────────────────────────────────────
+   Un bouton = un bloc carré, bordure noire, ombre franche.
+   Appuyé, il « s'enfonce » sur son ombre (transform seulement ;
+   l'ombre disparaît d'un coup, sans animation). */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  border: none;
+  gap: var(--sp-2);
+  min-height: var(--tap);
+  padding: 0 var(--sp-4);
+  border: var(--line-w) solid var(--line);
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 16px;
-  transition: opacity 0.15s, transform 0.1s;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-base);
+  line-height: 1.1;
+  text-align: center;
+  touch-action: manipulation;
+  transition: transform var(--dur-fast) var(--ease-out);
 }
-
-.btn:active { transform: scale(0.97); }
+.btn:active:not(:disabled) {
+  transform: translate(var(--press), var(--press));
+  box-shadow: none;
+}
+.btn:disabled {
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  box-shadow: none;
+  cursor: not-allowed;
+}
 
 .btn-primary {
   width: 100%;
-  padding: 16px;
-  border-radius: var(--radius-lg);
   background: var(--accent);
-  color: #FFFFFF;
+  color: var(--on-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
+/* Libellé long (plus de ~22 caractères) : casse normale, sinon il passe sur deux lignes */
+.btn-primary.long { text-transform: none; letter-spacing: 0; }
+/* Focus clavier sur un bouton orange : cadre noir, pas orange sur orange */
+.btn-primary:focus-visible, .btn-danger:focus-visible { outline-color: var(--line); }
 
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
+.btn-outline { background: var(--surface); color: var(--text); }
 
-.btn-outline {
-  padding: 12px 20px;
-  border-radius: var(--radius-lg);
+/* Sans cadre ni ombre : actions discrètes (Annuler, lien d'action) */
+.btn-ghost {
   background: transparent;
-  color: var(--primary);
-  border: 1.5px solid var(--border-strong);
+  border-color: transparent;
+  box-shadow: none;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+.btn-ghost:active:not(:disabled) { transform: translate(1px, 1px); }
+
+.btn-danger { background: var(--error); color: var(--on-error); }
+
+.btn-sm { min-height: 44px; padding: 0 var(--sp-3); font-size: var(--fs-sm); }
+
+/* Bouton carré à icône seule (fermer, retour, +/-) */
+.btn-icon {
+  width: 44px; min-height: 44px; height: 44px; padding: 0;
+  flex: none;
 }
 
-/* ── Input ─────────────────────────────────────────────────── */
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover:not(:disabled) { background: var(--surface-hover); }
+  .btn-primary:hover:not(:disabled) { background: var(--accent); filter: brightness(1.05); }
+  .btn-danger:hover:not(:disabled) { background: var(--error); }
+  .btn-ghost:hover:not(:disabled) { background: transparent; text-decoration-thickness: 3px; }
+}
+
+/* ── Champs ────────────────────────────────────────────────── */
 .input {
   width: 100%;
-  padding: 14px 16px;
-  border-radius: var(--radius-md);
-  border: 1.5px solid var(--border-strong);
+  min-height: var(--tap);
+  padding: 12px 14px;
+  border-radius: 0;
+  border: var(--line-w) solid var(--line);
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: var(--fs-base); /* 16 px : iOS ne zoome pas */
   outline: none;
-  transition: border-color 0.15s;
+}
+.input::placeholder { color: var(--text-placeholder); opacity: 1; }
+.input:focus { box-shadow: var(--shadow-sm); }
+.input.error { border-color: var(--error); box-shadow: 3px 3px 0 var(--error); }
+
+.label {
+  display: block;
+  margin-bottom: var(--sp-1);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
 }
 
-.input::placeholder { color: var(--text-placeholder); }
-.input:focus { border-color: var(--primary); }
-.input.error { border-color: var(--error); }
+/* ── Cartes ───────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: var(--line-w) solid var(--line);
+  box-shadow: var(--shadow-md);
+}
+
+/* Bandeau noir en tête d'une carte (rayon, jour, section) */
+.band {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: 5px 10px;
+  background: var(--band);
+  color: var(--text-on-band);
+  font-weight: var(--fw-bold);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+}
+
+/* Ligne d'une liste dans une carte */
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--tap);
+  padding: 0 var(--sp-3);
+  border-top: var(--line-thin) solid var(--line);
+}
+.row:first-child { border-top: none; }
+
+/* ── Puces (filtres, catégories) ──────────────────────────── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: var(--line-w) solid var(--line);
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.chip:active { transform: translate(2px, 2px); }
+.chip.active,
+.chip[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: var(--fw-bold);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Petite étiquette (« pour le gratin », « Ajouté », catégorie) */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border: var(--line-thin) solid var(--line);
+  background: var(--butter);
+  color: var(--ink);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* ── Case à cocher maison ─────────────────────────────────── */
+.check {
+  appearance: none;
+  flex: none;
+  display: inline-grid;
+  place-content: center;
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  border: var(--line-w) solid var(--line);
+  border-radius: 0;
+  background: var(--surface);
+  cursor: pointer;
+}
+.check::after {
+  content: '';
+  width: 14px;
+  height: 8px;
+  border: solid var(--on-accent);
+  border-width: 0 0 3px 3px;
+  transform: translateY(-2px) rotate(-45deg) scale(0);
+  transition: transform var(--dur-base) var(--ease-snap);
+}
+.check:checked { background: var(--accent); }
+.check:checked::after { transform: translateY(-2px) rotate(-45deg) scale(1); }
+
+/* ── Fenêtres ─────────────────────────────────────────────────
+   .ui-overlay : voile sombre opaque sur tout l'écran (pas de flou :
+   trop coûteux sur téléphone et pas dans le style).
+   .ui-sheet   : fenêtre qui monte du bas.
+   .ui-dialog  : fenêtre centrée (confirmation). */
+.ui-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--overlay);
+  animation: ui-fade var(--dur-base) var(--ease-out);
+}
+.ui-overlay.center { align-items: center; padding: var(--sp-5); }
+
+.ui-sheet {
+  width: min(560px, 100%);
+  max-height: 88svh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--bg);
+  border: var(--line-w) solid var(--line);
+  border-bottom: none;
+  box-shadow: 0 -6px 0 var(--accent);
+  padding: var(--sp-4) var(--gutter) calc(var(--sp-5) + env(safe-area-inset-bottom, 0px));
+  outline: none;
+  animation: ui-sheet-up var(--dur-sheet) var(--ease-out);
+}
+
+.ui-dialog {
+  width: min(380px, 100%);
+  max-height: 88svh;
+  overflow-y: auto;
+  background: var(--bg);
+  border: var(--line-w) solid var(--line);
+  box-shadow: var(--shadow-lg);
+  padding: var(--sp-5) var(--sp-4) var(--sp-4);
+  outline: none;
+  animation: ui-drop var(--dur-sheet) var(--ease-snap);
+}
+
+/* En-tête de fenêtre : titre + bouton fermer */
+.ui-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+.ui-head h2 { font-size: var(--fs-xl); text-transform: uppercase; }
+
+@keyframes ui-fade { from { opacity: 0; } }
+@keyframes ui-sheet-up { from { transform: translateY(100%); } }
+@keyframes ui-drop { from { opacity: 0; transform: translateY(-14px); } }
+
+/* ── Bouton flottant (+) ──────────────────────────────────── */
+.fab {
+  position: fixed;
+  right: var(--gutter);
+  bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border: var(--line-w) solid var(--line);
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.fab:active { transform: translate(4px, 4px); box-shadow: none; }
 
 /* ── Animations ───────────────────────────────────────────── */
 
-/* Entrée de page : fondu + glissement léger vers le haut */
+/* Entrée de page (repli quand View Transitions manque) */
 @keyframes page-in {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-.page {
-  animation: page-in 0.25s ease-out;
-}
+.page { animation: page-in var(--dur-page) var(--ease-out); }
 
 /* ── Transitions entre pages (navigateurs avec View Transitions) ──
    Le routeur pose data-nav="forward | back | fade" pendant la transition. */
-html.vt .page {
-  animation: none; /* la transition de page remplace l'apparition simple */
-}
+html.vt .page { animation: none; }
 
 /* Seul le contenu de la page glisse : il reçoit un nom de transition le temps
    de la navigation (pas en permanence, sinon il créerait un contexte
    d'empilement qui ferait passer la barre d'onglets au-dessus des fenêtres).
-   Le reste (fond photo) ne bouge pas. */
+   Le fond (motif) ne bouge pas. */
 html[data-nav] .app-shell { view-transition-name: page; }
 
 html[data-nav='forward']::view-transition-old(root),
@@ -188,15 +519,16 @@ html[data-nav='back']::view-transition-new(root) {
 
 ::view-transition-old(page),
 ::view-transition-new(page) {
-  animation-duration: 0.28s;
-  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation-duration: var(--dur-page);
+  animation-timing-function: var(--ease-out);
 }
 /* Le cadre du groupe ne doit pas s'animer (hauteurs de pages différentes) */
 ::view-transition-group(page) { animation: none; }
 
-html[data-nav='forward']::view-transition-old(page) { animation-name: vt-out-left; }
+/* Brut : la nouvelle page arrive en glissant franchement, l'ancienne s'efface vite */
+html[data-nav='forward']::view-transition-old(page) { animation-name: vt-out-left; animation-duration: 160ms; }
 html[data-nav='forward']::view-transition-new(page) { animation-name: vt-in-right; }
-html[data-nav='back']::view-transition-old(page)    { animation-name: vt-out-right; }
+html[data-nav='back']::view-transition-old(page)    { animation-name: vt-out-right; animation-duration: 160ms; }
 html[data-nav='back']::view-transition-new(page)    { animation-name: vt-in-left; }
 
 /* Barre d'onglets et avatar : immobiles, au-dessus de la page qui glisse */
@@ -211,37 +543,34 @@ html[data-nav='back']::view-transition-new(page)    { animation-name: vt-in-left
   display: none;
 }
 
-@keyframes vt-out-left  { to   { opacity: 0; transform: translateX(-12%); } }
-@keyframes vt-in-right  { from { opacity: 0; transform: translateX(16%); } }
-@keyframes vt-out-right { to   { opacity: 0; transform: translateX(12%); } }
-@keyframes vt-in-left   { from { opacity: 0; transform: translateX(-16%); } }
+@keyframes vt-out-left  { to   { opacity: 0; transform: translateX(-8%); } }
+@keyframes vt-in-right  { from { opacity: 0; transform: translateX(24%); } }
+@keyframes vt-out-right { to   { opacity: 0; transform: translateX(8%); } }
+@keyframes vt-in-left   { from { opacity: 0; transform: translateX(-24%); } }
 
-/* Entrée échelonnée pour les listes */
+/* Entrée échelonnée pour les listes (utiliser avec style="animation-delay: …") */
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Pulse subtil pour attirer l'attention */
+/* Petit coup d'œil pour attirer l'attention */
 @keyframes pulse-soft {
   0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.03); }
+  50%      { transform: scale(1.04); }
 }
 
-/* Slide-in depuis la droite */
+/* Arrivée par la droite */
 @keyframes slide-in-right {
   from { opacity: 0; transform: translateX(16px); }
   to   { opacity: 1; transform: translateX(0); }
 }
 
-/* Hover / focus améliorés pour les cartes interactives */
-.btn:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-
-.btn-outline:hover {
-  background: color-mix(in srgb, var(--primary) 8%, transparent);
+/* Claquement (élément qui « tombe » à sa place) */
+@keyframes snap-in {
+  0%   { opacity: 0; transform: translateY(-10px); }
+  70%  { opacity: 1; transform: translateY(2px); }
+  100% { transform: translateY(0); }
 }
 
 /* ── Reduced motion ────────────────────────────────────────── */

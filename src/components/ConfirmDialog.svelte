@@ -35,11 +35,11 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="cd-overlay" onclick={() => { if (!busy) oncancel() }}>
+<div class="ui-overlay center cd-overlay" onclick={() => { if (!busy) oncancel() }}>
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
-    class="cd"
+    class="ui-dialog cd"
     bind:this={el}
     tabindex="-1"
     role="alertdialog"
@@ -51,7 +51,7 @@
     {#if children}<div class="cd-body">{@render children()}</div>{/if}
     <div class="cd-actions">
       <button class="btn btn-outline" onclick={oncancel} disabled={busy}>{cancelLabel}</button>
-      <button class="btn cd-confirm" class:danger onclick={onconfirm} disabled={busy || confirmDisabled}>
+      <button class="btn cd-confirm" class:btn-primary={!danger} class:btn-danger={danger} onclick={onconfirm} disabled={busy || confirmDisabled}>
         {busy ? 'Un instant…' : confirmLabel}
       </button>
     </div>
@@ -59,39 +59,18 @@
 </div>
 
 <style>
-  .cd-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 210;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    background: rgba(2, 8, 22, 0.66);
-    animation: fade 0.18s ease-out;
-  }
-
-  .cd {
-    width: min(380px, 100%);
-    padding: 22px 20px 18px;
-    border-radius: 22px;
-    background: var(--bg);
-    border: 1px solid var(--border-strong);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
-    outline: none;
-    animation: pop 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.15);
-  }
-
-  @keyframes fade { from { opacity: 0; } }
-  @keyframes pop { from { opacity: 0; transform: scale(0.94) translateY(8px); } }
+  /* Fenêtre de confirmation : les styles communs sont dans app.css
+     (.ui-overlay, .ui-dialog, .btn…). Ici, seulement la mise en page. */
+  .cd-overlay { z-index: 210; }
 
   h2 {
-    font-size: 20px;
+    font-size: var(--fs-xl);
+    text-transform: uppercase;
     color: var(--text);
   }
 
   .cd-body {
-    margin-top: 8px;
+    margin-top: var(--sp-2);
     font-size: 15px;
     line-height: 1.45;
     color: var(--text-secondary);
@@ -99,29 +78,14 @@
 
   .cd-actions {
     display: flex;
-    gap: 8px;
-    margin-top: 20px;
+    gap: var(--sp-3);
+    margin-top: var(--sp-5);
   }
 
   .cd-actions .btn {
     flex: 1;
-    min-height: 48px;
-    border-radius: 14px;
+    width: auto;
     font-size: 15px;
     white-space: nowrap;
-  }
-
-  .cd-confirm {
-    background: var(--accent);
-    color: #FFFFFF;
-  }
-
-  .cd-confirm.danger {
-    background: var(--error);
-  }
-
-  .cd-confirm:disabled,
-  .cd-actions .btn:disabled {
-    opacity: 0.55;
   }
 </style>

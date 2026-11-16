@@ -10,6 +10,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.9.0',
+    date: '2026-11-16',
+    items: [
+      'Nouveau look pour toute l’appli : fond beurre, encre noire, boutons carrés qui s’enfoncent quand on appuie.',
+      'Des aliments tombent doucement dans le fond. Ils s’arrêtent si ton téléphone est réglé sur « réduire les animations ».',
+      'Mode sombre : l’appli suit le réglage de ton téléphone.',
+      'Animations plus vives : onglets, fenêtres qui montent du bas, cases qui se cochent, cartes qui tombent à leur place.',
+    ],
+  },
+  {
     version: '1.8.0',
     date: '2026-11-16',
     items: [

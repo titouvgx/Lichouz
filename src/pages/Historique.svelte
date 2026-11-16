@@ -241,10 +241,10 @@
     </div>
   {:else}
     <div class="history-list">
-      {#each lists as list (list.id)}
+      {#each lists as list, li (list.id)}
         {@const isOpen = openListId === list.id}
         {@const s = summaries.get(list.id)}
-        <article class="card history-card" class:is-open={isOpen}>
+        <article class="card history-card" class:is-open={isOpen} style="--i: {Math.min(li, 8)}">
           <button
             class="card-header"
             onclick={() => toggleDetail(list.id)}
@@ -263,13 +263,13 @@
                   <span class="stat-label">pris</span>
                 </span>
               {/if}
-              <svg class="chevron" class:open={isOpen} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              <svg class="chevron" class:open={isOpen} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
             </span>
 
             {#if s && !isOpen}
               <span class="card-preview">
                 {#if s.total > 0}
-                  <span class="mini-progress" aria-hidden="true"><span class="mini-fill" class:complete={s.checked === s.total} style:width="{(s.checked / s.total) * 100}%"></span></span>
+                  <span class="mini-progress" aria-hidden="true"><span class="mini-fill" class:complete={s.checked === s.total} style:transform="scaleX({s.checked / s.total})"></span></span>
                   <span class="preview-text">{previewText(s)}</span>
                 {:else}
                   <span class="preview-text">Liste vide</span>
@@ -289,7 +289,7 @@
               {:else}
                 {#each groupedDetailItems as group (group.category?.id ?? 'none')}
                   <section class="detail-group">
-                    <h3 class="detail-group-title">
+                    <h3 class="band detail-group-title">
                       <span class="rayon-icon" aria-hidden="true">{group.category?.icon || '🛒'}</span>
                       {group.category?.name || 'Sans rayon'}
                       <span class="rayon-count">{group.items.length}</span>
@@ -297,12 +297,12 @@
                     <ul class="detail-items">
                       {#each group.items as item (item.id)}
                         <li class="detail-item" class:not-taken={!item.checked}>
-                          <span class="check" class:on={item.checked} aria-label={item.checked ? 'Pris' : 'Pas pris'}>
+                          <span class="tick" class:on={item.checked} aria-label={item.checked ? 'Pris' : 'Pas pris'}>
                             {#if item.checked}<Icon name="check" size={13} strokeWidth={3} />{/if}
                           </span>
                           <span class="detail-item-name">{item.name}</span>
                           {#if item.is_extra}
-                            <span class="extra-badge">ajouté</span>
+                            <span class="tag">ajouté</span>
                           {/if}
                           {#if item.quantity}
                             <span class="detail-item-qty">{item.quantity}</span>
@@ -348,52 +348,42 @@
   .page {
     padding: var(--gutter);
     padding-top: calc(var(--gutter) + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     max-width: 640px;
     margin: 0 auto;
   }
 
   /* ── En-tête ── */
-  .head { margin-bottom: 16px; }
+  .head { margin-bottom: var(--sp-4); }
 
-  .head h1 {
-    font-size: 28px;
-    padding-right: 48px; /* avatar en haut à droite */
-  }
+  .head h1 { padding-right: 56px; /* avatar en haut à droite */ }
 
   .head-sub {
-    margin-top: 4px;
+    margin-top: var(--sp-1);
     font-size: 15px;
+    font-weight: var(--fw-medium);
     color: var(--text-secondary);
   }
 
-  /* ── Cartes ── */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-  }
-
+  /* ── Cartes (.card global : blanc, bordure 2 px, ombre) ── */
   .history-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--sp-4);
   }
 
   .history-card {
     overflow: hidden;
-    animation: fade-up 0.25s ease-out backwards;
-    transition: border-color 0.15s;
+    animation: fade-up var(--dur-sheet) var(--ease-out) calc(var(--i, 0) * 45ms) backwards;
   }
-
-  .history-card.is-open { border-color: color-mix(in srgb, var(--primary) 55%, transparent); }
 
   .card-header {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--sp-2);
     width: 100%;
     min-height: 64px;
-    padding: 12px 14px;
+    padding: var(--sp-3) 14px;
     background: none;
     border: none;
     cursor: pointer;
@@ -403,23 +393,26 @@
     touch-action: manipulation;
   }
 
+  .card-header:active { background: var(--surface-hover); }
+
   .header-row {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--sp-3);
     width: 100%;
   }
 
+  /* Puce carrée orange */
   .card-icon {
     flex-shrink: 0;
     width: 40px;
     height: 40px;
-    border-radius: 12px;
+    border: var(--line-w) solid var(--line);
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--primary-light);
-    color: var(--primary);
+    background: var(--accent);
+    color: var(--on-accent);
   }
 
   .card-info {
@@ -432,36 +425,36 @@
 
   .card-date {
     font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 700;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
     line-height: 1.2;
+    text-transform: uppercase;
   }
 
-  .card-time {
-    font-size: 13px;
-    color: var(--text-secondary);
-  }
+  .card-time { font-size: 13px; color: var(--text-secondary); }
 
+  /* Compteur « pris / total » : petit carré bordé */
   .card-stat {
     flex-shrink: 0;
     display: flex;
     align-items: baseline;
     gap: 1px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
+    padding: 3px 8px;
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
     font-size: 13px;
     color: var(--text-secondary);
   }
 
-  .card-stat strong { font-size: 15px; color: var(--text); }
+  .card-stat strong { font-size: var(--fs-base); color: var(--text); }
+  .card-stat.complete { background: var(--success-bg); }
   .card-stat.complete strong { color: var(--success); }
   .stat-label { margin-left: 4px; }
 
   .chevron {
     flex-shrink: 0;
-    color: var(--text-secondary);
-    transition: transform 0.2s;
+    color: var(--text);
+    transition: transform var(--dur-base) var(--ease-out);
   }
 
   .chevron.open { transform: rotate(180deg); }
@@ -470,31 +463,32 @@
   .card-preview {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--sp-2);
     width: 100%;
     padding: 0 0 2px 52px;
     color: var(--text-secondary);
   }
 
+  /* Mini-progression : bloc carré bordé, remplissage orange (scaleX) */
   .mini-progress {
     display: block;
-    height: 4px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
+    height: 10px;
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
     overflow: hidden;
   }
 
   .mini-fill {
     display: block;
     height: 100%;
-    border-radius: inherit;
-    background: var(--primary);
+    background: var(--accent);
+    transform-origin: left center;
   }
 
   .mini-fill.complete { background: var(--success); }
 
   .preview-text {
-    font-size: 14px;
+    font-size: var(--fs-sm);
     line-height: 1.35;
     display: -webkit-box;
     -webkit-line-clamp: 1;
@@ -504,10 +498,7 @@
   }
 
   /* ── Détail ── */
-  .card-detail {
-    padding: 4px 8px 12px;
-    border-top: 1px solid var(--border);
-  }
+  .card-detail { border-top: var(--line-w) solid var(--line); padding-bottom: var(--sp-3); }
 
   .detail-loading {
     display: flex;
@@ -517,37 +508,30 @@
 
   .detail-empty {
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: var(--fs-sm);
     text-align: center;
-    padding: 16px 0;
+    padding: var(--sp-4) 0;
   }
 
-  .detail-group { padding-top: 12px; }
+  .detail-group + .detail-group { margin-top: var(--sp-3); }
 
+  /* Bandeau de rayon (.band global) */
   .detail-group-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 8px 6px;
+    justify-content: flex-start;
     font-family: var(--font-body);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
+    letter-spacing: var(--tracking-caps);
   }
 
-  .rayon-icon { font-size: 18px; }
+  .rayon-icon { font-size: 14px; line-height: 1; }
 
   .rayon-count {
     margin-left: auto;
-    min-width: 24px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
-    font-size: 12px;
+    min-width: 22px;
+    padding: 0 6px;
+    background: var(--text-on-band);
+    color: var(--band);
+    font-size: var(--fs-xs);
     text-align: center;
-    color: var(--text);
   }
 
   .detail-items {
@@ -559,99 +543,88 @@
   .detail-item {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--sp-3);
     min-height: 44px;
-    padding: 6px 8px;
+    padding: 6px var(--sp-3);
   }
 
-  .detail-item + .detail-item { border-top: 1px solid var(--border); }
+  .detail-item + .detail-item { border-top: var(--line-thin) solid var(--line); }
 
-  .check {
-    width: 22px;
-    height: 22px;
+  /* Case carrée : orange si l'article a été pris */
+  .tick {
+    width: 24px;
+    height: 24px;
     flex-shrink: 0;
-    border-radius: 7px;
-    border: 2px solid var(--border-strong);
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
-  .check.on {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: var(--on-primary);
+  .tick.on {
+    background: var(--accent);
+    color: var(--on-accent);
   }
 
   .detail-item-name {
     flex: 1;
     min-width: 0;
-    font-size: 15px;
-    font-weight: 500;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
     color: var(--text);
     overflow-wrap: anywhere;
   }
 
   /* Article pas pris : en retrait */
-  .not-taken .detail-item-name { color: var(--text-secondary); }
+  .not-taken .detail-item-name { color: var(--text-secondary); font-weight: var(--fw-medium); }
 
   .detail-item-qty {
     flex-shrink: 0;
     max-width: 45%;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--primary);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--text);
     text-align: right;
   }
 
   .not-taken .detail-item-qty { color: var(--text-secondary); }
 
-  .extra-badge {
-    flex-shrink: 0;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 2px 7px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-secondary);
-  }
-
   /* ── Actions du détail ── */
-  .detail-actions {
-    margin-top: 12px;
-    padding: 12px 6px 0;
-    border-top: 1px solid var(--border);
+  .detail-actions:not(:empty) {
+    margin-top: var(--sp-3);
+    padding: var(--sp-3) var(--sp-3) 0;
+    border-top: var(--line-thin) solid var(--line);
   }
 
   .btn-delete {
     width: 100%;
-    min-height: 48px;
-    border-radius: 14px;
     background: var(--error-bg);
-    border: 1px solid color-mix(in srgb, var(--error) 40%, transparent);
-    color: #FF9EA1;
-    font-size: 15px;
+    color: var(--error);
+    border-color: var(--error);
+    box-shadow: 3px 3px 0 var(--error);
     touch-action: manipulation;
   }
 
+  .btn-delete:active:not(:disabled) { box-shadow: none; }
+
   /* ── États ── */
   .state {
-    padding: 32px 20px;
+    padding: var(--sp-6) var(--sp-5);
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
-  .state-icon { color: var(--text-secondary); }
+  .state-icon { color: var(--text); }
 
   .state-title {
     font-family: var(--font-display);
-    font-size: 20px;
-    font-weight: 700;
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
     color: var(--text);
   }
 
@@ -663,29 +636,22 @@
 
   .error-text { color: var(--error); }
 
-  .state-btn {
-    margin-top: 8px;
-    min-height: 46px;
-    border-radius: 14px;
-    background: rgba(9, 24, 50, 0.6);
-    color: var(--text);
-    touch-action: manipulation;
-  }
+  .state-btn { margin-top: var(--sp-2); }
 
   /* ── Squelettes ── */
   .skeleton {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding: 16px;
+    padding: var(--sp-4);
     animation: sk-pulse 1.2s ease-in-out infinite alternate;
   }
 
   .sk-line {
     display: block;
     height: 12px;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--surface-sunken);
+    border: var(--line-thin) solid var(--line);
   }
 
   .sk-title { width: 45%; height: 18px; }
@@ -693,24 +659,21 @@
 
   @keyframes sk-pulse {
     from { opacity: 1; }
-    to { opacity: 0.45; }
+    to { opacity: 0.5; }
   }
 
+  /* Rond d'une icône dessinée (indicateur de chargement) */
   .spinner-sm {
     width: 20px;
     height: 20px;
-    border: 2px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
+    border: 2px solid var(--line);
+    border-top-color: var(--accent);
     animation: spin 0.7s linear infinite;
   }
 
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   @media (hover: hover) and (pointer: fine) {
-    .card-header:hover { background: rgba(255, 255, 255, 0.04); }
-    .btn-delete:hover { background: color-mix(in srgb, var(--error) 25%, transparent); }
+    .card-header:hover { background: var(--surface-hover); }
   }
 </style>

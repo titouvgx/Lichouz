@@ -1,126 +1,100 @@
 <script lang="ts">
-  // Fond de TOUTE l'appli : photo de mer, légèrement floutée.
-  // Monté une seule fois dans App.svelte (la photo n'est pas rechargée à
-  // chaque changement de page).
-  //   variant 'home'  : accueil, voile léger au milieu (on voit l'eau)
-  //   variant 'page'  : autres pages, voile plus sombre et uniforme (lisibilité des listes)
-  // Photo : James Eades — Unsplash (licence Unsplash, usage libre).
+  // Fond de TOUTE l'appli (v1.9.0, « Brutal beurre ») : couleur unie + pluie
+  // lente d'aliments au trait, très pâles. Monté une seule fois dans App.svelte.
   //
-  //   - Deux tailles (640 px mobile / 1280 px grand écran), en WebP : ~120 Ko sur téléphone
-  //   - Flou appliqué une seule fois à l'image ; seul le conteneur bouge
-  //     (zoom très lent façon « Ken Burns », transform = GPU) → fluide sur mobile
-  //   - Voile sombre dégradé : titre et cartes restent lisibles
-  //   - Couleur de secours bleu nuit tant que la photo n'est pas chargée
-  const base = import.meta.env.BASE_URL
-  const src640 = `${base}bg/mer-640.webp`
-  const src1280 = `${base}bg/mer-1280.webp`
+  // Pour rester fluide sur téléphone :
+  //   - une douzaine d'aliments seulement, chacun sur sa propre couche (GPU) ;
+  //   - seul `transform` est animé (aucun recalcul de mise en page) ;
+  //   - pause quand l'appli n'est pas à l'écran (batterie) ;
+  //   - « réduire les animations » : aliments posés, immobiles.
+  import { onMount } from 'svelte'
+  import { makeRain } from '../lib/motifs'
 
-  interface Props {
-    variant?: 'home' | 'page'
-  }
-  let { variant = 'page' }: Props = $props()
+  // Un tirage par ouverture de l'appli : le fond change un peu à chaque fois
+  const items = makeRain(12)
 
-  let loaded = $state(false)
+  let paused = $state(false)
+
+  onMount(() => {
+    const onVisibility = () => { paused = document.visibilityState !== 'visible' }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  })
 </script>
 
-<div class="backdrop" aria-hidden="true">
-  <div class="drift">
-    <img
-      class="photo"
-      class:loaded
-      src={src640}
-      srcset="{src640} 640w, {src1280} 1280w"
-      sizes="100vw"
-      alt=""
-      decoding="async"
-      fetchpriority="high"
-      onload={() => (loaded = true)}
-    />
-  </div>
-  <div class="shade shade-home" class:visible={variant === 'home'}></div>
-  <div class="shade shade-page" class:visible={variant === 'page'}></div>
+<div class="backdrop" class:paused aria-hidden="true">
+  {#each items as it, i (i)}
+    <span
+      class="food"
+      class:accent={it.accent}
+      style:left="{it.x}%"
+      style:--y="{it.y}%"
+      style:--size="{it.size}px"
+      style:--r0="{it.rotStart}deg"
+      style:--r1="{it.rotEnd}deg"
+      style:animation-duration="{it.duration}s"
+      style:animation-delay="{it.delay}s"
+    >
+      <svg viewBox="0 0 24 24">{@html it.motif}</svg>
+    </span>
+  {/each}
 </div>
 
 <style>
   .backdrop {
-    /* fixed : couvre tout l'écran, y compris derrière la tab bar, sans raccord */
     position: fixed;
     inset: 0;
     z-index: -1;
     overflow: hidden;
-    background: #0A2342; /* bleu nuit, le temps que la photo arrive */
+    background: var(--page);
     pointer-events: none;
+    contain: strict;
   }
 
-  /* Le conteneur qui bouge (zoom + léger glissement, très lent) */
-  .drift {
+  .food {
     position: absolute;
-    inset: -6%; /* marge : les bords floutés et le mouvement ne laissent jamais de vide */
+    top: 0;
+    width: var(--size);
+    height: var(--size);
+    color: var(--motif-color);
+    opacity: var(--motif-opacity);
     will-change: transform;
-    animation: ken-burns 38s ease-in-out infinite alternate;
+    animation-name: fall;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
   }
 
-  @keyframes ken-burns {
-    from { transform: scale(1) translate3d(0, 0, 0); }
-    to   { transform: scale(1.08) translate3d(-1.5%, -2%, 0); }
+  .food.accent {
+    color: var(--accent);
+    opacity: var(--motif-accent-opacity);
   }
 
-  .photo {
+  .food svg {
+    display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    display: block;
-    /* Léger flou + un peu plus sombre et saturé : la photo reste « mer » sans voler la vedette */
-    filter: blur(4px) brightness(0.85) saturate(1.3);
-    opacity: 0;
-    transition: opacity 0.8s ease-out;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: square;
+    stroke-linejoin: miter;
   }
 
-  .photo.loaded {
-    opacity: 1;
+  .paused .food { animation-play-state: paused; }
+
+  /* De juste au-dessus de l'écran à juste en dessous, en tournant un peu */
+  @keyframes fall {
+    from { transform: translate3d(0, -60px, 0) rotate(var(--r0)); }
+    to   { transform: translate3d(0, calc(100svh + 60px), 0) rotate(var(--r1)); }
   }
 
-  /* Deux voiles superposés : on passe de l'un à l'autre en fondu (opacity)
-     quand on change de page, sans recalcul coûteux. */
-  .shade {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-  }
-
-  .shade.visible {
-    opacity: 1;
-  }
-
-  /* Accueil : sombre en haut (titre), plus léger au milieu (cartes), sombre en bas (boutons) */
-  .shade-home {
-    background:
-      linear-gradient(
-        to bottom,
-        rgba(4, 14, 40, 0.78) 0%,
-        rgba(4, 14, 40, 0.35) 28%,
-        rgba(4, 14, 40, 0.25) 60%,
-        rgba(4, 14, 40, 0.7) 100%
-      );
-  }
-
-  /* Autres pages : voile plus dense et régulier, les listes et formulaires restent nets */
-  .shade-page {
-    background:
-      linear-gradient(
-        to bottom,
-        rgba(4, 14, 40, 0.86) 0%,
-        rgba(4, 14, 40, 0.72) 35%,
-        rgba(4, 14, 40, 0.72) 70%,
-        rgba(4, 14, 40, 0.84) 100%
-      );
-  }
-
-  /* Grand écran : la photo (en portrait) est plus agrandie → un peu plus de flou */
-  @media (min-width: 900px) {
-    .photo {
-      filter: blur(6px) brightness(0.82) saturate(1.3);
+  /* Mouvement réduit : les aliments sont posés, immobiles */
+  @media (prefers-reduced-motion: reduce) {
+    .food {
+      top: var(--y);
+      animation: none !important;
+      transform: rotate(var(--r0));
+      will-change: auto;
     }
   }
 </style>

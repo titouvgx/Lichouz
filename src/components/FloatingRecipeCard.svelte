@@ -10,6 +10,7 @@
   //   .card     → apparition + appui / survol
   import { href } from '../lib/router.svelte'
   import { sizedImage } from '../lib/images'
+  import { categoryColor } from '../lib/categoryColors'
   import type { FloatSlot } from '../lib/floatLayout'
   import type { RecipeWithCategory } from '../lib/types'
 
@@ -60,7 +61,7 @@
         href={href('recette', recipe.id)}
         class="card"
         style:--i={index}
-        style:--cat={recipe.recipe_categories?.color ?? 'var(--primary)'}
+        style:--cat={categoryColor(recipe.recipe_categories?.name)}
         aria-label="{recipe.title}{recipe.prep_time_min ? `, ${formatTime(recipe.prep_time_min)}` : ''}"
       >
         {#if imgSrc}
@@ -153,29 +154,28 @@
   /* Bouton « ajouter à ma semaine », en haut à droite de la carte */
   .plan-btn {
     position: absolute;
-    top: -8px;
-    right: -8px;
+    top: -10px;
+    right: -10px;
     z-index: 2;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 2px solid var(--bg-raised);
-    background: var(--primary);
-    color: var(--on-primary);
+    width: 44px;
+    height: 44px;
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
+    color: var(--text);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     touch-action: manipulation;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
-    animation: pop-in 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--i) * 90ms + 250ms) backwards;
-    transition: transform 0.15s;
+    box-shadow: var(--shadow-sm);
+    animation: drop-in var(--dur-sheet) var(--ease-snap) calc(var(--i) * 90ms + 260ms) backwards;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
-  .plan-btn:active { transform: scale(0.9); }
+  .plan-btn:active { transform: translate(var(--press), var(--press)); box-shadow: none; }
 
   @media (hover: hover) and (pointer: fine) {
-    .plan-btn:hover { transform: scale(1.1); }
+    .plan-btn:hover { background: var(--accent); color: var(--on-accent); }
   }
 
   @keyframes drift-x {
@@ -193,22 +193,22 @@
     to   { transform: rotate(calc(var(--rot) + var(--wob))); }
   }
 
-  /* ── Couche 5 : la carte ── */
+  /* ── Couche 5 : la carte ──
+     Brut : bloc carré, bordure noire, ombre franche ; photo en haut,
+     étiquette blanche en bas avec le titre en noir (lisible sur toute photo). */
   .card {
     position: relative;
     display: block;
     width: 100%;
     height: 100%;
-    border-radius: 20px;
     overflow: hidden;
-    background: linear-gradient(145deg, color-mix(in srgb, var(--cat) 40%, var(--surface)), var(--surface));
-    box-shadow:
-      0 10px 24px -8px rgba(0, 0, 0, 0.3),
-      0 0 0 3px var(--bg-raised);
-    color: white;
+    background: var(--cat);
+    border: var(--line-w) solid var(--line);
+    box-shadow: var(--shadow-md);
+    color: var(--text);
     text-decoration: none;
-    animation: pop-in 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--i) * 90ms + 80ms) backwards;
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+    animation: drop-in var(--dur-sheet) var(--ease-snap) calc(var(--i) * 90ms + 80ms) backwards;
+    transition: transform var(--dur-fast) var(--ease-out);
     /* Mobile : pas de menu « enregistrer l'image » ni de sélection au appui long */
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -219,24 +219,15 @@
     container-type: inline-size;
   }
 
-  /* Retour visuel au doigt (fonctionne aussi sur iOS grâce à touch-action) */
+  /* Au doigt : la carte s'enfonce sur son ombre */
   .card:active {
-    transform: scale(0.94);
-    transition-duration: 0.08s;
+    transform: translate(4px, 4px);
+    box-shadow: none;
   }
 
   /* Survol : uniquement avec une vraie souris, sinon l'effet « colle » sur mobile */
   @media (hover: hover) and (pointer: fine) {
-    .card:hover {
-      transform: scale(1.06);
-      box-shadow:
-        0 18px 36px -10px rgba(0, 0, 0, 0.35),
-        0 0 0 3px var(--accent);
-    }
-
-    .card:hover .card-img {
-      transform: scale(1.08);
-    }
+    .card:hover { transform: translate(-2px, -2px); box-shadow: var(--shadow-lg); }
   }
 
   .card:focus-visible {
@@ -244,9 +235,10 @@
     outline-offset: 3px;
   }
 
-  @keyframes pop-in {
-    from { opacity: 0; transform: scale(0.5) translate3d(0, 30px, 0); }
-    to   { opacity: 1; transform: scale(1) translate3d(0, 0, 0); }
+  /* Les cartes tombent à leur place, l'une après l'autre */
+  @keyframes drop-in {
+    from { opacity: 0; transform: translate3d(0, -40px, 0); }
+    to   { opacity: 1; transform: translate3d(0, 0, 0); }
   }
 
   .card-img {
@@ -255,60 +247,62 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease-out;
     pointer-events: none;
   }
 
+  /* Recette sans photo : grande initiale noire sur la couleur de la catégorie */
   .card-monogram {
     position: absolute;
     inset: 0;
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    padding-top: 10cqw;
+    padding-top: 6cqw;
     font-family: var(--font-display);
-    font-weight: 800;
-    font-size: 52cqw; /* proportionnelle à la largeur de la carte */
+    font-weight: var(--fw-bold);
+    font-size: 58cqw; /* proportionnelle à la largeur de la carte */
     line-height: 1;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.9);
-    text-shadow: 6px 6px 0 rgba(0, 0, 0, 0.18);
-    /* fines rayures diagonales derrière la lettre */
-    background:
-      repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.08) 0 10px, transparent 10px 20px),
-      linear-gradient(150deg, var(--cat), color-mix(in srgb, var(--cat) 55%, #000));
+    color: var(--ink);
+    background: var(--cat);
   }
 
+  /* Étiquette compacte : la photo garde au moins les deux tiers de la carte */
   .card-overlay {
     position: absolute;
     inset: auto 0 0 0;
-    padding: 32px 10px 10px;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.45) 55%, transparent 100%);
+    max-height: 36%;
+    padding: 5px 7px 6px;
+    background: var(--surface);
+    border-top: var(--line-w) solid var(--line);
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
   }
 
+  /* Catégorie : seulement sur les grandes cartes (la photo d'abord) */
   .card-badge {
+    display: none;
     align-self: flex-start;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--tracking-caps);
     text-transform: uppercase;
-    padding: 2px 8px;
-    border-radius: 999px;
+    padding: 1px 5px;
+    border: var(--line-thin) solid var(--ink);
     background: var(--cat);
+    color: var(--ink);
   }
 
   .card-title {
     font-family: var(--font-display);
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1.2;
+    font-size: 13px;
+    font-weight: var(--fw-bold);
+    line-height: 1.15;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
@@ -316,28 +310,29 @@
     overflow: hidden;
     overflow-wrap: break-word;
     hyphens: auto;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   }
 
+  /* Temps de préparation : seulement sur les grandes cartes */
   .card-meta {
+    display: none;
     font-size: 11px;
-    opacity: 0.9;
+    color: var(--text-secondary);
   }
 
   .sticker {
     display: inline-flex;
     align-items: center;
     position: absolute;
-    top: 8px;
-    left: 8px;
-    padding: 3px 9px;
-    border-radius: 999px;
+    top: 6px;
+    left: 6px;
+    padding: 2px 7px;
+    border: var(--line-w) solid var(--ink);
     background: var(--accent);
-    color: white;
+    color: var(--on-accent);
     font-size: 11px;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
     white-space: nowrap;
-    box-shadow: 0 4px 10px var(--accent-shadow);
     animation: pulse-soft 2.5s ease-in-out infinite;
   }
 
@@ -345,34 +340,32 @@
     margin-left: 4px;
   }
 
-  /* Carte fantôme pendant le chargement : elle flotte déjà */
+  /* Carte fantôme pendant le chargement : elle flotte déjà et clignote doucement */
   .skeleton {
-    background: linear-gradient(110deg, var(--surface) 30%, var(--surface-hover) 50%, var(--surface) 70%);
-    background-size: 250% 100%;
-    box-shadow: 0 0 0 3px var(--bg-raised);
+    background: var(--surface);
     animation:
-      pop-in 0.5s ease-out calc(var(--i) * 80ms) backwards,
-      shimmer 1.4s linear infinite;
+      drop-in var(--dur-sheet) var(--ease-out) calc(var(--i) * 80ms) backwards,
+      skeleton-blink 1.2s ease-in-out infinite;
   }
 
-  @keyframes shimmer {
-    from { background-position: 100% 0; }
-    to   { background-position: -150% 0; }
+  @keyframes skeleton-blink {
+    50% { opacity: 0.55; }
   }
 
-  /* Petites cartes (iPhone SE, vieux Android) : on allège pour laisser voir la photo */
+  /* Petites cartes (iPhone SE, vieux Android) : on allège */
   @container (max-width: 140px) {
-    .card-overlay { padding: 24px 7px 7px; }
+    .card-overlay { padding: 4px 5px 5px; }
     .card-badge { display: none; }
     .card-title { font-size: 12px; letter-spacing: -0.01em; }
     .card-meta { font-size: 10px; }
-    .sticker { padding: 3px 6px; }
+    .sticker { padding: 2px 5px; }
     .sticker-label { display: none; }
   }
 
   /* Grandes cartes (tablette, ordinateur) */
   @container (min-width: 180px) {
     .card-title { font-size: 16px; }
-    .card-meta { font-size: 12px; }
+    .card-meta { display: block; font-size: 12px; }
+    .card-badge { display: block; }
   }
 </style>

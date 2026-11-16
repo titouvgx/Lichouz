@@ -183,11 +183,11 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="iv-overlay" onclick={onOverlay}>
+<div class="ui-overlay" onclick={onOverlay}>
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
-    class="iv"
+    class="ui-sheet iv"
     bind:this={dialogEl}
     tabindex="-1"
     role="dialog"
@@ -196,7 +196,7 @@
     aria-describedby="iv-sub"
     onclick={(e) => e.stopPropagation()}
   >
-    <header class="iv-header">
+    <header class="ui-head iv-header">
       <div class="iv-titles">
         <h2 id="iv-title">{title}</h2>
         <p id="iv-sub" class="iv-sub">
@@ -340,73 +340,50 @@
           {busy ? 'Création…' : 'Créer le lien'}
         </button>
       {:else}
-        <button class="btn btn-done" onclick={close}>Terminer</button>
+        <button class="btn btn-outline btn-done" onclick={close}>Terminer</button>
       {/if}
     </div>
   </div>
 </div>
 
 <style>
-  .iv-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 200; /* au-dessus de la barre d'onglets (100) */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    padding-top: max(16px, env(safe-area-inset-top, 0px));
-    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
-    background: rgba(2, 8, 22, 0.66);
-    animation: fade 0.2s ease-out;
-  }
-
+  /* Fenêtre : voile, feuille et animation viennent de app.css (.ui-overlay, .ui-sheet, .ui-head).
+     Ici, la mise en page interne (en-tête fixe, zone qui défile, bas fixe). */
   .iv {
-    width: min(440px, 100%);
-    max-height: min(88svh, 720px);
     display: flex;
     flex-direction: column;
-    background: var(--bg);
-    border: 1px solid var(--border-strong);
-    border-radius: 22px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+    max-height: min(88svh, 720px);
+    padding: 0;
     overflow: hidden;
-    animation: pop 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.15);
-    outline: none;
   }
-
-  @keyframes fade { from { opacity: 0; } }
-  @keyframes pop { from { opacity: 0; transform: scale(0.92) translateY(12px); } }
 
   /* ── En-tête ── */
   .iv-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 18px 18px 12px;
+    margin: 0;
+    padding: var(--sp-4) var(--gutter) var(--sp-3);
   }
 
   .iv-titles { min-width: 0; }
-  .iv-header h2 { font-size: 21px; color: var(--text); overflow-wrap: anywhere; }
-  .iv-sub { margin-top: 2px; font-size: 14px; color: var(--text-secondary); }
+  .iv-header h2 { color: var(--text); overflow-wrap: anywhere; }
+  .iv-sub { margin-top: 2px; font-size: var(--fs-sm); color: var(--text-secondary); }
 
   .iv-close {
     flex-shrink: 0;
     width: 44px;
     height: 44px;
-    margin: -6px -6px 0 0;
-    border-radius: 50%;
-    border: none;
+    margin: -4px -4px 0 0;
+    border: var(--line-w) solid var(--line);
     background: var(--surface);
     color: var(--text);
+    box-shadow: var(--shadow-sm);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     touch-action: manipulation;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
-
+  .iv-close:active:not(:disabled) { transform: translate(var(--press), var(--press)); box-shadow: none; }
   .iv-close:disabled { opacity: 0.5; }
 
   .iv-scroll {
@@ -415,25 +392,25 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-    padding: 0 18px 14px;
+    /* marge à droite/bas pour que les ombres franches ne soient pas coupées */
+    padding: 2px calc(var(--gutter) + 4px) var(--sp-4) var(--gutter);
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--sp-4);
   }
 
   .field { display: flex; flex-direction: column; gap: 6px; }
 
   .field-label {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text-secondary);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
   }
 
-  .optional { font-weight: 500; }
+  .optional { font-weight: var(--fw-medium); text-transform: none; letter-spacing: 0; color: var(--text-secondary); }
 
   .hint { font-size: 13px; color: var(--text-secondary); }
-
-  .input { min-height: 50px; }
 
   /* ── Choix du rôle ── */
   .roles {
@@ -442,29 +419,29 @@
     border: none;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--sp-3);
   }
 
-  .roles legend { padding: 0; margin-bottom: 6px; }
+  .roles legend { padding: 0; margin-bottom: var(--sp-2); }
 
   .role {
     position: relative;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--sp-3);
     min-height: 72px;
-    padding: 12px 14px;
-    border-radius: 16px;
-    border: 1.5px solid var(--border-strong);
-    background: rgba(255, 255, 255, 0.04);
+    padding: var(--sp-3);
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
     cursor: pointer;
     touch-action: manipulation;
-    transition: border-color 0.15s, background-color 0.15s;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
+  .role:active { transform: translate(2px, 2px); }
 
   .role.on {
-    border-color: var(--primary);
-    background: var(--primary-light);
+    background: var(--highlight);
+    box-shadow: var(--shadow-sm);
   }
 
   .role input {
@@ -475,63 +452,68 @@
     pointer-events: none;
   }
 
-  .role:has(input:focus-visible) { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .role:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
 
   .role-icon {
     width: 40px;
     height: 40px;
     flex-shrink: 0;
-    border-radius: 12px;
+    border: var(--line-w) solid var(--line);
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--surface);
-    color: var(--text-secondary);
+    color: var(--text);
   }
 
-  .role.on .role-icon { background: var(--primary); color: var(--on-primary); }
+  .role.on .role-icon { background: var(--accent); color: var(--on-accent); }
 
   .role-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-  .role-name { font-weight: 700; font-size: 16px; color: var(--text); }
+  .role-name { font-weight: var(--fw-bold); font-size: var(--fs-base); color: var(--text); }
   .role-desc { font-size: 13px; line-height: 1.35; color: var(--text-secondary); }
+  .role.on .role-desc { color: var(--text); }
 
+  /* Case carrée de sélection (le rond d'une pastille n'existe plus) */
   .role-dot {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     flex-shrink: 0;
-    border-radius: 50%;
-    border: 2px solid var(--border-strong);
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
     position: relative;
   }
 
-  .role.on .role-dot { border-color: var(--primary); }
+  .role.on .role-dot { background: var(--accent); }
 
   .role-dot::after {
     content: '';
     position: absolute;
-    inset: 3px;
-    border-radius: 50%;
-    background: var(--primary);
-    transform: scale(0);
-    transition: transform 0.15s;
+    left: 4px;
+    top: 4px;
+    width: 12px;
+    height: 7px;
+    border: solid var(--on-accent);
+    border-width: 0 0 3px 3px;
+    transform: translateY(1px) rotate(-45deg) scale(0);
+    transition: transform var(--dur-base) var(--ease-snap);
   }
 
-  .role.on .role-dot::after { transform: scale(1); }
+  .role.on .role-dot::after { transform: translateY(1px) rotate(-45deg) scale(1); }
 
   /* ── Fondateur ── */
   .explain {
     display: flex;
-    gap: 12px;
+    gap: var(--sp-3);
     align-items: flex-start;
-    padding: 14px;
-    border-radius: 14px;
-    background: var(--primary-light);
+    padding: var(--sp-3);
+    border: var(--line-w) solid var(--line);
+    background: var(--highlight);
     color: var(--text);
     font-size: 15px;
     line-height: 1.45;
   }
 
-  .explain-icon { color: var(--primary); flex-shrink: 0; margin-top: 1px; }
+  .explain-icon { color: var(--text); flex-shrink: 0; margin-top: 1px; }
 
   /* ── Lien ── */
   .link-box { position: relative; }
@@ -541,15 +523,14 @@
     left: 14px;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--primary);
+    color: var(--text);
     pointer-events: none;
   }
 
   .link-input {
     padding-left: 42px;
-    font-size: 14px;
+    font-size: var(--fs-sm);
     font-variant-numeric: tabular-nums;
-    color: var(--text);
     text-overflow: ellipsis;
     user-select: all;
     -webkit-user-select: all;
@@ -558,79 +539,48 @@
   .link-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: var(--sp-3);
   }
 
-  .act {
-    min-height: 52px;
-    border-radius: var(--radius-lg);
-    font-size: 15px;
-    touch-action: manipulation;
-  }
-
-  .act-copy {
-    background: var(--primary);
-    color: var(--on-primary);
-  }
-
-  .act-copy.done {
-    background: var(--success);
-    color: var(--on-success);
-  }
-
-  .act-share {
-    background: var(--accent);
-    color: #FFFFFF;
-  }
+  .act { min-height: 52px; font-size: 15px; }
+  .act-copy { background: var(--surface); color: var(--text); }
+  .act-copy.done { background: var(--success-bg); color: var(--success); }
+  .act-share { background: var(--accent); color: var(--on-accent); }
 
   .notice {
     display: flex;
     gap: 10px;
     align-items: flex-start;
-    padding: 12px 14px;
-    border-radius: 14px;
-    background: rgba(255, 107, 53, 0.12);
-    border: 1px solid rgba(255, 107, 53, 0.35);
-    color: #FFD2BF;
-    font-size: 14px;
+    padding: var(--sp-3);
+    border: var(--line-w) solid var(--line);
+    background: var(--surface-sunken);
+    color: var(--text);
+    font-size: var(--fs-sm);
     line-height: 1.45;
   }
 
-  .notice :global(.icon) { margin-top: 1px; color: var(--accent); }
-  .notice-date { display: block; margin-top: 4px; color: var(--text-secondary); }
+  .notice :global(.icon) { margin-top: 1px; flex-shrink: 0; }
+  .notice-date { display: block; margin-top: var(--sp-1); color: var(--text-secondary); }
 
   .iv-error {
-    font-size: 14px;
+    font-size: var(--fs-sm);
     line-height: 1.4;
-    color: #FFD9DA;
+    color: var(--text);
     background: var(--error-bg);
-    border: 1px solid color-mix(in srgb, var(--error) 55%, transparent);
-    padding: 9px 12px;
-    border-radius: var(--radius-md);
+    border: var(--line-w) solid var(--error);
+    padding: 9px var(--sp-3);
   }
 
   /* ── Bas de fenêtre ── */
   .iv-actions {
-    padding: 12px 18px 18px;
-    border-top: 1px solid var(--border);
+    padding: var(--sp-3) calc(var(--gutter) + 4px) calc(var(--sp-4) + env(safe-area-inset-bottom, 0px)) var(--gutter);
+    border-top: var(--line-w) solid var(--line);
   }
 
-  .iv-actions .btn-primary { min-height: 52px; padding: 14px; touch-action: manipulation; }
+  .iv-actions .btn { width: 100%; min-height: 52px; padding: 14px; }
   .iv-actions .btn-primary[aria-busy='true'] { cursor: progress; }
 
-  .btn-done {
-    width: 100%;
-    min-height: 52px;
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-    color: var(--text);
-    border: 1.5px solid var(--border-strong);
-    touch-action: manipulation;
-  }
-
   @media (hover: hover) and (pointer: fine) {
-    .iv-close:hover { background: var(--surface-hover); }
-    .role:hover { border-color: var(--primary); }
-    .act:hover, .btn-done:hover { opacity: 0.9; }
+    .role:hover:not(.on) { background: var(--surface-hover); }
   }
 </style>

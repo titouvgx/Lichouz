@@ -175,11 +175,11 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="dlg-overlay" onclick={onclose}>
+<div class="ui-overlay dlg-overlay" onclick={onclose}>
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
-    class="dlg"
+    class="ui-sheet dlg"
     bind:this={dialogEl}
     tabindex="-1"
     role="dialog"
@@ -198,18 +198,18 @@
         </h2>
         <p class="dlg-recipe">{recipe.title}</p>
       </div>
-      <button class="dlg-close" onclick={onclose} aria-label="Fermer">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      <button class="btn btn-icon dlg-close" onclick={onclose} aria-label="Fermer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </header>
 
     <!-- Portions (communes aux deux étapes) -->
-    <div class="portions">
+    <div class="portions card">
       <span class="portions-label"><Icon name="users" size={16} /> Portions</span>
       <div class="stepper">
-        <button onclick={() => { if (portions > 1) portions-- }} aria-label="Moins de portions" disabled={portions <= 1}>−</button>
+        <button class="btn btn-icon" onclick={() => { if (portions > 1) portions-- }} aria-label="Moins de portions" disabled={portions <= 1}>−</button>
         <span class="stepper-val" aria-live="polite">{portions}</span>
-        <button onclick={() => portions++} aria-label="Plus de portions">+</button>
+        <button class="btn btn-icon" onclick={() => portions++} aria-label="Plus de portions">+</button>
       </div>
     </div>
 
@@ -231,8 +231,8 @@
               </button>
             {/if}
             <div class="day-list">
-              {#each week.days.filter((d) => !d.isPast || showPastDays) as day (day.weekStart + day.dayIdx)}
-                <div class="day-row" class:is-today={day.isToday} class:is-past={day.isPast}>
+              {#each week.days.filter((d) => !d.isPast || showPastDays) as day, di (day.weekStart + day.dayIdx)}
+                <div class="day-row" class:is-today={day.isToday} class:is-past={day.isPast} style="--i: {Math.min(di, 8)}">
                   <div class="day-badge">
                     <span class="day-short">{DAY_SHORT[day.dayIdx]}</span>
                     <span class="day-num">{day.date.getDate()}</span>
@@ -272,15 +272,15 @@
       {/if}
 
       <div class="cart-toolbar">
-        <button class="link-btn" onclick={toggleAll}>{allSelected ? 'Tout décocher' : 'Tout cocher'}</button>
+        <button class="btn btn-ghost btn-sm link-btn" onclick={toggleAll}>{allSelected ? 'Tout décocher' : 'Tout cocher'}</button>
         <span class="cart-count">{selectedCount}/{recipe.recipe_ingredients.length}</span>
       </div>
 
       <div class="dlg-scroll">
-        <div class="ing-list">
+        <div class="ing-list card">
           {#each recipe.recipe_ingredients as ing (ing.id)}
-            <label class="ing" class:off={!checked[ing.id]}>
-              <input type="checkbox" bind:checked={checked[ing.id]} />
+            <label class="row ing" class:off={!checked[ing.id]}>
+              <input type="checkbox" class="check" bind:checked={checked[ing.id]} />
               <span class="ing-qty">{scaledQty(ing.quantity, ing.unit)}</span>
               <span class="ing-name">{ing.name}</span>
             </label>
@@ -289,12 +289,12 @@
       </div>
 
       <div class="dlg-actions">
-        <button class="btn btn-primary" onclick={addToCart} disabled={saving || selectedCount === 0}>
+        <button class="btn btn-primary long" onclick={addToCart} disabled={saving || selectedCount === 0}>
           <Icon name="cart" />
           {saving ? 'Ajout…' : `Ajouter ${selectedCount} ingrédient${selectedCount > 1 ? 's' : ''} aux courses`}
         </button>
         {#if planned}
-          <button class="skip-btn" onclick={skipCart} disabled={saving}>Pas maintenant</button>
+          <button class="btn btn-ghost skip-btn" onclick={skipCart} disabled={saving}>Pas maintenant</button>
         {/if}
       </div>
     {/if}
@@ -302,85 +302,60 @@
 </div>
 
 <style>
-  .dlg-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 200; /* au-dessus de la barre d'onglets (100) */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    padding-top: max(16px, env(safe-area-inset-top, 0px));
-    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
-    background: rgba(2, 8, 22, 0.66);
-    animation: fade 0.2s ease-out;
-  }
+  /* Fenêtre qui monte du bas : voile, cadre et animation dans app.css
+     (.ui-overlay, .ui-sheet). Ici : en-tête fixe, contenu qui défile, pied fixe. */
+  .dlg-overlay { padding-top: max(16px, env(safe-area-inset-top, 0px)); }
 
   .dlg {
-    width: min(460px, 100%);
-    max-height: min(88svh, 760px);
     display: flex;
     flex-direction: column;
-    background: var(--bg);
-    border: 1px solid var(--border-strong);
-    border-radius: 22px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
     overflow: hidden;
-    animation: pop 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.15);
-    outline: none;
+    max-height: min(88svh, 760px);
+    padding: 0;
+    width: min(480px, 100%);
   }
 
-  @keyframes fade { from { opacity: 0; } }
-  @keyframes pop  { from { opacity: 0; transform: scale(0.92) translateY(12px); } }
+  @media (min-width: 640px) {
+    .dlg-overlay { align-items: center; padding: var(--sp-4); }
+    .dlg { border-bottom: var(--line-w) solid var(--line); box-shadow: var(--shadow-lg); }
+  }
 
   /* ── En-tête ── */
   .dlg-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 12px;
-    padding: 18px 18px 12px;
+    gap: var(--sp-3);
+    padding: var(--sp-4) var(--gutter) var(--sp-3);
   }
 
   .dlg-titles { min-width: 0; }
 
   .dlg-step {
-    display: block;
+    display: inline-block;
+    padding: 2px 8px;
+    margin-bottom: 6px;
+    background: var(--band);
+    color: var(--text-on-band);
     font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--tracking-caps);
     text-transform: uppercase;
-    color: var(--primary);
-    margin-bottom: 4px;
   }
 
   .dlg-header h2 {
-    font-size: 21px;
+    font-size: var(--fs-xl);
+    text-transform: uppercase;
     color: var(--text);
   }
 
   .dlg-recipe {
     margin-top: 2px;
-    font-size: 14px;
+    font-size: var(--fs-sm);
     color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  .dlg-close {
-    flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: none;
-    background: var(--surface);
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    touch-action: manipulation;
   }
 
   /* ── Portions ── */
@@ -388,48 +363,37 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0 18px 12px;
-    padding: 8px 8px 8px 14px;
-    border-radius: 14px;
-    background: var(--surface);
+    margin: 0 var(--gutter) var(--sp-3);
+    padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3);
+    box-shadow: var(--shadow-sm);
   }
 
   .portions-label {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: 600;
+    gap: var(--sp-2);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
     color: var(--text);
   }
 
   .stepper {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--sp-2);
   }
 
-  .stepper button {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 1px solid var(--border-strong);
-    background: transparent;
-    color: var(--text);
-    font-size: 18px;
-    font-weight: 700;
-    cursor: pointer;
-    touch-action: manipulation;
-  }
-
-  .stepper button:disabled { opacity: 0.35; cursor: default; }
+  .stepper .btn { font-size: 20px; }
+  .stepper .btn:disabled { opacity: 0.35; }
 
   .stepper-val {
-    min-width: 26px;
+    min-width: 28px;
     text-align: center;
     font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 800;
+    font-size: 20px;
+    font-weight: var(--fw-bold);
     color: var(--text);
   }
 
@@ -440,90 +404,91 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-    padding: 0 18px 8px;
+    padding: 0 var(--gutter) var(--sp-2);
   }
 
+  /* Titre de semaine : bandeau noir collé en haut pendant le défilement */
   .week-title {
     position: sticky;
     top: 0;
     z-index: 1;
-    margin: 0 -18px;
-    padding: 10px 18px 8px;
-    background: var(--bg);
+    margin: var(--sp-2) 0 var(--sp-2);
+    padding: 5px 10px;
+    background: var(--band);
+    color: var(--text-on-band);
     font-size: 13px;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-secondary);
+    letter-spacing: var(--tracking-caps);
   }
 
   .day-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    margin-bottom: 8px;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-3);
   }
 
+  /* Jour = ligne carrée ; aujourd'hui surligné */
   .day-row {
     display: flex;
     align-items: stretch;
-    gap: 10px;
+    gap: var(--sp-2);
     padding: 6px;
-    border-radius: 14px;
     background: var(--surface);
-    border: 1px solid transparent;
+    border: var(--line-w) solid var(--line);
+    animation: fade-up var(--dur-sheet) var(--ease-out) calc(var(--i, 0) * 45ms) backwards;
   }
 
-  .day-row.is-today { border-color: var(--primary); }
-  .day-row.is-past .day-badge { opacity: 0.55; }
+  .day-row.is-today { background: var(--highlight); box-shadow: var(--shadow-sm); }
+  .day-row.is-past .day-badge { opacity: 0.6; }
 
   .past-toggle {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     min-height: 44px;
-    margin-bottom: 4px;
+    margin-bottom: var(--sp-1);
     padding: 0 6px;
     border: none;
     background: transparent;
-    color: var(--text-secondary);
-    font-size: 14px;
-    font-weight: 600;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+    cursor: pointer;
     touch-action: manipulation;
   }
-  .past-toggle .chev { display: inline-flex; transition: transform 0.2s ease; }
+  .past-toggle .chev { display: inline-flex; transition: transform var(--dur-base) var(--ease-out); }
   .past-toggle .chev.open { transform: rotate(180deg); }
-  @media (prefers-reduced-motion: reduce) {
-    .past-toggle .chev { transition: none; }
-  }
 
   .day-badge {
-    width: 46px;
+    width: 48px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--band);
+    color: var(--text-on-band);
     line-height: 1;
   }
 
-  .is-today .day-badge { background: var(--primary); color: var(--on-primary); }
-
   .day-short {
     font-size: 10px;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    opacity: 0.85;
+    letter-spacing: var(--tracking-caps);
   }
 
   .day-num {
     margin-top: 3px;
     font-family: var(--font-display);
     font-size: 18px;
-    font-weight: 800;
+    font-weight: var(--fw-bold);
   }
 
   .meal-btns {
@@ -542,35 +507,39 @@
     justify-content: center;
     gap: 2px;
     padding: 6px 10px;
-    border-radius: 10px;
-    border: 1px solid var(--border-strong);
-    background: rgba(255, 255, 255, 0.04);
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
     color: var(--text);
     font-family: var(--font-body);
     text-align: left;
     cursor: pointer;
     min-width: 0;
     touch-action: manipulation;
-    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
-  .meal-btn:active { transform: scale(0.97); background: var(--primary-light); border-color: var(--primary); }
-  .meal-btn:disabled { opacity: 0.5; }
+  /* Créneau touché : orange, texte noir, il s'enfonce */
+  .meal-btn:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+  .meal-btn:active:not(:disabled) .meal-taken { color: var(--on-accent); }
+  .meal-btn:disabled { opacity: 0.5; cursor: default; }
 
   .meal-name {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 14px;
-    font-weight: 700;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
   }
 
+  /* Déjà pris : en creux, bordure pointillée */
   .meal-btn.taken {
     border-style: dashed;
-    background: transparent;
+    background: var(--surface-sunken);
   }
-
-  .meal-btn.taken .meal-name { color: var(--text-secondary); }
 
   .meal-taken {
     max-width: 100%;
@@ -582,26 +551,26 @@
   }
 
   .dlg-hint {
-    padding: 8px 18px 16px;
+    padding: var(--sp-3) var(--gutter) max(var(--sp-4), env(safe-area-inset-bottom, 0px));
     font-size: 12px;
     color: var(--text-secondary);
-    border-top: 1px solid var(--border);
+    border-top: var(--line-w) solid var(--line);
   }
 
   /* ── Étape 2 ── */
   .planned-banner {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    margin: 0 18px 12px;
-    padding: 10px 12px;
-    border-radius: 12px;
+    gap: var(--sp-3);
+    margin: 0 var(--gutter) var(--sp-3);
+    padding: 10px var(--sp-3);
     background: var(--success-bg);
-    color: var(--success);
-    font-size: 14px;
+    border: var(--line-w) solid var(--line);
+    color: var(--text);
+    font-size: var(--fs-sm);
   }
 
-  .planned-banner span { color: var(--text); }
+  .planned-banner :global(svg) { flex-shrink: 0; }
   .planned-banner > span::first-letter { text-transform: uppercase; }
   .replaced { display: block; font-size: 12px; color: var(--text-secondary); }
 
@@ -609,54 +578,37 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 18px 8px;
+    padding: 0 var(--gutter) var(--sp-2);
   }
 
-  .link-btn {
-    border: none;
-    background: none;
-    padding: 6px 0;
-    color: var(--primary);
-    font-family: var(--font-body);
+  .link-btn { padding: 0 var(--sp-2); margin-left: calc(var(--sp-2) * -1); }
+
+  .cart-count {
+    padding: 2px 8px;
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
     font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
+    font-weight: var(--fw-bold);
+    font-variant-numeric: tabular-nums;
   }
 
-  .cart-count { font-size: 13px; color: var(--text-secondary); }
-
-  .ing-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
+  .ing-list { display: flex; flex-direction: column; margin-bottom: var(--sp-2); }
 
   .ing {
-    display: flex;
-    align-items: center;
-    gap: 12px;
     min-height: 48px;
-    padding: 8px 12px;
-    border-radius: 12px;
-    background: var(--surface);
+    padding: 8px var(--sp-3);
     cursor: pointer;
-    transition: opacity 0.15s;
+    touch-action: manipulation;
   }
+  .ing + .ing { border-top: var(--line-thin) solid var(--line); }
 
-  .ing.off { opacity: 0.45; }
-
-  .ing input {
-    width: 20px;
-    height: 20px;
-    accent-color: var(--primary);
-    flex-shrink: 0;
-  }
+  .ing.off .ing-qty,
+  .ing.off .ing-name { color: var(--text-secondary); text-decoration: line-through; text-decoration-thickness: 2px; }
 
   .ing-qty {
     min-width: 56px;
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--primary);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
   }
 
   .ing-name { font-size: 15px; color: var(--text); }
@@ -665,33 +617,19 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 4px;
-    padding: 12px 18px 14px;
-    border-top: 1px solid var(--border);
+    gap: var(--sp-2);
+    padding: var(--sp-3) var(--gutter) max(var(--sp-4), env(safe-area-inset-bottom, 0px));
+    border-top: var(--line-w) solid var(--line);
   }
 
   .dlg-actions .btn-primary {
-    padding: 15px 12px;
-    border-radius: 14px;
+    padding: 0 var(--sp-3);
     font-size: 15px;
-    white-space: nowrap;
-  }
-
-  .skip-btn {
-    min-height: 44px;
-    border: none;
-    background: none;
-    color: var(--text-secondary);
-    font-family: var(--font-body);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    touch-action: manipulation;
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .meal-btn:hover { background: var(--primary-light); border-color: var(--primary); }
-    .dlg-close:hover { background: var(--surface-hover); }
-    .skip-btn:hover { color: var(--text); }
+    .meal-btn:hover:not(:disabled):not(.taken) { background: var(--surface-hover); }
+    .meal-btn.taken:hover:not(:disabled) { background: var(--surface-hover); }
+    .ing:hover { background: var(--surface-hover); }
   }
 </style>

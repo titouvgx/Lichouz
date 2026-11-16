@@ -216,7 +216,7 @@
   </header>
 
   <!-- Avatar + résumé -->
-  <section class="profile-card" aria-label="Profil">
+  <section class="profile-card card" aria-label="Profil">
     <div class="avatar" aria-hidden="true">
       {#if initial}
         {initial}
@@ -232,8 +232,8 @@
   </section>
 
   <!-- Famille et administration -->
-  <nav class="links" aria-label="Famille">
-    <a class="link-row" href={href('famille')}>
+  <nav class="links card" aria-label="Famille">
+    <a class="link-row row" href={href('famille')}>
       <span class="section-icon"><Icon name="users" size={18} /></span>
       <span class="link-text">
         <span class="link-title">Ma famille</span>
@@ -243,7 +243,7 @@
       </span>
       <Icon name="chevron-right" size={18} />
     </a>
-    <a class="link-row" href={href('mes-recettes')}>
+    <a class="link-row row" href={href('mes-recettes')}>
       <span class="section-icon"><Icon name="chef" size={18} /></span>
       <span class="link-text">
         <span class="link-title">Mes recettes</span>
@@ -251,7 +251,7 @@
       </span>
       <Icon name="chevron-right" size={18} />
     </a>
-    <a class="link-row" href={href('avis')}>
+    <a class="link-row row" href={href('avis')}>
       <span class="section-icon"><Icon name="mail" size={18} /></span>
       <span class="link-text">
         <span class="link-title">Idées et retours</span>
@@ -259,7 +259,7 @@
       </span>
       <Icon name="chevron-right" size={18} />
     </a>
-    <a class="link-row" href={href('nouveautes')}>
+    <a class="link-row row" href={href('nouveautes')}>
       <span class="section-icon"><Icon name="star" size={18} /></span>
       <span class="link-text">
         <span class="link-title">Nouveautés</span>
@@ -268,7 +268,7 @@
       <Icon name="chevron-right" size={18} />
     </a>
     {#if profileState.context?.isSuperAdmin}
-      <a class="link-row" href={href('admin')}>
+      <a class="link-row row" href={href('admin')}>
         <span class="section-icon"><Icon name="lock" size={18} /></span>
         <span class="link-text">
           <span class="link-title">Administration</span>
@@ -277,7 +277,7 @@
         <Icon name="chevron-right" size={18} />
       </a>
     {/if}
-    <a class="link-row" href={href('aide')}>
+    <a class="link-row row" href={href('aide')}>
       <span class="section-icon"><Icon name="book" size={18} /></span>
       <span class="link-text">
         <span class="link-title">Aide</span>
@@ -310,7 +310,7 @@
       />
     </div>
     {#if nameError}<p id="name-error" class="field-error" role="alert">{nameError}</p>{/if}
-    <button class="btn btn-save" onclick={handleSaveName} aria-busy={saving}>
+    <button class="btn btn-primary btn-save" onclick={handleSaveName} aria-busy={saving}>
       {saving ? 'Enregistrement…' : 'Enregistrer le nom'}
     </button>
   </section>
@@ -384,7 +384,7 @@
     </div>
 
     {#if pwError}<p class="field-error" role="alert">{pwError}</p>{/if}
-    <button class="btn btn-save" onclick={handleChangePassword} aria-busy={savingPw}>
+    <button class="btn btn-primary btn-save" onclick={handleChangePassword} aria-busy={savingPw}>
       {savingPw ? 'Modification…' : 'Changer le mot de passe'}
     </button>
   </section>
@@ -405,7 +405,7 @@
 
   <!-- Déconnexion : à part -->
   <div class="danger-zone">
-    <button class="btn btn-logout" onclick={() => (confirmSignOut = true)}>
+    <button class="btn btn-outline btn-logout" onclick={() => (confirmSignOut = true)}>
       <Icon name="logout" size={18} /> Se déconnecter
     </button>
   </div>
@@ -420,7 +420,7 @@
         Ton compte et ton accès disparaissent pour de bon. Les recettes que tu as écrites
         restent dans ta famille, sans ton nom.
       </p>
-      <button class="btn btn-delete" onclick={askDelete}>
+      <button class="btn btn-danger btn-delete" onclick={askDelete}>
         <Icon name="trash" size={18} /> Supprimer mon compte
       </button>
     {/if}
@@ -527,74 +527,44 @@
     padding-top: calc(var(--gutter) + env(safe-area-inset-top, 0px));
     max-width: 560px;
     margin: 0 auto;
-    padding-bottom: 32px;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--sp-4);
   }
 
-  .head {
-    margin-bottom: 4px;
-  }
-
-  .head h1 {
-    font-family: var(--font-display);
-    font-size: 28px;
-  }
+  .head h1 { padding-right: 56px; /* avatar en haut à droite */ }
 
   .head-sub {
-    margin-top: 4px;
+    margin-top: var(--sp-1);
     font-size: 15px;
+    font-weight: var(--fw-medium);
     color: var(--text-secondary);
   }
 
   /* ── Profil ── */
-  .links {
-    display: grid;
-    gap: 10px;
-  }
-  .link-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-height: 56px;
-    padding: 12px 16px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    color: var(--text);
-    text-decoration: none;
-    touch-action: manipulation;
-  }
-  .link-row:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-  .link-text { flex: 1; display: grid; gap: 2px; min-width: 0; }
-  .link-title { font-weight: 600; }
-  .link-sub { font-size: 13px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
   .profile-card {
     display: flex;
     align-items: center;
-    gap: 16px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    padding: 18px;
+    gap: var(--sp-4);
+    padding: var(--sp-4);
+    animation: fade-up var(--dur-sheet) var(--ease-out) backwards;
   }
 
   .avatar {
     width: 64px;
     height: 64px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 70%, var(--accent)));
-    color: var(--on-primary);
-    font-family: var(--font-display);
+    border: var(--line-w) solid var(--line);
+    background: var(--accent);
+    color: var(--on-accent);
     font-size: 28px;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-sm);
   }
 
   .profile-info {
@@ -605,9 +575,8 @@
   }
 
   .profile-name {
-    font-family: var(--font-display);
     font-size: 20px;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     color: var(--text);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -623,47 +592,66 @@
   }
 
   .profile-role-badge {
-    margin-top: 4px;
+    margin-top: var(--sp-1);
     align-self: flex-start;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 999px;
-    background: var(--primary-light);
-    color: var(--primary);
+    padding: 1px 8px;
+    border: var(--line-thin) solid var(--line);
+    background: var(--band);
+    color: var(--text-on-band);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
   }
 
+  /* ── Menus : une carte, des lignes cliquables ── */
+  .links {
+    animation: fade-up var(--dur-sheet) var(--ease-out) 45ms backwards;
+  }
+  .link-row {
+    min-height: 60px;
+    padding: var(--sp-2) var(--sp-3);
+    color: var(--text);
+    text-decoration: none;
+    touch-action: manipulation;
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .link-row:active { background: var(--surface-hover); transform: translate(2px, 2px); }
+  .link-row:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+  .link-text { flex: 1; display: grid; gap: 2px; min-width: 0; }
+  .link-title { font-weight: var(--fw-bold); }
+  .link-sub { font-size: 13px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
   /* ── Cartes ── */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    padding: 18px;
+  section.card:not(.profile-card) {
+    padding: var(--sp-4);
     display: flex;
     flex-direction: column;
     gap: 14px;
+    animation: fade-up var(--dur-sheet) var(--ease-out) 90ms backwards;
   }
 
+  /* Titre de rubrique = bandeau noir en tête de carte (même rôle que les rayons des Courses) */
   .section-title {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text);
-    margin: 0;
+    gap: var(--sp-2);
+    margin: calc(var(--sp-4) * -1) calc(var(--sp-4) * -1) var(--sp-3);
+    padding: 6px var(--sp-3);
+    background: var(--band);
+    color: var(--text-on-band);
+    font-size: 13px;
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
   }
 
+  /* Icône dans un petit carré bordé */
   .section-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: var(--primary-light);
-    color: var(--primary);
+    color: inherit;
     flex-shrink: 0;
   }
 
@@ -674,26 +662,20 @@
   }
 
   .label-text {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-secondary);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+    color: var(--text);
   }
+  .label-text strong { letter-spacing: 0; }
 
-  .input {
-    min-height: 50px;
-  }
-
-  .input-wrap {
-    position: relative;
-  }
-
-  .input-has-toggle {
-    padding-right: 52px;
-  }
+  .input-wrap { position: relative; }
+  .input-has-toggle { padding-right: 52px; }
 
   .eye-btn {
     position: absolute;
-    right: 3px;
+    right: 2px;
     top: 50%;
     transform: translateY(-50%);
     width: 44px;
@@ -702,28 +684,21 @@
     align-items: center;
     justify-content: center;
     border: none;
-    border-radius: var(--radius-sm);
     background: transparent;
-    color: var(--text-secondary);
+    color: var(--text);
     cursor: pointer;
     touch-action: manipulation;
   }
-
-  .eye-btn[aria-pressed='true'] { color: var(--primary); }
-
-  .eye-btn:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: -2px;
-  }
+  .eye-btn[aria-pressed='true'] { color: var(--text); background: var(--highlight); }
+  .eye-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
 
   .field-error {
-    font-size: 14px;
+    font-size: var(--fs-sm);
     line-height: 1.4;
-    color: #FFD9DA;
+    color: var(--text);
     background: var(--error-bg);
-    border: 1px solid color-mix(in srgb, var(--error) 55%, transparent);
+    border: var(--line-w) solid var(--error);
     padding: 9px 12px;
-    border-radius: var(--radius-md);
   }
 
   /* ── Force du mot de passe ── */
@@ -743,146 +718,106 @@
 
   .strength-bar span {
     flex: 1;
-    height: 5px;
-    border-radius: 3px;
-    background: var(--border-strong);
+    height: 8px;
+    border: var(--line-thin) solid var(--line);
+    background: var(--surface-sunken);
   }
 
   .strength-bar[data-level='0'] span:nth-child(1) { background: var(--error); }
   .strength-bar[data-level='1'] span:nth-child(1) { background: var(--accent); }
-  .strength-bar[data-level='2'] span:nth-child(-n + 2) { background: var(--primary); }
+  .strength-bar[data-level='2'] span:nth-child(-n + 2) { background: var(--accent); }
   .strength-bar[data-level='3'] span { background: var(--success); }
 
-  .strength-label { font-weight: 600; color: var(--text-secondary); }
-  .strength-label[data-level='0'] { color: #FF9A9D; }
-  .strength-label[data-level='1'] { color: var(--accent); }
-  .strength-label[data-level='2'] { color: var(--primary); }
+  .strength-label { font-weight: var(--fw-bold); color: var(--text-secondary); }
+  .strength-label[data-level='0'] { color: var(--error); }
+  .strength-label[data-level='1'] { color: var(--text); }
+  .strength-label[data-level='2'] { color: var(--text); }
   .strength-label[data-level='3'] { color: var(--success); }
 
   .strength-hint { color: var(--text-secondary); line-height: 1.4; }
 
-  .match {
-    min-height: 18px;
-    font-size: 13px;
-  }
-
+  .match { min-height: 18px; font-size: 13px; }
   .match-ok {
     display: inline-flex;
     align-items: center;
     gap: 4px;
     color: var(--success);
-    font-weight: 600;
+    font-weight: var(--fw-bold);
   }
-
   .match-ko { color: var(--text-secondary); }
 
   /* ── Boutons ── */
-  .btn-save {
-    min-height: 48px;
-    padding: 12px 20px;
-    border-radius: var(--radius-lg);
-    background: var(--primary);
-    color: var(--on-primary);
-    font-size: 15px;
-    touch-action: manipulation;
-  }
-
   .btn-save[aria-busy='true'] { opacity: 0.75; cursor: progress; }
-
-  .btn-row {
-    min-height: 48px;
-    font-size: 15px;
-    touch-action: manipulation;
-  }
+  .btn-row { font-size: 15px; }
 
   .about-text {
-    font-size: 14px;
+    font-size: var(--fs-sm);
     line-height: 1.5;
     color: var(--text-secondary);
   }
 
   /* ── Déconnexion, à part ── */
   .danger-zone {
-    margin-top: 16px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
+    margin-top: var(--sp-2);
+    padding-top: var(--sp-5);
+    border-top: var(--line-w) solid var(--line);
   }
-
-  .btn-logout {
-    width: 100%;
-    min-height: 50px;
-    border-radius: var(--radius-lg);
-    border: 1.5px solid color-mix(in srgb, var(--error) 70%, transparent);
-    background: rgba(9, 24, 50, 0.55);
-    color: #FF9A9D;
-    font-size: 15px;
-    touch-action: manipulation;
-  }
+  .btn-logout { width: 100%; font-size: 15px; }
 
   /* ── Supprimer mon compte ── */
   .delete-zone {
-    margin-top: 8px;
-    padding: 16px 18px;
-    border-radius: var(--radius-xl);
-    border: 1px solid color-mix(in srgb, var(--error) 45%, transparent);
-    background: rgba(9, 24, 50, 0.55);
+    margin-top: var(--sp-2);
+    padding: var(--sp-4);
+    border: var(--line-w) solid var(--error);
+    background: var(--error-bg);
+    box-shadow: 4px 4px 0 var(--error);
     display: flex;
     flex-direction: column;
     gap: 10px;
   }
   .delete-title {
-    font-family: var(--font-display);
-    font-size: 16px;
-    font-weight: 700;
-    color: #FF9A9D;
+    font-size: var(--fs-base);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+    color: var(--text);
     margin: 0;
   }
   .delete-text {
-    font-size: 14px;
+    font-size: var(--fs-sm);
     line-height: 1.5;
-    color: var(--text-secondary);
+    color: var(--text);
   }
-  .btn-delete {
-    min-height: 48px;
-    border-radius: var(--radius-lg);
-    border: 1.5px solid color-mix(in srgb, var(--error) 70%, transparent);
-    background: transparent;
-    color: #FF9A9D;
-    font-size: 15px;
-    touch-action: manipulation;
-  }
+  .btn-delete { width: 100%; font-size: 15px; }
   .delete-list {
-    margin: 0 0 12px;
+    margin: 0 0 var(--sp-3);
     padding-left: 18px;
     display: grid;
     gap: 6px;
-    font-size: 14px;
+    font-size: var(--fs-sm);
     line-height: 1.45;
   }
-  .delete-form { display: grid; gap: 12px; text-align: left; }
-  .delete-zone + .app-version { margin-top: 12px; }
+  .delete-form { display: grid; gap: var(--sp-3); text-align: left; }
+  .delete-zone + .app-version { margin-top: var(--sp-3); }
 
   /* Version de l'appli (voir src/lib/version.ts) */
   .app-version {
-    margin: 20px 0 4px;
+    margin: var(--sp-5) 0 var(--sp-1);
     text-align: center;
-    font-size: 12px;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
     color: var(--text-secondary);
-    opacity: 0.8;
     font-variant-numeric: tabular-nums;
   }
 
   .warn {
     display: block;
-    margin-bottom: 8px;
-    color: #FFB59A;
+    margin-bottom: var(--sp-2);
+    color: var(--error);
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .eye-btn:hover { color: var(--text); background: var(--surface); }
-    .btn-save:hover { opacity: 0.9; }
-    .btn-logout:hover { background: var(--error-bg); }
-    .btn-delete:hover { background: var(--error-bg); }
+    .link-row:hover { background: var(--surface-hover); }
+    .eye-btn:hover { background: var(--surface-hover); }
   }
 
   @media (min-width: 900px) {

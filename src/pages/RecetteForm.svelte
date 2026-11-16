@@ -6,6 +6,7 @@
   import { flip } from 'svelte/animate'
   import Icon from '../components/Icon.svelte'
   import ConfirmDialog from '../components/ConfirmDialog.svelte'
+  import { categoryColor } from '../lib/categoryColors'
   import { toast } from '../lib/toast.svelte'
   import { href, navigate } from '../lib/router.svelte'
   import { auth } from '../lib/auth.svelte'
@@ -766,7 +767,7 @@
     <form onsubmit={handleSubmit} novalidate>
 
       <!-- ── Photo ── -->
-      <section class="card" aria-labelledby="photo-label">
+      <section class="card" aria-labelledby="photo-label" style="--i: 0">
         <h2 class="section-title" id="photo-label"><Icon name="image" size={18} /> Photo</h2>
         <input
           bind:this={photoInput}
@@ -791,7 +792,7 @@
           <div class="photo-actions">
             <button
               type="button"
-              class="photo-btn"
+              class="btn btn-outline photo-btn"
               onclick={pickPhoto}
               disabled={processingPhoto || saving}
             >
@@ -799,7 +800,7 @@
             </button>
             <button
               type="button"
-              class="photo-btn photo-btn-danger"
+              class="btn btn-outline photo-btn photo-btn-danger"
               onclick={removePhoto}
               disabled={processingPhoto || saving}
             >
@@ -828,9 +829,9 @@
       </section>
 
       <!-- ── Infos principales ── -->
-      <section class="card" aria-label="Informations">
+      <section class="card" aria-label="Informations" style="--i: 1">
         <div class="field">
-          <label class="label-text" for="rf-title">Titre <span class="req" aria-hidden="true">*</span></label>
+          <label class="label label-text" for="rf-title">Titre <span class="req" aria-hidden="true">*</span></label>
           <input
             id="rf-title"
             type="text"
@@ -851,11 +852,11 @@
         </div>
 
         <div class="field" role="group" aria-labelledby="rf-cat-label">
-          <span class="label-text" id="rf-cat-label">Catégorie</span>
+          <span class="label label-text" id="rf-cat-label">Catégorie</span>
           <div class="chip-select">
             <button
               type="button"
-              class="chip-option"
+              class="chip chip-option"
               class:selected={categoryId === ''}
               aria-pressed={categoryId === ''}
               onclick={() => (categoryId = '')}
@@ -863,11 +864,11 @@
             {#each recipeCategories as cat (cat.id)}
               <button
                 type="button"
-                class="chip-option"
+                class="chip chip-option cat-option"
                 class:selected={categoryId === cat.id}
                 aria-pressed={categoryId === cat.id}
                 onclick={() => (categoryId = cat.id)}
-                style="--cat-color: {cat.color}"
+                style="--cat-color: {categoryColor(cat.name)}"
               >{cat.name}</button>
             {/each}
           </div>
@@ -875,7 +876,7 @@
 
         <div class="row-2">
           <div class="field">
-            <label class="label-text" for="rf-portions"><Icon name="users" size={14} /> Portions</label>
+            <label class="label label-text" for="rf-portions"><Icon name="users" size={14} /> Portions</label>
             <div class="stepper" class:error={errors.portions}>
               <button
                 type="button"
@@ -909,7 +910,7 @@
             {#if errors.portions}<p class="field-err" id="rf-portions-err">{errors.portions}</p>{/if}
           </div>
           <div class="field">
-            <label class="label-text" for="rf-prep"><Icon name="clock" size={14} /> Temps (min)</label>
+            <label class="label label-text" for="rf-prep"><Icon name="clock" size={14} /> Temps (min)</label>
             <input
               id="rf-prep"
               type="number"
@@ -932,16 +933,16 @@
       </section>
 
       <!-- ── Étiquettes (migration 25) ── -->
-      <section class="card" aria-labelledby="rf-tags-title">
+      <section class="card" aria-labelledby="rf-tags-title" style="--i: 2">
         <h2 class="section-title" id="rf-tags-title"><Icon name="tag" size={18} /> Étiquettes <span class="optional">facultatif</span></h2>
 
         <div class="field" role="group" aria-labelledby="rf-diet-label">
-          <span class="label-text" id="rf-diet-label">Régime</span>
+          <span class="label label-text" id="rf-diet-label">Régime</span>
           <div class="chip-select">
             {#each REGIMES as r (r.key)}
               <button
                 type="button"
-                class="chip-option"
+                class="chip chip-option"
                 class:selected={diets.includes(r.key)}
                 aria-pressed={diets.includes(r.key)}
                 onclick={() => toggleDiet(r.key)}
@@ -952,7 +953,7 @@
         </div>
 
         <div class="field">
-            <label class="label-text" for="rf-origin">Origine</label>
+            <label class="label label-text" for="rf-origin">Origine</label>
             <select id="rf-origin" class="input" bind:value={origin}>
               <option value="">Aucune</option>
               {#each ['France', 'Monde'] as groupe (groupe)}
@@ -965,12 +966,12 @@
             </select>
         </div>
           <div class="field" role="group" aria-labelledby="rf-budget-label">
-            <span class="label-text" id="rf-budget-label">Budget</span>
+            <span class="label label-text" id="rf-budget-label">Budget</span>
             <div class="chip-select budget-select">
               {#each BUDGETS as b (b.value)}
                 <button
                   type="button"
-                  class="chip-option"
+                  class="chip chip-option"
                   class:selected={budget === b.value}
                   aria-pressed={budget === b.value}
                   aria-label={b.long}
@@ -982,12 +983,12 @@
           </div>
 
         <div class="field" role="group" aria-labelledby="rf-theme-label">
-          <span class="label-text" id="rf-theme-label">Thèmes <span class="optional">{themes.length}/{MAX_THEMES}</span></span>
+          <span class="label label-text" id="rf-theme-label">Thèmes <span class="optional">{themes.length}/{MAX_THEMES}</span></span>
           <div class="chip-select">
             {#each THEMES as t (t.key)}
               <button
                 type="button"
-                class="chip-option"
+                class="chip chip-option"
                 class:selected={themes.includes(t.key)}
                 aria-pressed={themes.includes(t.key)}
                 disabled={!themes.includes(t.key) && themes.length >= MAX_THEMES}
@@ -999,18 +1000,18 @@
       </section>
 
       <!-- ── Qui peut voir la recette ── -->
-      <section class="card" aria-labelledby="rf-vis-title">
+      <section class="card" aria-labelledby="rf-vis-title" style="--i: 3">
         <h2 class="section-title" id="rf-vis-title"><Icon name="users" size={18} /> Qui peut la voir ?</h2>
         <div class="vis-options" role="radiogroup" aria-labelledby="rf-vis-title">
           <label class="vis-option" class:selected={visibility === 'famille'}>
-            <input type="radio" name="rf-visibility" value="famille" bind:group={visibility} />
+            <input type="radio" class="check" name="rf-visibility" value="famille" bind:group={visibility} />
             <span class="vis-text">
               <span class="vis-name">Ma famille seulement</span>
               <span class="vis-hint">Visible par les membres de ta famille.</span>
             </span>
           </label>
           <label class="vis-option" class:selected={visibility === 'super_famille'}>
-            <input type="radio" name="rf-visibility" value="super_famille" bind:group={visibility} />
+            <input type="radio" class="check" name="rf-visibility" value="super_famille" bind:group={visibility} />
             <span class="vis-text">
               <span class="vis-name">Toutes nos familles</span>
               <span class="vis-hint">
@@ -1022,7 +1023,7 @@
       </section>
 
       <!-- ── Ingrédients ── -->
-      <section class="card" aria-labelledby="rf-ing-title">
+      <section class="card" aria-labelledby="rf-ing-title" style="--i: 4">
         <div class="section-head">
           <h2 class="section-title" id="rf-ing-title">🥕 Ingrédients</h2>
           <span class="count">{ingredients.filter((i) => i.name.trim()).length || ''}</span>
@@ -1169,7 +1170,7 @@
         </ul>
 
         {#if ingredients.length < INGREDIENTS_MAX}
-          <button type="button" class="btn-add" onclick={() => addIngredient()}>
+          <button type="button" class="btn btn-outline btn-add" onclick={() => addIngredient()}>
             <Icon name="plus" size={18} strokeWidth={2.5} /> Ajouter un ingrédient
           </button>
         {:else}
@@ -1178,7 +1179,7 @@
       </section>
 
       <!-- ── Étapes ── -->
-      <section class="card" aria-labelledby="rf-steps-title">
+      <section class="card" aria-labelledby="rf-steps-title" style="--i: 5">
         <div class="section-head">
           <h2 class="section-title" id="rf-steps-title"><Icon name="list" size={18} /> Étapes</h2>
         </div>
@@ -1237,7 +1238,7 @@
         </ol>
 
         {#if steps.length < STEPS_MAX}
-          <button type="button" class="btn-add" onclick={addStep}>
+          <button type="button" class="btn btn-outline btn-add" onclick={addStep}>
             <Icon name="plus" size={18} strokeWidth={2.5} /> Ajouter une étape
           </button>
         {:else}
@@ -1260,7 +1261,7 @@
           {/if}
           <button
             type="submit"
-            class="btn save-btn"
+            class="btn btn-primary save-btn"
             class:inactive={titleMissing}
             aria-disabled={titleMissing ? 'true' : undefined}
             disabled={saving || processingPhoto}
@@ -1302,7 +1303,7 @@
   .page {
     padding: var(--gutter);
     padding-top: calc(var(--gutter) + env(safe-area-inset-top, 0px));
-    padding-bottom: 12px;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     max-width: 640px;
     margin: 0 auto;
   }
@@ -1312,64 +1313,77 @@
     align-items: center;
     gap: 6px;
     min-height: 44px;
-    margin: -6px 0 4px -4px;
+    margin: -6px 0 var(--sp-1) -4px;
     padding: 0 8px 0 4px;
-    color: var(--primary);
+    color: var(--text);
     font-size: 15px;
-    font-weight: 600;
-    text-decoration: none;
+    font-weight: var(--fw-bold);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
     touch-action: manipulation;
   }
 
   h1 {
-    font-size: 28px;
+    font-size: var(--fs-2xl);
     padding-right: 48px; /* place pour l'avatar */
-    margin-bottom: 16px;
+    margin-bottom: var(--sp-4);
   }
 
   form {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--sp-4);
   }
 
-  /* ── Cartes ── */
+  /* ── Sections : carte (globale) + bandeau en tête ── */
   .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    padding: 16px 14px;
+    --pad: 14px;
+    padding: var(--sp-4) var(--pad);
     display: flex;
     flex-direction: column;
     gap: 14px;
+    animation: fade-up var(--dur-sheet) var(--ease-out) calc(var(--i, 0) * 45ms) backwards;
+  }
+
+  .section-title,
+  .section-head {
+    margin: calc(var(--sp-4) * -1) calc(var(--pad) * -1) 0;
+    padding: 6px var(--pad);
+    background: var(--band);
+    color: var(--text-on-band);
   }
 
   .section-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
   .section-title {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--sp-2);
     font-family: var(--font-display);
-    font-size: 19px;
-    font-weight: 700;
-    color: var(--text);
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+  }
+
+  .section-head .section-title {
     margin: 0;
+    padding: 0;
   }
 
   .count {
     min-width: 28px;
     text-align: center;
     font-size: 13px;
-    font-weight: 700;
-    color: var(--text-secondary);
+    font-weight: var(--fw-bold);
+    color: var(--text-on-band);
   }
-
   .count:empty { display: none; }
 
   /* ── Champs ── */
@@ -1380,54 +1394,43 @@
     min-width: 0;
   }
 
+  /* .label globale + icône en ligne */
   .label-text {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    margin: 0;
   }
 
-  .req { color: var(--accent); }
+  .req { color: var(--error); }
 
   /* Qui peut voir la recette */
   .vis-options {
     display: grid;
-    gap: 10px;
-    margin-top: 12px;
+    gap: var(--sp-3);
+    margin-top: var(--sp-3);
   }
   .vis-option {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: var(--sp-3);
     min-height: 44px;
-    padding: 12px 14px;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-md, 14px);
-    background: rgba(255, 255, 255, 0.04);
+    padding: var(--sp-3);
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
     cursor: pointer;
     touch-action: manipulation;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
+  .vis-option:active { transform: translate(2px, 2px); }
   .vis-option.selected {
-    border-color: var(--primary);
-    background: rgba(92, 200, 216, 0.12);
+    background: var(--highlight);
+    box-shadow: var(--shadow-sm);
   }
-  .vis-option input {
-    margin-top: 3px;
-    width: 18px;
-    height: 18px;
-    accent-color: var(--primary);
-    flex-shrink: 0;
-  }
-  .vis-option input:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
+  .vis-option.selected .vis-hint { color: var(--text); }
+  .vis-option .check { margin-top: 2px; }
   .vis-text { display: grid; gap: 2px; }
-  .vis-name { font-weight: 600; color: var(--text); }
+  .vis-name { font-weight: var(--fw-bold); color: var(--text); }
   .vis-hint { font-size: 13px; color: var(--text-secondary); }
 
   /* Champs : la mise au point fait défiler en gardant de la place
@@ -1438,18 +1441,16 @@
     scroll-margin: 80px 0 150px;
   }
 
-  .input { padding: 12px 14px; }
-
   .field-err {
     font-size: 13px;
-    font-weight: 600;
-    color: #FF8A8E; /* rouge éclairci : lisible sur la photo */
+    font-weight: var(--fw-bold);
+    color: var(--error);
   }
 
   .row-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: var(--sp-3);
   }
 
   /* Pas de flèches des champs nombre : on a le stepper */
@@ -1461,15 +1462,13 @@
   .stepper {
     display: flex;
     align-items: stretch;
-    height: 48px;
-    border-radius: var(--radius-md);
-    border: 1.5px solid var(--border-strong);
+    height: var(--tap);
+    border: var(--line-w) solid var(--line);
     background: var(--bg);
-    overflow: hidden;
   }
 
-  .stepper:focus-within { border-color: var(--primary); }
-  .stepper.error { border-color: var(--error); }
+  .stepper:focus-within { box-shadow: var(--shadow-sm); }
+  .stepper.error { border-color: var(--error); box-shadow: 3px 3px 0 var(--error); }
 
   .stepper-btn {
     flex: 0 0 44px;
@@ -1477,15 +1476,16 @@
     align-items: center;
     justify-content: center;
     border: none;
-    background: transparent;
-    color: var(--primary);
+    background: var(--surface);
+    color: var(--text);
     cursor: pointer;
     touch-action: manipulation;
   }
-
-  .stepper-btn:disabled { color: var(--text-placeholder); cursor: default; }
-  .stepper-btn:active:not(:disabled) { background: var(--primary-light); }
-  .stepper-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+  .stepper-btn:first-child { border-right: var(--line-w) solid var(--line); }
+  .stepper-btn:last-child { border-left: var(--line-w) solid var(--line); }
+  .stepper-btn:disabled { color: var(--text-placeholder); cursor: default; opacity: 0.6; }
+  .stepper-btn:active:not(:disabled) { background: var(--accent); color: var(--on-accent); }
+  .stepper-btn:focus-visible { outline-offset: -3px; }
 
   .stepper-input {
     flex: 1;
@@ -1495,45 +1495,50 @@
     color: var(--text);
     font-family: var(--font-body);
     font-size: 17px;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     text-align: center;
     outline: none;
   }
 
-  /* ── Chip select (catégories) ── */
+  /* ── Puces (catégories, régime, thèmes) : .chip globale ── */
   .chip-select {
     display: flex;
-    gap: 8px;
+    gap: var(--sp-2);
     flex-wrap: wrap;
   }
 
-  .chip-option {
-    min-height: 44px;
-    padding: 0 16px;
-    border-radius: 999px;
-    border: 1.5px solid var(--border-strong);
-    background: transparent;
-    color: var(--text);
-    font-size: 14px;
-    font-weight: 600;
-    font-family: var(--font-body);
-    cursor: pointer;
-    touch-action: manipulation;
-    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
-  }
-
-  .chip-option.selected {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: var(--on-primary);
-  }
-
-  .chip-option:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .chip-option { min-height: 44px; padding: 0 14px; font-weight: var(--fw-bold); }
   .chip-option:disabled { opacity: 0.45; cursor: default; }
+  .chip-option:focus-visible { outline-offset: 2px; }
+
+  /* Catégorie : petit carré de sa couleur ; choisie = remplie, avec ombre */
+  .cat-option::before {
+    content: '';
+    width: 12px;
+    height: 12px;
+    background: var(--cat-color);
+    border: var(--line-thin) solid var(--ink);
+  }
+  .cat-option.selected::before { background: var(--ink); }
+  .cat-option.selected {
+    background: var(--cat-color);
+    color: var(--ink);
+    box-shadow: var(--shadow-sm);
+  }
+
   .budget-select { flex-wrap: nowrap; gap: 6px; }
-  .budget-select .chip-option { flex: 1; padding: 0 8px; white-space: nowrap; }
-  .optional { font-family: var(--font-body); font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-left: 4px; }
-  select.input { padding: 12px 14px; min-height: 48px; }
+  .budget-select .chip-option { flex: 1; justify-content: center; padding: 0 8px; }
+  .optional {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: var(--fw-medium);
+    text-transform: none;
+    letter-spacing: 0;
+    margin-left: 4px;
+  }
+  .label .optional { color: var(--text-secondary); }
+  .section-title .optional { color: var(--text-on-band); }
+  select.input { padding: 12px 14px; min-height: var(--tap); }
 
   /* ── Ingrédients ── */
   .col-heads {
@@ -1543,8 +1548,8 @@
     margin-bottom: -8px;
     padding: 0 2px;
     font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--tracking-caps);
     text-transform: uppercase;
     color: var(--text-secondary);
   }
@@ -1563,7 +1568,7 @@
     flex-direction: column;
     gap: 6px;
     padding: 10px 0;
-    border-bottom: 1px solid var(--border);
+    border-bottom: var(--line-thin) solid var(--line);
   }
 
   .ing:first-child { padding-top: 0; }
@@ -1578,6 +1583,7 @@
   .cell {
     min-width: 0;
     height: 46px;
+    min-height: 46px;
     padding: 0 9px;
     font-size: 16px; /* ≥ 16 px : pas de zoom automatique sur iOS */
   }
@@ -1585,7 +1591,7 @@
   .ing-tools {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 6px;
   }
 
   .rayon {
@@ -1595,26 +1601,24 @@
     display: flex;
     align-items: center;
     height: 44px;
-    margin-right: 4px;
-    border-radius: 999px;
-    background: var(--bg-raised);
-    border: 1px solid var(--border);
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
   }
 
-  .rayon:focus-within { border-color: var(--primary); }
+  .rayon:focus-within { box-shadow: var(--shadow-sm); }
 
   .rayon-select {
     width: 100%;
     height: 100%;
     min-width: 0;
-    padding: 0 30px 0 12px;
+    padding: 0 30px 0 10px;
     border: none;
-    border-radius: inherit;
+    border-radius: 0;
     background: transparent;
     color: var(--text-secondary);
     font-family: var(--font-body);
     font-size: 14px;
-    font-weight: 600;
+    font-weight: var(--fw-medium);
     text-overflow: ellipsis;
     white-space: nowrap;
     appearance: none;
@@ -1625,20 +1629,20 @@
   }
 
   /* L'option choisie affiche l'émoji du rayon + son nom */
-  .rayon:not(.unset) .rayon-select { color: var(--text); }
+  .rayon:not(.unset) .rayon-select { color: var(--text); font-weight: var(--fw-bold); }
   .rayon.unset { border-style: dashed; }
-  .rayon.unset .rayon-select { font-weight: 500; }
 
   .rayon-select option { background: var(--bg); color: var(--text); }
 
   .rayon-chev {
     position: absolute;
-    right: 10px;
+    right: 8px;
     display: flex;
-    color: var(--text-secondary);
+    color: var(--text);
     pointer-events: none;
   }
 
+  /* Boutons d'outil : carrés, bordés */
   .tool {
     flex: 0 0 44px;
     width: 44px;
@@ -1646,23 +1650,25 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: none;
-    border-radius: 12px;
-    background: transparent;
-    color: var(--text-secondary);
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
+    color: var(--text);
     cursor: pointer;
     touch-action: manipulation;
-    transition: background-color 0.15s, color 0.15s, opacity 0.15s;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
-  .tool:disabled { opacity: 0.28; cursor: default; }
-  .tool:active:not(:disabled) { background: var(--surface-hover); color: var(--text); }
-  .tool-del:active:not(:disabled) { background: var(--error-bg); color: #FF8A8E; }
-  .tool:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+  .step-head .tool { margin-left: 6px; }
+  .step-head .tool:first-of-type { margin-left: 0; }
+
+  .tool:disabled { opacity: 0.3; cursor: default; }
+  .tool:active:not(:disabled) { transform: translate(2px, 2px); }
+  .tool-del { color: var(--error); }
+  .tool:focus-visible { outline-offset: 2px; }
 
   .up { display: flex; transform: rotate(180deg); }
 
-  .fresh { animation: row-in 0.22s ease-out; }
+  .fresh { animation: row-in var(--dur-base) var(--ease-out); }
 
   @keyframes row-in {
     from { opacity: 0; transform: translateY(-6px); }
@@ -1677,13 +1683,12 @@
     z-index: 30;
     list-style: none;
     margin: 0;
-    padding: 4px;
+    padding: 0;
     max-height: 240px;
     overflow-y: auto;
     background: var(--bg);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-md);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    border: var(--line-w) solid var(--line);
+    box-shadow: var(--shadow-md);
   }
 
   .autocomplete-item {
@@ -1692,24 +1697,24 @@
     gap: 10px;
     min-height: 44px;
     padding: 0 12px;
-    border-radius: 8px;
     color: var(--text);
     font-size: 15px;
     cursor: pointer;
     touch-action: manipulation;
   }
+  .autocomplete-item + .autocomplete-item { border-top: var(--line-thin) solid var(--line); }
 
   .autocomplete-item.active,
   .autocomplete-item:active {
-    background: var(--primary-light);
+    background: var(--highlight);
   }
 
   .ac-emoji { font-size: 16px; }
-  .ac-name { font-weight: 600; flex: 1; min-width: 0; }
+  .ac-name { font-weight: var(--fw-bold); flex: 1; min-width: 0; }
   .ac-unit { color: var(--text-secondary); font-size: 13px; }
 
   /* ── Étapes ── */
-  .step-list { gap: 14px; }
+  .step-list { gap: var(--sp-4); }
 
   .step {
     display: flex;
@@ -1720,19 +1725,18 @@
   .step-head {
     display: flex;
     align-items: center;
-    gap: 2px;
   }
 
+  /* Numéro dans un carré noir */
   .step-badge {
     flex: 0 0 auto;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--primary);
-    color: var(--on-primary);
+    width: 32px;
+    height: 32px;
+    background: var(--band);
+    color: var(--text-on-band);
     font-family: var(--font-display);
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 16px;
+    font-weight: var(--fw-bold);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1740,10 +1744,10 @@
 
   .step-label {
     flex: 1;
-    margin-left: 8px;
+    margin-left: var(--sp-2);
     font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--tracking-caps);
     text-transform: uppercase;
     color: var(--text-secondary);
   }
@@ -1759,43 +1763,28 @@
 
   /* ── Ajouter ── */
   .btn-add {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
     width: 100%;
-    min-height: 48px;
-    border-radius: var(--radius-lg);
-    border: 1.5px dashed var(--border-strong);
-    background: transparent;
-    color: var(--primary);
-    font-size: 15px;
-    font-weight: 700;
-    font-family: var(--font-body);
-    cursor: pointer;
-    touch-action: manipulation;
-    transition: transform 0.12s, border-color 0.15s;
+    border-style: dashed;
+    box-shadow: none;
+    color: var(--text);
   }
-
-  .btn-add:active { transform: scale(0.98); }
-  .btn-add:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .btn-add:focus-visible { outline-offset: 2px; }
 
   /* ── Barre d'enregistrement ── */
   .save-bar {
     position: sticky;
-    /* juste au-dessus de la barre d'onglets (56 px + zone de sécurité) */
-    bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 8px);
+    /* juste au-dessus de la barre d'onglets (64 px + zone de sécurité) */
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px) + var(--sp-2));
     z-index: 20;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 4px;
-    padding: 8px 8px 8px 14px;
-    border-radius: var(--radius-xl);
-    background: rgba(9, 24, 50, 0.95);
-    border: 1px solid var(--border-strong);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-    transition: transform 0.2s ease, opacity 0.2s ease;
+    gap: var(--sp-2);
+    margin-top: var(--sp-1);
+    padding: var(--sp-2) var(--sp-2) var(--sp-2) 14px;
+    background: var(--surface);
+    border: var(--line-w) solid var(--line);
+    box-shadow: var(--shadow-md);
+    transition: transform var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out);
   }
 
   .save-bar.hidden {
@@ -1807,7 +1796,7 @@
   .save-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--sp-3);
   }
 
   .status {
@@ -1825,8 +1814,8 @@
     background: none;
     text-align: left;
     font-family: var(--font-body);
-    font-weight: 700;
-    color: #FF8A8E;
+    font-weight: var(--fw-bold);
+    color: var(--error);
     text-decoration: underline;
     text-underline-offset: 3px;
     cursor: pointer;
@@ -1835,34 +1824,29 @@
 
   .save-btn {
     flex: 0 0 auto;
-    min-height: 48px;
+    width: auto;
     padding: 0 18px;
-    border-radius: var(--radius-lg);
-    background: var(--accent);
-    color: #FFFFFF;
     font-size: 15px;
     white-space: nowrap;
-    touch-action: manipulation;
-    box-shadow: 0 6px 18px var(--accent-shadow);
   }
 
   .save-btn.inactive,
   .save-btn:disabled {
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--surface-sunken);
     color: var(--text-secondary);
     box-shadow: none;
   }
 
-  .save-btn:disabled { cursor: progress; }
+  .save-btn:disabled { cursor: progress; opacity: 1; }
 
   .form-error {
     color: var(--text);
     background: var(--error-bg);
-    border: 1px solid rgba(229, 72, 77, 0.5);
-    padding: 8px 12px;
+    border: var(--line-w) solid var(--error);
+    padding: var(--sp-2) var(--sp-3);
     margin-right: 6px;
-    border-radius: var(--radius-sm);
     font-size: 14px;
+    font-weight: var(--fw-medium);
   }
 
   .load-error { align-items: flex-start; }
@@ -1885,9 +1869,9 @@
     position: relative;
     width: 100%;
     aspect-ratio: 16 / 9;
-    border-radius: var(--radius-lg);
     overflow: hidden;
-    background: var(--bg);
+    background: var(--surface-sunken);
+    border: var(--line-w) solid var(--line);
   }
 
   .photo-img {
@@ -1905,10 +1889,10 @@
     align-items: center;
     justify-content: center;
     gap: 10px;
-    background: rgba(9, 24, 50, 0.72);
+    background: var(--surface);
     color: var(--text);
     font-size: 14px;
-    font-weight: 500;
+    font-weight: var(--fw-bold);
   }
 
   .photo-empty {
@@ -1918,93 +1902,50 @@
     justify-content: center;
     gap: 6px;
     min-height: var(--tap);
-    border: 1.5px dashed var(--border-strong);
-    background: rgba(16, 38, 74, 0.6);
+    border-style: dashed;
     color: var(--text-secondary);
     font-family: var(--font-body);
     cursor: pointer;
     touch-action: manipulation;
-    transition: border-color 0.15s, color 0.15s;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
   /* Pas de photo : inutile d'occuper tout le 16/9 sur grand écran */
   .photo-empty { aspect-ratio: auto; height: clamp(150px, 42vw, 220px); }
 
-  .photo-empty:active:not(:disabled) {
-    border-color: var(--primary);
-    color: var(--primary);
-  }
-
-  .photo-empty:disabled {
-    cursor: progress;
-  }
-
-  .photo-empty:focus-visible,
-  .photo-btn:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
+  .photo-empty:active:not(:disabled) { transform: translate(2px, 2px); }
+  .photo-empty:disabled { cursor: progress; }
+  .photo-empty:focus-visible { outline-offset: 2px; }
 
   .photo-empty-icon {
     width: 56px;
     height: 56px;
-    border-radius: 50%;
-    background: var(--primary-light);
-    color: var(--primary);
+    border: var(--line-w) solid var(--line);
+    background: var(--accent);
+    color: var(--on-accent);
+    box-shadow: var(--shadow-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 4px;
+    margin-bottom: var(--sp-1);
   }
 
   .photo-empty-title {
     font-size: 15px;
-    font-weight: 600;
+    font-weight: var(--fw-bold);
     color: var(--text);
   }
 
-  .photo-empty-sub {
-    font-size: 13px;
-  }
+  .photo-empty-sub { font-size: 13px; }
 
   .photo-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: var(--sp-3);
   }
 
-  .photo-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    min-height: 44px;
-    padding: 10px 14px;
-    border-radius: var(--radius-md);
-    border: 1.5px solid var(--primary);
-    background: transparent;
-    color: var(--primary);
-    font-size: 15px;
-    font-weight: 600;
-    font-family: var(--font-body);
-    cursor: pointer;
-    touch-action: manipulation;
-    transition: transform 0.12s;
-  }
-
-  .photo-btn:active:not(:disabled) {
-    transform: scale(0.97);
-  }
-
-  .photo-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .photo-btn-danger {
-    border-color: var(--border-strong);
-    color: var(--text-secondary);
-  }
+  .photo-btn { gap: var(--sp-2); font-size: 15px; }
+  .photo-btn-danger { color: var(--error); }
 
   .photo-hint {
     margin-top: -4px;
@@ -2014,53 +1955,41 @@
 
   /* ── Survol (souris uniquement) ── */
   @media (hover: hover) and (pointer: fine) {
-    .photo-empty:hover:not(:disabled) {
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-    .photo-btn-danger:hover:not(:disabled) {
-      border-color: var(--error);
-      color: var(--error);
-    }
-    .chip-option:hover:not(.selected) {
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-    .tool:hover:not(:disabled) { background: var(--surface-hover); color: var(--text); }
-    .tool-del:hover:not(:disabled) { background: var(--error-bg); color: #FF8A8E; }
-    .stepper-btn:hover:not(:disabled) { background: var(--primary-light); }
-    .autocomplete-item:hover { background: var(--primary-light); }
-    .btn-add:hover { border-color: var(--primary); }
-    .save-btn:not(.inactive):not(:disabled):hover { opacity: 0.92; }
+    .photo-empty:hover:not(:disabled) { background: var(--surface-hover); }
+    .chip-option:hover:not(:disabled):not([aria-pressed='true']) { background: var(--surface-hover); }
+    .tool:hover:not(:disabled) { background: var(--surface-hover); }
+    .stepper-btn:hover:not(:disabled) { background: var(--surface-hover); }
+    .autocomplete-item:hover { background: var(--highlight); }
+    .vis-option:not(.selected):hover { background: var(--surface-hover); }
   }
 
   /* ── Grand écran : un peu plus d'air ── */
   @media (min-width: 720px) {
-    .card { padding: 20px; }
+    .card { --pad: 20px; padding-top: 20px; padding-bottom: 20px; }
+    .section-title,
+    .section-head { margin-top: -20px; }
     .col-heads,
     .ing-line { grid-template-columns: 90px 110px 1fr; }
   }
 
-  /* ── Loading ── */
+  /* ── Chargement ── */
   .center-msg {
     display: flex;
     justify-content: center;
-    padding: 48px 16px;
+    padding: 48px var(--sp-4);
   }
 
   .spinner {
     width: 28px;
     height: 28px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
+    border: var(--line-w) solid var(--line);
+    border-top-color: var(--accent);
+    animation: spin 0.8s steps(4) infinite;
   }
 
   .spinner-sm {
     width: 16px;
     height: 16px;
-    border-width: 2px;
   }
 
   @keyframes spin {

@@ -36,11 +36,11 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="dlg-overlay" onclick={onclose}>
+<div class="ui-overlay dlg-overlay" onclick={onclose}>
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
-    class="dlg"
+    class="ui-sheet dlg"
     bind:this={dialogEl}
     tabindex="-1"
     role="dialog"
@@ -50,7 +50,7 @@
   >
     <header class="dlg-header">
       <h2 id="flt-title">Filtres</h2>
-      <button class="dlg-close" onclick={onclose} aria-label="Fermer"><Icon name="x" /></button>
+      <button class="btn btn-icon dlg-close" onclick={onclose} aria-label="Fermer"><Icon name="x" size={20} /></button>
     </header>
 
     <div class="dlg-body">
@@ -133,114 +133,95 @@
 </div>
 
 <style>
-  .dlg-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 200; /* au-dessus de la barre d'onglets (100) */
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding-top: max(16px, env(safe-area-inset-top, 0px));
-    background: rgba(2, 8, 22, 0.66);
-    animation: fade 0.2s ease-out;
-  }
+  /* Fenêtre qui monte du bas : voile, cadre et animation communs dans app.css
+     (.ui-overlay, .ui-sheet). Ici : en-tête fixe, contenu qui défile, pied fixe. */
+  .dlg-overlay { padding-top: max(16px, env(safe-area-inset-top, 0px)); }
 
   .dlg {
-    width: min(520px, 100%);
-    max-height: 88svh;
     display: flex;
     flex-direction: column;
-    background: var(--bg);
-    border: 1px solid var(--border-strong);
-    border-bottom: none;
-    border-radius: 18px 18px 0 0;
-    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.4);
     overflow: hidden;
-    animation: up 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
-    outline: none;
+    padding: 0;
   }
 
   @media (min-width: 640px) {
-    .dlg-overlay { align-items: center; padding: 16px; }
-    .dlg { border-radius: 18px; border-bottom: 1px solid var(--border-strong); }
-  }
-
-  @keyframes fade { from { opacity: 0; } }
-  @keyframes up   { from { opacity: 0; transform: translateY(24px); } }
-
-  @media (prefers-reduced-motion: reduce) {
-    .dlg-overlay, .dlg { animation: none; }
+    .dlg-overlay { align-items: center; padding: var(--sp-4); }
+    .dlg { border-bottom: var(--line-w) solid var(--line); box-shadow: var(--shadow-lg); }
   }
 
   .dlg-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 10px 4px 18px;
+    gap: var(--sp-3);
+    padding: 14px var(--gutter) 10px;
   }
-  .dlg-header h2 { font-size: 21px; color: var(--text); }
-
-  .dlg-close {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: none;
-    background: transparent;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    touch-action: manipulation;
-  }
+  .dlg-header h2 { font-size: var(--fs-2xl); text-transform: uppercase; color: var(--text); }
 
   .dlg-body {
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 4px 18px 12px;
+    padding: 4px var(--gutter) var(--sp-4);
   }
 
-  section + section { margin-top: 18px; }
+  section + section { margin-top: 20px; }
 
+  /* Titre de rubrique : bandeau noir, comme les rayons de la liste de courses */
   h3 {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin: 0 0 10px;
+    padding: 4px 8px;
+    background: var(--band);
+    color: var(--text-on-band);
     font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--tracking-caps);
     text-transform: uppercase;
-    color: var(--text-secondary);
-    margin: 0 0 8px;
   }
-  .hint { text-transform: none; letter-spacing: 0; font-weight: 500; margin-left: 4px; }
-  .group { font-size: 13px; color: var(--text-secondary); margin: 10px 0 6px; }
+  .hint { text-transform: none; letter-spacing: 0; font-weight: var(--fw-regular); }
+  .group {
+    font-size: 13px;
+    font-weight: var(--fw-bold);
+    color: var(--text-secondary);
+    margin: 12px 0 6px;
+  }
 
-  .opts { display: flex; flex-wrap: wrap; gap: 6px; }
+  .opts { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 
   .opt {
     min-height: 44px;
-    padding: 0 14px;
-    border-radius: 8px;
-    border: 1px solid var(--border-strong);
-    background: transparent;
+    padding: 0 12px;
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
     color: var(--text);
     font: 600 14px/1.2 var(--font-body);
     cursor: pointer;
     touch-action: manipulation;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
+  .opt:active { transform: translate(2px, 2px); }
+  /* Choisi : orange, ombre franche (il « ressort ») */
   .opt.on {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: var(--on-primary);
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: var(--fw-bold);
+    box-shadow: var(--shadow-sm);
   }
-  .opt:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-  .opt-sub { font-weight: 500; opacity: 0.8; margin-left: 2px; }
+  .opt-sub { font-weight: var(--fw-regular); margin-left: 2px; }
+
+  @media (hover: hover) and (pointer: fine) {
+    .opt:not(.on):hover { background: var(--surface-hover); }
+  }
 
   .dlg-foot {
     display: flex;
-    gap: 10px;
-    padding: 12px 18px;
-    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
-    border-top: 1px solid var(--border);
+    gap: var(--sp-3);
+    padding: 12px var(--gutter) 14px;
+    padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+    border-top: var(--line-w) solid var(--line);
   }
-  .dlg-foot .btn { min-height: 48px; }
-  .dlg-foot .btn-primary { flex: 1; }
+  .dlg-foot .btn-outline { flex: none; }
+  .dlg-foot .btn-primary { flex: 1; width: auto; }
 </style>

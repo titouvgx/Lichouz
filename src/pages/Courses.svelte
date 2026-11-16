@@ -476,17 +476,17 @@
     <h1>Courses</h1>
     {#if list && total > 0}
       <p class="head-sub">
-        {#if allDone}Tout est dans le chariot{:else}<strong>{total - done}</strong> article{total - done > 1 ? 's' : ''} à prendre{/if}
+        {#if allDone}Tout est dans le chariot{:else}<strong class="count">{total - done}</strong> article{total - done > 1 ? 's' : ''} à prendre{/if}
       </p>
       <div class="progress" aria-hidden="true">
-        <div class="progress-fill" class:done={allDone} style:width="{(done / total) * 100}%"></div>
+        <div class="progress-fill" class:done={allDone} style:transform="scaleX({done / total})"></div>
       </div>
     {/if}
   </header>
 
   {#if offline}
     <div class="offline-banner" role="status">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5.17-2.8M19 13a10 10 0 0 0-2.3-1.6M2 8.8a15 15 0 0 1 4.2-2.7M22 8.8A15 15 0 0 0 10.7 5M12 20h.01"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5.17-2.8M19 13a10 10 0 0 0-2.3-1.6M2 8.8a15 15 0 0 1 4.2-2.7M22 8.8A15 15 0 0 0 10.7 5M12 20h.01"/></svg>
       <span>
         Hors connexion{#if cachedAt}{' · '}liste du {timeLabel(cachedAt)}{/if}.
         {#if pendingCount > 0}<strong>{pendingCount} cochage{pendingCount > 1 ? 's' : ''}</strong> en attente, envoyé{pendingCount > 1 ? 's' : ''} au retour du réseau.{:else}Tu peux cocher, ce sera envoyé au retour du réseau.{/if}
@@ -517,28 +517,28 @@
     {/if}
 
     <!-- À prendre, par rayon -->
-    {#each groups as group (group.category?.id ?? 'none')}
-      <section class="card rayon">
-        <h2 class="rayon-title">
+    {#each groups as group, gi (group.category?.id ?? 'none')}
+      <section class="card rayon" style="--i: {Math.min(gi, 8)}">
+        <h2 class="band rayon-title">
           <span class="rayon-icon" aria-hidden="true">{group.category?.icon || '🛒'}</span>
           {group.category?.name || 'Sans rayon'}
           <span class="rayon-count">{group.items.length}</span>
         </h2>
         <ul class="rows">
-          {#each group.items as item (item.id)}
+          {#each group.items as item, i (item.id)}
             {@const from = sourcesOf(item)}
-            <li class="row" animate:flip={{ duration: d(220) }} out:fly={{ x: 60, duration: d(180) }}>
+            <li class="item" style="--i: {Math.min(i, 8)}" animate:flip={{ duration: d(220) }} out:fly={{ x: 60, duration: d(180) }}>
               <button class="row-main" onclick={() => toggle(item)} aria-label="Mettre {item.name} dans le chariot">
                 <span class="box" aria-hidden="true"></span>
                 <span class="row-text">
                   <span class="row-name">{item.name}</span>
-                  {#if from.length > 0}<span class="row-from">pour {from.join(' · ')}</span>{/if}
+                  {#if from.length > 0}<span class="tag row-from">pour {from.join(' · ')}</span>{/if}
                 </span>
-                {#if item.is_extra}<span class="badge">ajouté</span>{/if}
+                {#if item.is_extra}<span class="tag">ajouté</span>{/if}
                 {#if item.quantity}<span class="row-qty">{item.quantity}</span>{/if}
               </button>
               <button class="row-remove" onclick={() => remove(item)} aria-label="Retirer {item.name} de la liste">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
               </button>
             </li>
           {/each}
@@ -556,7 +556,7 @@
     <!-- Ajouter un article -->
     {#if showAddForm}
       <section class="card add-form">
-        <h2 class="add-title">Ajouter un article</h2>
+        <h2 class="band add-title">Ajouter un article</h2>
         <!-- svelte-ignore a11y_autofocus -->
         <input class="input" placeholder="Nom (ex : papier toilette)" bind:value={newItemName} autofocus
           maxlength={LIST_ITEM_NAME_MAX}
@@ -578,7 +578,7 @@
     {:else}
       <div class="tools" class:single={!staples && !pantry}>
         <button class="add-btn" onclick={() => (showAddForm = true)}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           Ajouter un article
         </button>
         {#if staples}
@@ -601,11 +601,11 @@
     <!-- Sûrement déjà à la maison (produits du placard) -->
     {#if atHome.length > 0}
       <section class="card cart home">
-        <button class="cart-head" onclick={() => (homeOpen = !homeOpen)} aria-expanded={homeOpen}>
+        <button class="band cart-head" onclick={() => (homeOpen = !homeOpen)} aria-expanded={homeOpen}>
           <Icon name="home" />
           <span>Sûrement déjà à la maison</span>
           <span class="rayon-count">{atHome.length}</span>
-          <svg class="chevron" class:open={homeOpen} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          <svg class="chevron" class:open={homeOpen} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         {#if homeOpen}
           <p class="home-hint">
@@ -614,7 +614,7 @@
           </p>
           <ul class="rows">
             {#each atHome as item (item.id)}
-              <li class="row is-home" animate:flip={{ duration: d(220) }} out:fly={{ y: -16, duration: d(180) }}>
+              <li class="item is-home" animate:flip={{ duration: d(220) }} out:fly={{ y: -16, duration: d(180) }}>
                 <button class="row-main" onclick={() => toggle(item)} aria-label="Mettre {item.name} dans le chariot">
                   <span class="box" aria-hidden="true"></span>
                   <span class="row-name">{item.name}</span>
@@ -633,16 +633,16 @@
     <!-- Dans le chariot -->
     {#if inCart.length > 0}
       <section class="card cart">
-        <button class="cart-head" onclick={() => (cartOpen = !cartOpen)} aria-expanded={cartOpen}>
+        <button class="band cart-head" onclick={() => (cartOpen = !cartOpen)} aria-expanded={cartOpen}>
           <Icon name="cart" />
           <span>Dans le chariot</span>
           <span class="rayon-count">{inCart.length}</span>
-          <svg class="chevron" class:open={cartOpen} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          <svg class="chevron" class:open={cartOpen} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         {#if cartOpen}
           <ul class="rows">
             {#each inCart as item (item.id)}
-              <li class="row is-done" animate:flip={{ duration: d(220) }} in:fly={{ x: -40, duration: d(200) }}>
+              <li class="item is-done" animate:flip={{ duration: d(220) }} in:fly={{ x: -40, duration: d(200) }}>
                 <button class="row-main" onclick={() => toggle(item)} aria-label="Remettre {item.name} dans la liste">
                   <span class="box checked" aria-hidden="true"><Icon name="check" size={14} strokeWidth={3} /></span>
                   <span class="row-name">{item.name}</span>
@@ -719,40 +719,56 @@
   .page {
     padding: var(--gutter);
     padding-top: calc(var(--gutter) + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     max-width: 640px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--sp-3);
   }
 
   /* ── En-tête ── */
-  .head h1 {
-    font-size: 28px;
-    padding-right: 48px;
-  }
+  .head h1 { padding-right: 56px; }
 
   .head-sub {
-    margin-top: 4px;
+    margin-top: var(--sp-2);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
     font-size: 15px;
-    color: var(--text-secondary);
+    font-weight: var(--fw-medium);
+    color: var(--text);
   }
 
-  .head-sub strong { color: var(--text); font-size: 17px; }
+  /* Compteur : petit carré blanc bordé avec ombre */
+  .count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 6px;
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    color: var(--text);
+  }
 
+  /* Progression : bloc carré bordé, remplissage orange (scaleX, pas width) */
   .progress {
-    margin-top: 10px;
-    height: 6px;
-    border-radius: 999px;
+    margin-top: var(--sp-3);
+    height: 14px;
+    border: var(--line-w) solid var(--line);
     background: var(--surface);
     overflow: hidden;
   }
 
   .progress-fill {
     height: 100%;
-    border-radius: inherit;
-    background: linear-gradient(90deg, var(--primary), color-mix(in srgb, var(--primary) 60%, white));
-    transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    background: var(--accent);
+    transform-origin: left center;
+    transition: transform var(--dur-sheet) var(--ease-out);
   }
 
   .progress-fill.done { background: var(--success); }
@@ -763,67 +779,49 @@
     gap: 10px;
     align-items: flex-start;
     padding: 12px 14px;
-    border-radius: 14px;
-    background: rgba(255, 196, 0, 0.14);
-    border: 1px solid rgba(255, 196, 0, 0.35);
-    color: #FFE08A;
-    font-size: 14px;
+    border: var(--line-w) solid var(--line);
+    background: var(--highlight);
+    box-shadow: var(--shadow-sm);
+    color: var(--text);
+    font-size: var(--fs-sm);
     line-height: 1.4;
   }
 
   .offline-banner svg { flex-shrink: 0; margin-top: 1px; }
-  .offline-banner span { color: var(--text); }
 
-  /* ── Cartes ── */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    padding: 14px;
-  }
-
+  /* ── Cartes (.card global : blanc, bordure 2 px, ombre) ── */
   .empty {
     text-align: center;
-    padding: 32px 20px;
+    padding: var(--sp-6) var(--sp-5);
     color: var(--text-secondary);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
-  .empty h2 { font-size: 20px; color: var(--text); }
-  .empty-icon { color: var(--text-secondary); }
-  .empty-cta { margin-top: 12px; width: auto; padding: 14px 20px; }
-  .error-text { color: var(--error); }
+  .empty h2 { font-size: var(--fs-xl); color: var(--text); text-transform: uppercase; }
+  .empty-icon { color: var(--text); }
+  .empty-cta { margin-top: var(--sp-3); width: auto; padding: 0 20px; }
+  .error-text { color: var(--error); font-weight: var(--fw-medium); }
 
-  /* ── Rayons ── */
-  .rayon { padding: 12px 8px 6px; }
+  /* ── Rayons : carte + bandeau noir ── */
+  .rayon { animation: fade-up var(--dur-sheet) var(--ease-out) calc(var(--i, 0) * 45ms) backwards; }
 
-  .rayon-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 8px 8px;
-    font-family: var(--font-body);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-  }
+  .rayon-title { font-family: var(--font-body); letter-spacing: var(--tracking-caps); }
 
-  .rayon-icon { font-size: 18px; }
+  /* L'émoji du rayon reste petit dans le bandeau */
+  .rayon-icon { font-size: 14px; line-height: 1; }
 
+  /* Compteur à droite du bandeau */
   .rayon-count {
     margin-left: auto;
-    min-width: 24px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
-    font-size: 12px;
+    min-width: 22px;
+    padding: 0 6px;
+    background: var(--text-on-band);
+    color: var(--band);
+    font-size: var(--fs-xs);
     text-align: center;
-    color: var(--text);
   }
 
   .rows {
@@ -832,14 +830,14 @@
     padding: 0;
   }
 
-  .row {
+  /* Ligne d'article : séparée par un trait 1 px */
+  .item {
     display: flex;
     align-items: center;
-    border-radius: 12px;
-    animation: fade-up 0.25s ease-out backwards;
+    animation: fade-up var(--dur-sheet) var(--ease-out) calc(var(--i, 0) * 45ms) backwards;
   }
 
-  .row + .row { border-top: 1px solid var(--border); }
+  .item + .item { border-top: var(--line-thin) solid var(--line); }
 
   /* Toute la ligne se touche pour cocher (pas seulement la case) */
   .row-main {
@@ -848,8 +846,8 @@
     min-height: 52px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 8px;
+    gap: var(--sp-3);
+    padding: 8px 4px 8px var(--sp-3);
     border: none;
     background: none;
     color: var(--text);
@@ -857,32 +855,30 @@
     text-align: left;
     cursor: pointer;
     touch-action: manipulation;
-    border-radius: 12px;
   }
 
-  .row-main:active { background: var(--primary-light); }
+  .row-main:active { background: var(--surface-hover); }
 
+  /* Case carrée (comme .check) */
   .box {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     flex-shrink: 0;
-    border-radius: 7px;
-    border: 2px solid var(--border-strong);
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
   .box.checked {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: var(--on-primary);
-    animation: check-pop 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+    background: var(--accent);
+    color: var(--on-accent);
+    animation: check-pop var(--dur-base) var(--ease-snap);
   }
 
   @keyframes check-pop {
     0% { transform: scale(0.7); }
-    60% { transform: scale(1.12); }
     100% { transform: scale(1); }
   }
 
@@ -891,18 +887,21 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    align-items: flex-start;
+    gap: 2px;
   }
+
+  /* Note « pour … » : petite étiquette beurre */
   .row-from {
-    font-size: 13px;
-    line-height: 1.35;
-    color: var(--text-secondary);
+    max-width: 100%;
+    white-space: normal;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
     overflow: hidden;
   }
+
   .frozen-hint {
     margin: 2px 4px 0;
     font-size: 13px;
@@ -913,37 +912,26 @@
   .row-name {
     flex: 1;
     min-width: 0;
-    font-size: 16px;
-    font-weight: 500;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
     overflow-wrap: anywhere;
   }
+
+  .row-text .row-name { flex: none; }
 
   .row-qty {
     flex-shrink: 0;
     max-width: 45%;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--primary);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--text);
     text-align: right;
-  }
-
-  .badge {
-    flex-shrink: 0;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 2px 7px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-secondary);
   }
 
   .row-remove {
     flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+    width: 44px;
+    height: 44px;
     border: none;
     background: none;
     color: var(--text-secondary);
@@ -956,70 +944,68 @@
 
   .row-remove:active { background: var(--error-bg); color: var(--error); }
 
-  .is-done .row-name { text-decoration: line-through; color: var(--text-secondary); }
-  .is-done .row-qty { color: var(--text-secondary); }
+  /* Coché : barré épais, texte secondaire */
+  .is-done .row-name,
+  .is-done .row-qty {
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+    color: var(--text-secondary);
+  }
 
   .all-done {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
     background: var(--success-bg);
-    border-color: color-mix(in srgb, var(--success) 40%, transparent);
-    color: var(--success);
-    font-weight: 600;
+    color: var(--text);
+    font-weight: var(--fw-bold);
   }
 
-  .all-done span { color: var(--text); }
-
-  /* ── Dans le chariot ── */
-  .cart { padding: 4px 8px; }
-
+  /* ── Dans le chariot / à la maison : bandeau cliquable ── */
   .cart-head {
     width: 100%;
-    min-height: 52px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 0 8px;
+    min-height: 48px;
+    padding: 0 var(--sp-3);
     border: none;
-    background: none;
-    color: var(--text);
+    justify-content: flex-start;
     font-family: var(--font-body);
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-
-  .cart-head .rayon-count { margin-left: auto; }
-  .chevron { transition: transform 0.2s; color: var(--text-secondary); }
-  .chevron.open { transform: rotate(180deg); }
-  .cart .rows { padding-bottom: 6px; }
-
-  /* ── Ajout ── */
-  .add-btn {
-    min-height: 52px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    border-radius: var(--radius-xl);
-    border: 1.5px dashed var(--border-strong);
-    background: rgba(255, 255, 255, 0.04);
-    color: var(--text);
-    font-family: var(--font-body);
-    font-size: 15px;
-    font-weight: 600;
     cursor: pointer;
     touch-action: manipulation;
   }
 
-  .add-btn:active { background: var(--primary-light); border-color: var(--primary); }
+  .cart-head .rayon-count { margin-left: auto; }
+  .chevron { transition: transform var(--dur-base) var(--ease-out); }
+  .chevron.open { transform: rotate(180deg); }
+
+  /* ── Ajout ── */
+  .add-btn {
+    min-height: var(--tap);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    border: var(--line-w) solid var(--line);
+    background: var(--accent);
+    color: var(--on-accent);
+    box-shadow: var(--shadow-sm);
+    font-family: var(--font-body);
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+
+  .add-btn:active { transform: translate(var(--press), var(--press)); box-shadow: none; }
 
   /* Ajouter / Habituels / Mon placard */
   .tools {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: var(--sp-3);
   }
 
   .tools .add-btn { grid-column: 1 / -1; }
@@ -1027,43 +1013,44 @@
   .tools .tool-btn:last-child:nth-child(2) { grid-column: 1 / -1; }
 
   .tool-btn {
-    min-height: 48px;
+    min-height: var(--tap);
     min-width: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 0 12px;
-    border-radius: 14px;
-    border: 1px solid var(--border-strong);
-    background: rgba(9, 24, 50, 0.6);
+    gap: var(--sp-2);
+    padding: 0 var(--sp-3);
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
     color: var(--text);
+    box-shadow: var(--shadow-sm);
     font-family: var(--font-body);
-    font-size: 15px;
-    font-weight: 600;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
     white-space: nowrap;
     cursor: pointer;
     touch-action: manipulation;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
-  .tool-btn :global(svg) { color: var(--primary); flex-shrink: 0; }
-  .tool-btn:active { background: var(--primary-light); border-color: var(--primary); }
-  .tool-btn:disabled { opacity: 0.45; cursor: default; }
+  .tool-btn :global(svg) { flex-shrink: 0; }
+  .tool-btn:active:not(:disabled) { transform: translate(var(--press), var(--press)); box-shadow: none; }
+  .tool-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .tool-count {
     min-width: 22px;
-    padding: 1px 7px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.12);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-secondary);
+    padding: 0 6px;
+    background: var(--band);
+    color: var(--text-on-band);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    text-align: center;
   }
 
   /* ── Sûrement déjà à la maison ── */
   .home-hint {
-    padding: 0 8px 6px;
-    font-size: 14px;
+    padding: var(--sp-2) var(--sp-3) 0;
+    font-size: var(--fs-sm);
     color: var(--text-secondary);
   }
 
@@ -1072,10 +1059,13 @@
     padding: 0 4px;
     border: none;
     background: none;
-    color: var(--primary);
+    color: var(--text);
     font-family: var(--font-body);
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
     cursor: pointer;
     touch-action: manipulation;
   }
@@ -1087,80 +1077,75 @@
 
   .need-btn {
     flex-shrink: 0;
-    min-height: 40px;
-    margin-left: 2px;
-    padding: 0 12px;
-    border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
-    background: color-mix(in srgb, var(--accent) 14%, transparent);
-    color: #FFB596;
+    min-height: 44px;
+    margin-right: var(--sp-2);
+    padding: 0 var(--sp-3);
+    border: var(--line-w) solid var(--line);
+    background: var(--accent);
+    color: var(--on-accent);
+    box-shadow: var(--shadow-sm);
     font-family: var(--font-body);
     font-size: 13px;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     white-space: nowrap;
     cursor: pointer;
     touch-action: manipulation;
-    position: relative;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
-  /* Zone de tap portée à 48 px sans grossir le bouton */
-  .need-btn::before { content: ''; position: absolute; inset: -4px -2px; }
-  .need-btn:active { transform: scale(0.96); background: color-mix(in srgb, var(--accent) 26%, transparent); }
+  .need-btn:active { transform: translate(var(--press), var(--press)); box-shadow: none; }
 
   .add-form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--sp-3);
+    padding-bottom: var(--sp-4);
   }
 
-  .add-title { font-size: 17px; }
+  .add-form > :not(.add-title) { margin-inline: var(--sp-3); }
+  .add-title { font-size: 13px; font-family: var(--font-body); letter-spacing: var(--tracking-caps); justify-content: flex-start; }
 
   .add-row {
     display: grid;
     grid-template-columns: 1fr 1.3fr;
-    gap: 8px;
+    gap: var(--sp-2);
   }
-
-  .add-form .input { background: var(--bg); }
 
   .add-actions {
     display: flex;
-    gap: 8px;
+    gap: var(--sp-3);
   }
 
-  .add-actions .btn { flex: 1; min-height: 46px; border-radius: 14px; }
+  .add-actions .btn { flex: 1; }
 
   /* ── Actions ── */
   .actions {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 8px;
+    gap: var(--sp-3);
+    margin-top: var(--sp-2);
   }
-
-  .actions .btn { min-height: 50px; border-radius: 14px; }
-  .actions .btn-outline { background: rgba(9, 24, 50, 0.6); color: var(--text); }
 
   /* ── Divers ── */
   .center { display: flex; justify-content: center; padding: 48px 0; }
 
+  /* Rond d'une icône dessinée (indicateur de chargement) */
   .spinner {
     width: 28px;
     height: 28px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
+    border: 3px solid var(--line);
+    border-top-color: var(--accent);
     animation: spin 0.7s linear infinite;
   }
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
   @media (hover: hover) and (pointer: fine) {
-    .row-main:hover { background: rgba(255, 255, 255, 0.06); }
+    .row-main:hover { background: var(--surface-hover); }
     .row-remove:hover { background: var(--error-bg); color: var(--error); }
-    .add-btn:hover { border-color: var(--primary); }
-    .tool-btn:not(:disabled):hover { border-color: var(--primary); }
-    .need-btn:hover { background: color-mix(in srgb, var(--accent) 24%, transparent); }
-    .inline-link:hover { text-decoration: underline; }
+    .add-btn:hover { filter: brightness(1.05); }
+    .tool-btn:not(:disabled):hover { background: var(--surface-hover); }
+    .need-btn:hover { filter: brightness(1.05); }
+    .inline-link:hover { text-decoration-thickness: 3px; }
   }
 </style>

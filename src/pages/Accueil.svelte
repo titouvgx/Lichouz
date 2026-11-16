@@ -237,8 +237,8 @@
     flex-direction: column;
     /* svh = hauteur stable : ne bouge pas quand la barre d'adresse se replie,
        sinon les cartes seraient recalculées pendant le défilement */
-    min-height: calc(100vh - 76px - env(safe-area-inset-bottom, 0px));
-    min-height: calc(100svh - 76px - env(safe-area-inset-bottom, 0px));
+    min-height: calc(100vh - 84px - env(safe-area-inset-bottom, 0px));
+    min-height: calc(100svh - 84px - env(safe-area-inset-bottom, 0px));
     padding: var(--gutter);
     padding-top: calc(14px + env(safe-area-inset-top, 0px));
     padding-bottom: 8px;
@@ -248,65 +248,64 @@
 
   /* ── En-tête ────────────────────────────────── */
   .hero {
-    padding-right: 48px; /* place pour l'avatar en haut à droite */
+    padding-right: 56px; /* place pour l'avatar en haut à droite */
   }
 
-  /* Le fond est une photo sombre (clair comme sombre) : textes de l'en-tête en blanc */
+  /* Date : petite étiquette noire, comme un bandeau de rayon */
   .date-chip {
     display: inline-block;
-    padding: 3px 11px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.16);
-    color: #FFFFFF;
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
-
-  .date-chip::first-letter {
+    padding: 3px 8px;
+    background: var(--band);
+    color: var(--text-on-band);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
     text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+    margin-bottom: var(--sp-2);
   }
 
   .hero h1 {
-    font-size: clamp(28px, 8vw, 44px);
-    font-weight: 800;
-    color: #FFFFFF;
-    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    font-size: clamp(30px, 9.5vw, 46px);
   }
-
-
 
   .subtitle {
-    margin-top: 4px;
-    color: rgba(255, 255, 255, 0.82);
+    margin-top: var(--sp-1);
+    color: var(--text);
     font-size: 15px;
+    font-weight: var(--fw-medium);
   }
 
+  /* « 5 idées » : surligné orange, comme au marqueur */
   .subtitle strong {
-    color: var(--accent);
+    padding: 0 3px;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: var(--fw-bold);
   }
 
-  /* Repas du jour : pastille discrète, cliquable vers la fiche */
+  /* Repas du jour : petit bloc blanc cliquable vers la fiche */
   .today-meal {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    max-width: calc(100% + 48px); /* l'avatar est plus haut : on récupère sa marge */
-    min-height: 34px;
-    margin-top: 8px;
-    margin-right: -48px;
-    padding: 5px 10px;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--bg-raised) 80%, transparent);
+    max-width: calc(100% + 56px); /* l'avatar est plus haut : on récupère sa marge */
+    min-height: 44px;
+    margin-top: var(--sp-3);
+    margin-right: -56px;
+    padding: 6px 10px;
+    background: var(--surface);
+    border: var(--line-w) solid var(--line);
+    box-shadow: var(--shadow-sm);
     color: var(--text-secondary);
     font-size: 13px;
     line-height: 1.25;
     text-decoration: none;
     touch-action: manipulation;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
-  .today-meal > :global(svg:first-child) { flex-shrink: 0; color: var(--accent); }
-  .today-meal > :global(svg:last-child) { flex-shrink: 0; opacity: 0.7; }
+  .today-meal > :global(svg:first-child) { flex-shrink: 0; color: var(--text); }
+  .today-meal > :global(svg:last-child) { flex-shrink: 0; color: var(--text); }
 
   /* Titre long ou petit écran : on passe à la ligne (2 lignes max) plutôt que de couper le cuisinier */
   .today-text {
@@ -321,9 +320,9 @@
   .today-cook { white-space: nowrap; }
 
   .today-when { color: var(--text-secondary); }
-  .today-meal strong { color: var(--text); font-weight: 700; }
+  .today-meal strong { color: var(--text); font-weight: var(--fw-bold); }
 
-  .today-meal:active { transform: scale(0.97); }
+  .today-meal:active { transform: translate(var(--press), var(--press)); box-shadow: none; }
 
   /* ── Zone flottante ─────────────────────────── */
   .float-zone {
@@ -337,31 +336,32 @@
   .fridge-cta {
     display: flex;
     align-items: center;
-    gap: 12px;
-    min-height: 56px;
+    gap: var(--sp-3);
+    min-height: 60px;
     margin-top: 6px;
-    padding: 8px 14px 8px 8px;
-    border-radius: var(--radius-xl);
-    background: var(--bg-raised);
-    border: 1.5px solid var(--border-strong);
+    padding: 0 14px 0 0;
+    background: var(--surface);
+    border: var(--line-w) solid var(--line);
+    box-shadow: var(--shadow-md);
     color: var(--text);
     text-decoration: none;
     touch-action: manipulation;
-    transition: transform 0.1s;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
-  .fridge-cta:active { transform: scale(0.98); }
+  .fridge-cta:active { transform: translate(4px, 4px); box-shadow: none; }
 
+  /* Bloc orange collé à gauche, plein hauteur */
   .fridge-icon {
     flex-shrink: 0;
-    width: 40px;
-    height: 40px;
+    align-self: stretch;
+    width: 56px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--accent) 22%, transparent);
-    color: var(--accent);
+    background: var(--accent);
+    border-right: var(--line-w) solid var(--line);
+    color: var(--on-accent);
   }
 
   .fridge-text {
@@ -374,17 +374,18 @@
 
   .fridge-text strong {
     font-family: var(--font-display);
-    font-size: 16px;
-    font-weight: 700;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
   }
 
   .fridge-text span {
     margin-top: 2px;
-    font-size: 12.5px;
+    font-size: 13px;
     color: var(--text-secondary);
   }
 
-  .fridge-cta > :global(svg) { flex-shrink: 0; color: var(--text-secondary); }
+  .fridge-cta > :global(svg) { flex-shrink: 0; color: var(--text); }
 
   /* Grand écran : bouton centré, pas en bandeau sur toute la largeur */
   @media (min-width: 700px) {
@@ -394,15 +395,14 @@
   /* Téléphones courts (360 × 740…) : bouton sur une ligne, pour laisser
      la hauteur aux cartes (la zone flottante ne descend pas sous MIN_ZONE_HEIGHT) */
   @media (max-height: 780px) {
-    .fridge-cta { min-height: 48px; margin-top: 4px; padding: 4px 12px 4px 6px; }
-    .fridge-icon { width: 36px; height: 36px; border-radius: 10px; }
+    .fridge-cta { min-height: 50px; margin-top: 4px; }
+    .fridge-icon { width: 48px; }
     .fridge-text span { display: none; }
-    .today-meal { min-height: 30px; margin-top: 6px; padding: 4px 10px; }
+    .today-meal { margin-top: 6px; }
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .fridge-cta:hover { border-color: var(--primary); }
-    .today-meal:hover strong { color: var(--primary); }
+    .fridge-cta:hover, .today-meal:hover, .see-all:hover { background: var(--surface-hover); }
   }
 
   /* ── Pied de page ───────────────────────────── */
@@ -410,41 +410,37 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding-top: 6px;
+    gap: var(--sp-3);
+    padding-top: 10px;
   }
 
   .countdown {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--sp-2);
     min-width: 0;
-    padding: 6px 12px 6px 10px;
-    border-radius: 14px;
-    /* pastille opaque : lisible sur le motif, sans flou (coûteux sur mobile) */
-    background: color-mix(in srgb, var(--bg-raised) 88%, transparent);
     font-size: 13px;
-    line-height: 1.3;
-    color: var(--text-secondary);
+    line-height: 1.25;
+    color: var(--text);
   }
 
   .countdown strong {
     white-space: nowrap; /* « 15 h 39 » ne doit jamais être coupé */
-    color: var(--text);
+    font-weight: var(--fw-bold);
   }
 
+  /* Carré vert qui clignote sèchement (opacity seulement) */
   .dot {
     flex-shrink: 0;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+    width: 10px;
+    height: 10px;
     background: var(--success);
-    animation: ping 2s ease-out infinite;
+    border: var(--line-thin) solid var(--line);
+    animation: blink 1.6s steps(2, jump-none) infinite;
   }
 
-  @keyframes ping {
-    0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 60%, transparent); }
-    100% { box-shadow: 0 0 0 9px transparent; }
+  @keyframes blink {
+    50% { opacity: 0.25; }
   }
 
   .see-all {
@@ -453,17 +449,19 @@
     display: inline-flex;
     align-items: center;
     padding: 0 14px;
-    border-radius: 999px;
-    background: var(--bg-raised);
-    border: 1.5px solid var(--border-strong);
-    color: var(--primary);
-    font-size: 14px;
-    font-weight: 700;
+    background: var(--surface);
+    border: var(--line-w) solid var(--line);
+    box-shadow: var(--shadow-sm);
+    color: var(--text);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
     touch-action: manipulation;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
   .see-all:active {
-    transform: scale(0.96);
+    transform: translate(var(--press), var(--press));
+    box-shadow: none;
   }
 
   /* ── États ──────────────────────────────────── */
@@ -473,34 +471,27 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: var(--sp-1);
     text-align: center;
     padding: 32px 16px;
     color: var(--text-secondary);
   }
 
-  .state-icon {
-    color: var(--text-secondary);
-  }
+  .state-icon { color: var(--text); }
 
-  .state-detail {
-    font-size: 12px;
-    opacity: 0.8;
-  }
+  .state-detail { font-size: var(--fs-xs); }
 
-  .error-msg {
-    color: var(--error);
-  }
+  .error-msg { color: var(--error); font-weight: var(--fw-medium); }
 
   .state-cta {
-    margin-top: 16px;
+    margin-top: var(--sp-4);
     width: auto;
-    padding: 14px 24px;
+    padding: 0 24px;
   }
 
   /* Très petits écrans (iPhone SE, vieux Android) */
   @media (max-width: 359px) {
-    .countdown { font-size: 12px; }
+    .countdown { font-size: var(--fs-xs); }
     .see-all { padding: 0 10px; font-size: 13px; }
   }
 
@@ -512,5 +503,4 @@
     .see-all { margin-inline: auto; }
     .accueil-footer { justify-content: center; padding-top: 2px; }
   }
-
 </style>

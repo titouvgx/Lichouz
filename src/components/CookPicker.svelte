@@ -69,11 +69,11 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="overlay" onclick={onclose}>
+<div class="ui-overlay center" onclick={onclose}>
   <!-- svelte-ignore a11y_click_events_have_key_events -->
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
-    class="cp"
+    class="ui-dialog cp"
     bind:this={dialogEl}
     tabindex="-1"
     role="dialog"
@@ -88,7 +88,7 @@
         <h2 id="cp-title">Qui cuisine ?</h2>
         <p id="cp-sub" class="cp-sub">{subtitle}</p>
       </div>
-      <button class="cp-close" onclick={onclose} aria-label="Fermer">
+      <button class="btn btn-icon cp-close" onclick={onclose} aria-label="Fermer">
         <Icon name="x" size={18} strokeWidth={2.5} />
       </button>
     </div>
@@ -97,9 +97,9 @@
       {#if loading && members.length === 0}
         <div class="cp-loading"><div class="cp-spinner"></div></div>
       {:else}
-        {#each members as m (m.id)}
+        {#each members as m, idx (m.id)}
           {@const selected = m.id === currentId}
-          <button class="cp-item" class:selected aria-pressed={selected} onclick={() => onselect(m.id)}>
+          <button class="cp-item" class:selected aria-pressed={selected} style="--i: {Math.min(idx, 8)}" onclick={() => onselect(m.id)}>
             <span class="cp-avatar" aria-hidden="true">{initial(m.display_name)}</span>
             <span class="cp-name">
               {m.display_name}
@@ -123,50 +123,25 @@
 </div>
 
 <style>
-  .overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 200; /* au-dessus de la barre d'onglets (100) */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    background: rgba(2, 8, 22, 0.66);
-    animation: cp-fade 0.18s ease-out;
-  }
-
-  .cp {
-    width: min(360px, 100%);
-    max-height: calc(100svh - 40px);
-    overflow-y: auto;
-    padding: 16px 14px 14px;
-    border-radius: 22px;
-    background: var(--bg);
-    border: 1px solid var(--border-strong);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
-    outline: none;
-    animation: cp-pop 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.15);
-  }
-
-  @keyframes cp-fade { from { opacity: 0; } }
-  @keyframes cp-pop { from { opacity: 0; transform: scale(0.94) translateY(8px); } }
+  /* Voile, cadre et animation : classes communes (.ui-overlay.center, .ui-dialog) */
+  .cp { width: min(360px, 100%); padding: var(--sp-4) var(--sp-4) var(--sp-4); }
 
   .cp-head {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 0 2px 12px 4px;
+    gap: var(--sp-3);
+    padding-bottom: var(--sp-3);
   }
 
   .cp-head-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
-    background: var(--primary-light);
-    color: var(--primary);
+    width: 40px;
+    height: 40px;
+    border: var(--line-w) solid var(--line);
+    background: var(--band);
+    color: var(--text-on-band);
     flex-shrink: 0;
   }
 
@@ -176,7 +151,8 @@
   }
 
   h2 {
-    font-size: 19px;
+    font-size: var(--fs-lg);
+    text-transform: uppercase;
     color: var(--text);
     line-height: 1.2;
   }
@@ -190,81 +166,70 @@
     text-overflow: ellipsis;
   }
 
-  .cp-close {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    margin: -6px -4px -6px 0;
-    border-radius: 50%;
-    border: none;
-    background: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
-    touch-action: manipulation;
-    flex-shrink: 0;
-  }
+  .cp-close { align-self: flex-start; }
 
   .cp-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--sp-2);
   }
 
   .cp-item {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--sp-3);
     width: 100%;
     min-height: 54px;
-    padding: 8px 12px;
-    border-radius: 14px;
-    border: 1px solid var(--border);
+    padding: var(--sp-2) var(--sp-3);
+    border: var(--line-w) solid var(--line);
     background: var(--surface);
     color: var(--text);
     font-family: var(--font-body);
-    font-size: 16px;
-    font-weight: 600;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
     text-align: left;
     cursor: pointer;
     touch-action: manipulation;
-    transition: background 0.15s, border-color 0.15s, transform 0.12s;
+    animation: fade-up var(--dur-sheet) var(--ease-out) calc(var(--i, 0) * 45ms) backwards;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
   .cp-item:active {
-    transform: scale(0.98);
+    transform: translate(var(--press), var(--press));
+    box-shadow: none;
   }
 
+  /* Choisi : orange + ombre franche */
   .cp-item.selected {
-    border-color: var(--primary);
-    background: var(--primary-light);
+    background: var(--accent);
+    color: var(--on-accent);
+    box-shadow: var(--shadow-sm);
   }
 
-  .cp-nobody {
-    margin-top: 4px;
-    color: var(--text-secondary);
-  }
+  .cp-nobody { margin-top: var(--sp-1); }
 
   .cp-avatar {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 70%, var(--accent)));
-    color: var(--on-primary);
-    font-size: 15px;
-    font-weight: 700;
+    width: 36px;
+    height: 36px;
+    border: var(--line-w) solid var(--ink);
+    background: var(--highlight);
+    color: var(--text);
+    font-size: 16px;
+    font-weight: var(--fw-bold);
     flex-shrink: 0;
   }
 
+  .cp-item.selected .cp-avatar { background: var(--ink); color: var(--butter); border-color: var(--ink); }
+
   .cp-avatar-empty {
     background: transparent;
-    border: 1.5px dashed var(--border-strong);
-    color: var(--text-secondary);
+    border: var(--line-w) dashed var(--line);
+    color: var(--text);
   }
+  .cp-item.selected .cp-avatar-empty { background: transparent; color: var(--on-accent); border-color: var(--ink); }
 
   .cp-name {
     flex: 1;
@@ -275,49 +240,42 @@
   }
 
   .cp-me {
-    margin-left: 4px;
+    margin-left: var(--sp-1);
     font-size: 13px;
-    font-weight: 500;
-    color: var(--text-secondary);
+    font-weight: var(--fw-medium);
   }
+  .cp-item:not(.selected) .cp-me { color: var(--text-secondary); }
 
   .cp-check {
     display: flex;
-    color: var(--primary);
     flex-shrink: 0;
   }
 
   .cp-empty {
-    padding: 8px 4px;
-    font-size: 14px;
+    padding: var(--sp-2) var(--sp-1);
+    font-size: var(--fs-sm);
     color: var(--text-secondary);
   }
 
   .cp-loading {
     display: flex;
     justify-content: center;
-    padding: 16px;
+    padding: var(--sp-4);
   }
 
   .cp-spinner {
     width: 24px;
     height: 24px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: cp-spin 0.7s linear infinite;
+    border: var(--line-w) solid var(--line);
+    border-top-color: var(--accent);
+    animation: cp-spin 0.8s steps(4) infinite;
   }
 
   @keyframes cp-spin { to { transform: rotate(360deg); } }
 
-  .cp-item:focus-visible,
-  .cp-close:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
+  .cp-item:focus-visible { outline-offset: 2px; }
 
   @media (hover: hover) and (pointer: fine) {
-    .cp-item:hover { border-color: var(--primary); }
-    .cp-close:hover { background: var(--surface); color: var(--text); }
+    .cp-item:not(.selected):hover { background: var(--surface-hover); }
   }
 </style>

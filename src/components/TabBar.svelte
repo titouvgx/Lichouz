@@ -24,7 +24,7 @@
 </script>
 
 <nav class="tab-bar" aria-label="Navigation principale" style:--count={tabs.length}>
-  <!-- Pastille qui glisse sous l'onglet actif (une seule, déplacée par transform) -->
+  <!-- Bloc orange qui glisse sous l'onglet actif (une seule pièce, déplacée par transform) -->
   <span
     class="indicator"
     class:hidden={activeIndex < 0}
@@ -38,19 +38,19 @@
       class:active={isActive(tab.route)}
       aria-current={isActive(tab.route) ? 'page' : undefined}
     >
-      <svg class="tab-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg class="tab-icon" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         {#if tab.icon === 'home'}
           <path d="M3 10.5 12 3l9 7.5"/>
-          <path d="M5 9v11a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9"/>
+          <path d="M5 9v12h5v-6h4v6h5V9"/>
         {:else if tab.icon === 'book'}
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          <path d="M4 3h16v18H4z"/>
+          <path d="M8 3v18M11 8h6M11 12h6"/>
         {:else if tab.icon === 'calendar'}
-          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <rect x="3" y="4" width="18" height="18"/>
           <path d="M16 2v4M8 2v4M3 10h18"/>
         {:else if tab.icon === 'cart'}
-          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+          <path d="M1 2h4l3 13h12l3-9H6"/>
+          <path d="M9 20h1M18 20h1"/>
         {:else if tab.icon === 'clock'}
           <circle cx="12" cy="12" r="10"/>
           <path d="M12 6v6l4 2"/>
@@ -62,86 +62,87 @@
 </nav>
 
 <style>
+  /* Barre d'onglets « Brutal beurre » : bande blanche, trait noir au-dessus.
+     L'onglet actif est un bloc orange qui GLISSE d'un onglet à l'autre
+     (une seule pièce, déplacée par transform, avec un petit claquement). */
   .tab-bar {
     view-transition-name: tab-bar; /* reste immobile pendant les transitions de page */
     position: fixed;
     inset: auto 0 0 0;
     display: flex;
-    height: 56px;
-    padding: 0 8px;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: var(--bg-raised);
-    border-top: 1px solid var(--border);
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding: 0 6px env(safe-area-inset-bottom, 0px);
+    background: var(--surface);
+    border-top: var(--line-w) solid var(--line);
     z-index: 100;
   }
 
-  /* Pastille : une « case » de la largeur d'un onglet, déplacée de i cases.
-     Le rond visible est dessiné au centre de la case (::before). */
+  /* Bloc orange : une « case » de la largeur d'un onglet, déplacée de i cases */
   .indicator {
     position: absolute;
-    top: 5px;
-    left: 8px;
-    width: calc((100% - 16px) / var(--count));
-    height: 30px;
+    top: 7px;
+    left: 6px;
+    width: calc((100% - 12px) / var(--count));
+    height: 50px;
+    padding: 0 4px 0 0; /* l'ombre (3 px à droite) reste dans la case */
     transform: translateX(calc(var(--i) * 100%));
-    transition: transform 0.38s cubic-bezier(0.3, 1.35, 0.5, 1), opacity 0.2s;
+    transition: transform var(--dur-sheet) var(--ease-snap), opacity var(--dur-base);
     pointer-events: none;
   }
 
   .indicator::before {
     content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: 56px;
+    display: block;
     height: 100%;
-    margin-left: -28px;
-    border-radius: 999px;
-    background: var(--primary-light);
+    background: var(--accent);
+    border: var(--line-w) solid var(--line);
+    box-shadow: var(--shadow-sm);
   }
 
   .indicator.hidden { opacity: 0; }
 
   .tab {
-    position: relative; /* au-dessus de la pastille */
+    position: relative; /* au-dessus du bloc */
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    color: var(--text-secondary);
+    gap: 2px;
+    min-width: 0;
+    color: var(--text);
     text-decoration: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .tab.active {
-    color: var(--primary);
-  }
-
-  /* Petit rebond de l'icône quand l'onglet devient actif */
-  .tab.active .tab-icon {
-    animation: tab-pop 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
-  }
-
-  @keyframes tab-pop {
-    0% { transform: scale(0.8); }
-    60% { transform: scale(1.12); }
-    100% { transform: scale(1); }
-  }
-
-  .tab:active .tab-icon { transform: scale(0.88); }
-
-  .tab {
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+
+  .tab.active { color: var(--on-accent); }
+
+  /* Appui : l'onglet s'enfonce un peu */
+  .tab:active { transform: translateY(2px); }
+
+  .tab-icon {
+    stroke-width: 2;
+    stroke-linecap: square;
+    stroke-linejoin: miter;
+  }
+
+  /* L'icône de l'onglet qui devient actif « tombe » à sa place */
+  .tab.active .tab-icon {
+    animation: tab-drop var(--dur-sheet) var(--ease-snap);
+  }
+
+  @keyframes tab-drop {
+    from { transform: translateY(-6px); }
   }
 
   .tab-label {
-    font-size: 11px;
-    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: -0.01em;
+    font-weight: var(--fw-medium);
+    white-space: nowrap;
   }
 
-  .tab.active .tab-label {
-    font-weight: 600;
-  }
+  .tab.active .tab-label { font-weight: var(--fw-bold); }
 </style>

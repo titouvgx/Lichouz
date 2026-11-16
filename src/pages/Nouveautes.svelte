@@ -16,8 +16,8 @@
     <p class="head-sub">Tu utilises la version {APP_VERSION}.</p>
   </header>
 
-  {#each RELEASE_NOTES as note (note.version)}
-    <section class="card" aria-labelledby="v-{note.version}">
+  {#each RELEASE_NOTES as note, ni (note.version)}
+    <section class="card" style="--i: {Math.min(ni, 8)}" aria-labelledby="v-{note.version}">
       <h2 id="v-{note.version}">Version {note.version} <span class="date">{fmt(note.date)}</span></h2>
       <ul>
         {#each note.items as item, i (i)}
@@ -29,21 +29,15 @@
 </div>
 
 <style>
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    padding: 18px;
-  }
   .page {
     padding: var(--gutter);
     padding-top: 0;
     max-width: 560px;
     margin: 0 auto;
-    padding-bottom: 32px;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--sp-4);
   }
   .back-link {
     display: inline-flex;
@@ -52,13 +46,21 @@
     gap: 6px;
     min-height: 44px;
     margin-top: calc(8px + env(safe-area-inset-top, 0px));
-    color: var(--primary);
-    font-weight: 600;
+    color: var(--text);
+    font-weight: var(--fw-bold);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
     touch-action: manipulation;
   }
-  .head h1 { font-family: var(--font-display); font-size: 28px; padding-right: 48px; }
-  .head-sub { margin-top: 4px; font-size: 15px; color: var(--text-secondary); }
-  h2 { font-size: 17px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
-  .date { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
-  ul { margin: 8px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; line-height: 1.45; }
+  .head h1 { padding-right: 56px; }
+  .head-sub { margin-top: var(--sp-1); font-size: 15px; font-weight: var(--fw-medium); color: var(--text-secondary); }
+  .card {
+    padding: var(--sp-4);
+    animation: fade-up var(--dur-sheet) var(--ease-out) calc(var(--i, 0) * 45ms) backwards;
+  }
+  h2 { font-size: var(--fs-lg); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2); }
+  .date { font-size: 13px; font-weight: var(--fw-medium); color: var(--text-secondary); }
+  ul { margin: var(--sp-2) 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; line-height: 1.45; }
+  li::marker { color: var(--accent); }
 </style>

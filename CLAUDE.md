@@ -2,13 +2,14 @@
 
 **Lichouz** (anciennement « Courses en famille », renommée le 14/11/2026 → `docs/renommage-lichouz.md`) : PWA familiale : recettes, planning de la semaine, liste de courses partagée en temps réel entre les membres d'une famille.
 - **Site** : https://titouvgx.github.io/Lichouz/ — **Repo** : https://github.com/titouvgx/Lichouz (public). ⚠️ **L majuscule obligatoire** : GitHub Pages respecte la casse (`/lichouz/` = 404). Décision du 14/11/2026 : on garde `Lichouz` ; Site URL / Redirect URLs Supabase = `/Lichouz/`. Ne pas renommer le dépôt (casserait les liens et les applis installées)
-- **Détails à lire seulement si besoin** : `docs/architecture.md` (modèle, Realtime, photos, hors connexion, vie du foyer, structure des fichiers, recettes livrées), `docs/design.md` (design « Mer », règles UI mobile), `docs/historique.md` (étapes passées, anciennes décisions), `supabase/prod/README.md` (mise en prod), `tests/rls/README.md` (banc d'attaque)
+- **Détails à lire seulement si besoin** : `docs/architecture.md` (modèle, Realtime, photos, hors connexion, vie du foyer, structure des fichiers, recettes livrées), `docs/design.md` (design « Brutal beurre » depuis v1.9.0, règles UI mobile), `docs/historique.md` (étapes passées, anciennes décisions), `supabase/prod/README.md` (mise en prod), `tests/rls/README.md` (banc d'attaque)
 
 ## Règles de travail (demandées par l'utilisateur)
 - Tutoiement, explications simples (il doit pouvoir les raconter avec ses mots). Séparer vérifié / supposé, taux de fiabilité en % sur les réponses importantes, vérifier sur internet ce qui peut changer
 - Signaler de soi-même risques et angles morts. Poser les questions si l'attendu n'est pas clair
 - Économiser les tokens : pas de sous-agent sauf gros chantier parallèle demandé ; captures seulement des écrans modifiés ; sorties de commandes filtrées
 - **Pousser sur `main` (= déploiement) seulement si vérifié** : `npm run check` sans erreur, `npm test`, `npm run build`, captures mobiles 393×852 regardées
+- **Branche `preprod` (bac à sable, depuis le 16/11/2026)** : toute nouvelle version passe d'abord par `preprod` (branche de travail → `preprod` → `main`). Titouan la teste en local (`git checkout preprod && git pull && npm ci && npm run dev -- --host`, base `courses-test`, migrations exécutées sur `courses-test` avant). `main` ne reçoit que ce qui est passé par `preprod` ET validé par Titouan. `preprod` ne déploie rien (seul `main` déclenche `deploy.yml`) ; ne jamais lancer « Run workflow » du déploiement sur une autre branche que `main`
 - Idées de la « boîte à idées » : rien sans feu vert explicite
 
 ## Stack
@@ -52,7 +53,7 @@ Svelte 5 (runes uniquement : `$state`, `$derived`, `$effect`, `$props`) + TypeSc
 ## Pièges connus
 - `signIn()` ne touche PAS `auth.loading` (sinon la page de connexion est remplacée par le spinner)
 - Service worker : chaque déploiement recharge l'appli ouverte (différé pendant le formulaire recette) ; enregistré seulement en build
-- `body` doit rester transparent (fond photo `AppBackdrop`) ; fenêtres `.overlay` en `z-index: 200` (tab bar à 100)
+- `body` doit rester transparent (fond animé `AppBackdrop`) ; fenêtres `.ui-overlay` en `z-index: 200` (tab bar à 100) ; aucune couleur/ombre/arrondi en dur : variables de `app.css` (`docs/design.md`)
 - Icônes : composant `Icon.svelte` ; émojis seulement pour les rayons et l'ingrédient 🥕. Animer seulement `transform`/`opacity`, `prefers-reduced-motion` respecté, zones de tap ≥ 44 px, `:hover` seulement souris
 
 ## Risques et faiblesses connus (à traiter en 1.0.x)
@@ -63,7 +64,7 @@ Svelte 5 (runes uniquement : `$state`, `$derived`, `$effect`, `$props`) + TypeSc
 ## Versions et mise en ligne
 - SemVer, source unique `package.json` (affichée dans l'appli) ; chaque changement notable → `CHANGELOG.md` section `[Non publié]` avec les migrations nécessaires
 - Sortir X.Y.Z : bases à jour → `npm version X.Y.Z --no-git-tag-version` → CHANGELOG daté → check + test + build + captures → commit « Version X.Y.Z » sur main → vérifier site et Actions → `git tag vX.Y.Z && git push origin vX.Y.Z`
-- Branche de travail → vérifications ; `main` → vérifications puis déploiement
+- Branche de travail → vérifications ; `preprod` → vérifications + test de Titouan en local ; `main` → vérifications puis déploiement
 - Réglages Supabase par base pour invitations / mot de passe oublié : fonction `accepter-invitation` déployée (Verify JWT désactivé, `supabase/functions/README.md`) ; Site URL + Redirect URLs = adresse du site ; modèle « Reset Password » : `{{ .SiteURL }}?token_hash={{ .TokenHash }}&type=recovery#/nouveau-mot-de-passe` ; modèle « Confirm signup » = `supabase/emails/confirm-signup.html` ; SMTP Brevo (prod, branché le 15/11/2026, expéditeur Gmail dédié)
 
 ## Suite

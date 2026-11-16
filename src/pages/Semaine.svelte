@@ -17,6 +17,7 @@
   } from '../lib/api/meals'
   import { fetchRecipes } from '../lib/api/recipes'
   import { sizedImage } from '../lib/images'
+  import { categoryColor } from '../lib/categoryColors'
   import { fetchFamilyMembers, setSlotCook } from '../lib/api/household'
   import { toast } from '../lib/toast.svelte'
   import CookPicker from '../components/CookPicker.svelte'
@@ -368,11 +369,11 @@
       <h1>Semaine</h1>
       <div class="week-nav">
         <button class="nav-btn" onclick={prevWeek} aria-label="Semaine précédente">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
         </button>
         <span class="week-label">{isCurrentWeek ? 'Cette semaine' : weekLabel()}</span>
         <button class="nav-btn" onclick={nextWeek} aria-label="Semaine suivante">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
         </button>
       </div>
     </div>
@@ -387,7 +388,7 @@
       {/if}
     </div>
     <div class="summary-bar" aria-hidden="true">
-      <div class="summary-fill" style:width="{(plannedCount / 14) * 100}%"></div>
+      <div class="summary-fill" style:transform="scaleX({plannedCount / 14})"></div>
     </div>
 
     {#if !loading && !error && myId}
@@ -415,7 +416,7 @@
       {#each Array(7) as _, dayIdx}
         {@const today = isToday(dayIdx)}
         {@const past = isCurrentWeek && !today && isPast(dayIdx)}
-        <section class="day-card" class:is-today={today} class:is-past={past} aria-label={DAY_NAMES_FULL[dayIdx]}>
+        <section class="day-card" style="--i: {dayIdx}" class:is-today={today} class:is-past={past} aria-label={DAY_NAMES_FULL[dayIdx]}>
           <div class="day-header">
             <div class="day-badge">
               <span class="day-name">{DAY_NAMES[dayIdx]}</span>
@@ -479,7 +480,7 @@
               <Icon name="users" size={14} /> {slot.portions}
             </button>
             <button class="remove-btn" onclick={() => handleRemoveSlot(slot.id)} aria-label="Retirer {slot.recipes.title}">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
           {/if}
         </div>
@@ -489,7 +490,7 @@
     <button class="slot empty" class:dimmed={onlyMine} onclick={() => openPicker(dayIdx, meal.key)} aria-label="Ajouter un repas : {DAY_NAMES_FULL[dayIdx]} {meal.label}">
       <span class="empty-meal"><Icon name={meal.icon} size={14} /> {meal.label}</span>
       <span class="empty-plus">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
       </span>
     </button>
   {/if}
@@ -499,19 +500,19 @@
 {#if pickerOpen}
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <!-- svelte-ignore a11y_click_events_have_key_events -->
-  <div class="overlay" onclick={closePicker}>
+  <div class="ui-overlay" onclick={closePicker}>
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="picker" onclick={(e) => e.stopPropagation()}>
+    <div class="ui-sheet picker" onclick={(e) => e.stopPropagation()}>
       <div class="picker-header">
         <h2>{DAY_NAMES_FULL[pickerDay]} · {pickerMeal === 'midi' ? 'Midi' : 'Soir'}</h2>
         <button class="picker-close" onclick={closePicker} aria-label="Fermer">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
       </div>
 
       <div class="picker-search">
-        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
         <input
@@ -537,14 +538,14 @@
               {#if sizedImage(recipe.image_url, 44, 44)}
                 <img src={sizedImage(recipe.image_url, 44, 44)} alt="" class="picker-thumb" loading="lazy" />
               {:else}
-                <span class="picker-emoji" aria-hidden="true">{recipe.title.trim().charAt(0)}</span>
+                <span class="picker-emoji" aria-hidden="true" style="background: {categoryColor(recipe.recipe_categories?.name)}">{recipe.title.trim().charAt(0)}</span>
               {/if}
               <div class="picker-item-info">
                 <span class="picker-item-title">{recipe.title}</span>
                 {#if recipe.recipe_categories}
                   <span
-                    class="picker-item-cat"
-                    style="color: {recipe.recipe_categories.color}"
+                    class="tag picker-item-cat"
+                    style="background: {categoryColor(recipe.recipe_categories.name)}; color: var(--ink)"
                   >{recipe.recipe_categories.name}</span>
                 {/if}
               </div>
@@ -576,74 +577,65 @@
   .page {
     padding: var(--gutter);
     padding-top: calc(var(--gutter) + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     max-width: 1600px;
     margin: 0 auto;
   }
 
   /* ── En-tête ── */
-  .week-header {
-    margin-bottom: 16px;
-  }
+  .week-header { margin-bottom: var(--sp-4); }
 
   /* Téléphone : titre, puis navigation sur toute la largeur (évite l'avatar) */
   .title-row {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: var(--sp-3);
     margin-bottom: 14px;
   }
 
-  .title-row h1 {
-    padding-right: 48px; /* avatar en haut à droite */
-  }
+  .title-row h1 { padding-right: 56px; /* avatar en haut à droite */ }
 
   @media (min-width: 640px) {
     .title-row {
       flex-direction: row;
       align-items: center;
       justify-content: space-between;
-      padding-right: 52px;
+      padding-right: 60px;
     }
-  }
-
-  .title-row h1 {
-    font-size: 28px;
   }
 
   .week-nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 4px;
-    padding: 4px;
-    border-radius: 999px;
+    gap: var(--sp-1);
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: var(--line-w) solid var(--line);
+    box-shadow: var(--shadow-sm);
   }
 
   .nav-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
+    width: 44px;
+    height: 44px;
     border: none;
     background: transparent;
     color: var(--text);
     cursor: pointer;
     touch-action: manipulation;
-    transition: background 0.15s;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
-  .nav-btn:active {
-    background: var(--surface-hover);
-  }
+  .nav-btn:active { transform: translate(2px, 2px); background: var(--surface-hover); }
 
   .week-label {
-    font-size: 15px;
-    font-weight: 700;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
     color: var(--text);
     padding: 0 6px;
     white-space: nowrap;
@@ -655,44 +647,44 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin-bottom: 8px;
-  }
-
-  .summary strong {
+    gap: var(--sp-2);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
     color: var(--text);
-    font-size: 16px;
+    margin-bottom: var(--sp-2);
   }
 
-  .summary-range {
-    margin-left: 2px;
-  }
+  .summary strong { font-size: var(--fs-lg); font-weight: var(--fw-bold); }
+  .summary-range { margin-left: 2px; color: var(--text-secondary); }
 
   .today-btn {
+    min-height: 44px;
     border: none;
     background: none;
-    color: var(--primary);
+    color: var(--text);
     font-family: var(--font-body);
     font-size: 13px;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
     cursor: pointer;
-    padding: 6px 0;
+    touch-action: manipulation;
   }
 
+  /* Progression : bloc carré bordé, remplissage orange (scaleX) */
   .summary-bar {
-    height: 6px;
-    border-radius: 999px;
+    height: 14px;
+    border: var(--line-w) solid var(--line);
     background: var(--surface);
     overflow: hidden;
   }
 
   .summary-fill {
     height: 100%;
-    border-radius: inherit;
-    background: linear-gradient(90deg, var(--primary), color-mix(in srgb, var(--primary) 60%, white));
-    transition: width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    background: var(--accent);
+    transform-origin: left center;
+    transition: transform var(--dur-sheet) var(--ease-out);
   }
 
   /* ── Grille des jours ──
@@ -702,7 +694,7 @@
   .days-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: var(--sp-4);
   }
 
   @media (min-width: 640px) {
@@ -710,35 +702,35 @@
   }
 
   @media (min-width: 1100px) {
-    .days-grid { grid-template-columns: repeat(7, 1fr); gap: 10px; }
+    .days-grid { grid-template-columns: repeat(7, 1fr); gap: var(--sp-3); }
   }
 
+  /* Un jour = carte blanche + bandeau */
   .day-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    animation: fade-up 0.35s ease-out backwards;
+    background: var(--surface);
+    border: var(--line-w) solid var(--line);
+    box-shadow: var(--shadow-md);
+    animation: fade-up var(--dur-sheet) var(--ease-out) calc(var(--i, 0) * 45ms) backwards;
   }
 
-  .day-card.is-today {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 1px var(--primary), 0 8px 24px -12px var(--primary);
-  }
-
-  /* Jour passé : seule la date passe en retrait (la carte reste lisible) */
-  .is-past .day-badge,
-  .is-past .day-full {
-    opacity: 0.5;
-  }
+  /* Jour passé : seul le bandeau passe en retrait (la carte reste lisible) */
+  .is-past .day-header { opacity: 0.6; }
 
   .day-header {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--sp-3);
+    padding: 6px 10px;
+    background: var(--band);
+    color: var(--text-on-band);
+  }
+
+  /* Aujourd'hui : bandeau orange, texte noir */
+  .is-today .day-header {
+    background: var(--accent);
+    color: var(--on-accent);
   }
 
   .day-badge {
@@ -746,56 +738,58 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.1);
+    width: 40px;
+    height: 40px;
+    background: var(--text-on-band);
+    color: var(--band);
     line-height: 1;
     flex-shrink: 0;
   }
 
   .is-today .day-badge {
-    background: var(--primary);
-    color: var(--on-primary);
+    background: var(--ink);
+    color: var(--butter);
   }
 
   .day-name {
     font-size: 10px;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    opacity: 0.8;
+    letter-spacing: var(--tracking-caps);
   }
 
   .day-num {
     font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 800;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
     margin-top: 2px;
   }
 
   .day-full {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--text);
-    text-transform: capitalize;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
   }
 
   .today-chip {
     margin-left: auto;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 999px;
-    background: var(--primary-light);
-    color: var(--primary);
+    padding: 1px 6px;
+    border: var(--line-thin) solid var(--ink);
+    background: var(--ink);
+    color: var(--butter);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
   }
 
   /* Midi / Soir : côte à côte sur téléphone et tablette, l'un sous l'autre en 7 colonnes */
   .slots {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: var(--sp-2);
+    padding: var(--sp-2);
     flex: 1;
   }
 
@@ -806,21 +800,18 @@
     /* sélecteurs plus précis : ces règles passent devant celles de base, écrites plus bas */
     .slots .slot-visual { height: 120px; }
     .slots .slot { min-height: 150px; }
-    .slots .slot.empty { flex-direction: column; justify-content: center; gap: 10px; }
+    .slots .slot.empty { flex-direction: column; justify-content: center; gap: var(--sp-3); }
   }
 
-  .slot {
-    border-radius: var(--radius-lg);
-    min-height: 64px;
-  }
+  .slot { min-height: 64px; }
 
-  /* ── Tuile remplie ── */
+  /* ── Mini-carte repas planifié ── */
   .slot.filled {
     position: relative;
     display: flex;
     flex-direction: column;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid var(--border);
+    background: var(--surface);
+    border: var(--line-w) solid var(--line);
     overflow: hidden;
   }
 
@@ -828,7 +819,8 @@
     position: relative;
     display: block;
     height: 76px;
-    background: linear-gradient(150deg, color-mix(in srgb, var(--primary) 45%, #0B1D3A), #0B1D3A);
+    background: var(--highlight);
+    border-bottom: var(--line-w) solid var(--line);
     overflow: hidden;
   }
 
@@ -846,38 +838,39 @@
     align-items: center;
     justify-content: center;
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: var(--fw-bold);
     font-size: 40px;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text);
   }
 
   .meal-chip {
     position: absolute;
-    top: 6px;
-    left: 6px;
+    top: 0;
+    left: 0;
     display: inline-flex;
     align-items: center;
     gap: 4px;
     padding: 3px 8px;
-    border-radius: 999px;
-    background: rgba(6, 20, 45, 0.78);
-    color: #FFFFFF;
+    background: var(--band);
+    color: var(--text-on-band);
     font-size: 11px;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
   }
 
   .slot-body {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    padding: 8px 10px 8px;
+    padding: 8px 10px;
     flex: 1;
   }
 
   .slot-title {
-    font-size: 14px;
-    font-weight: 700;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
     line-height: 1.25;
     color: var(--text);
     display: -webkit-box;
@@ -898,15 +891,14 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    min-height: 32px;
-    padding: 0 10px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
+    min-height: 44px;
+    padding: 0 8px;
+    border: none;
     background: transparent;
-    color: var(--text-secondary);
+    color: var(--text);
     font-family: var(--font-body);
     font-size: 13px;
-    font-weight: 600;
+    font-weight: var(--fw-bold);
     cursor: pointer;
     touch-action: manipulation;
   }
@@ -915,38 +907,33 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    margin: -6px -8px -6px 0;
     border: none;
     background: transparent;
     color: var(--text-secondary);
     cursor: pointer;
     touch-action: manipulation;
-    transition: background 0.15s, color 0.15s;
   }
 
-  .remove-btn:active {
-    background: var(--error-bg);
-    color: var(--error);
-  }
+  .remove-btn:active { background: var(--error-bg); color: var(--error); }
 
   .portions-edit {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--sp-1);
   }
 
   .portions-btn,
   .portions-save {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: 1px solid var(--border-strong);
-    background: transparent;
+    width: 32px;
+    height: 32px;
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
     color: var(--text);
-    font-size: 16px;
-    font-weight: 700;
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -955,50 +942,48 @@
     font-family: var(--font-body);
     line-height: 1;
     touch-action: manipulation;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
-  .portions-save {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: var(--on-primary);
-  }
+  .portions-btn:active,
+  .portions-save:active { transform: translate(2px, 2px); }
+
+  .portions-save { background: var(--accent); color: var(--on-accent); }
 
   .portions-val {
-    font-size: 14px;
-    font-weight: 700;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
     min-width: 18px;
     text-align: center;
     color: var(--text);
   }
 
-  /* ── Tuile vide ── */
+  /* ── Créneau vide : bloc carré, bordure pointillée 2 px ── */
   .slot.empty {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
-    padding: 0 12px;
-    border: 1.5px dashed var(--border-strong);
-    background: rgba(255, 255, 255, 0.04);
-    color: var(--text-secondary);
+    gap: var(--sp-2);
+    padding: 0 var(--sp-3);
+    border: var(--line-w) dashed var(--line);
+    background: transparent;
+    color: var(--text);
     font-family: var(--font-body);
     cursor: pointer;
     touch-action: manipulation;
-    transition: background 0.15s, border-color 0.15s, color 0.15s, opacity 0.2s;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
-  .slot.empty:active {
-    background: var(--primary-light);
-    border-color: var(--primary);
-    color: var(--primary);
-  }
+  .slot.empty:active { transform: translate(2px, 2px); background: var(--surface-hover); }
 
   .empty-meal {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
   }
 
   .empty-plus {
@@ -1007,13 +992,13 @@
     justify-content: center;
     width: 28px;
     height: 28px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text);
+    background: var(--accent);
+    color: var(--on-accent);
+    border: var(--line-w) solid var(--line);
   }
 
-  /* ── Qui cuisine ? : pastille en haut à droite de la photo ──
-     Zone tactile 44 px, visuel 28 px (même style que l'avatar de Mon compte) */
+  /* ── Qui cuisine ? : puce carrée en haut à droite de la photo ──
+     Zone tactile 44 px, visuel 28 px */
   .cook-btn {
     position: absolute;
     top: 0;
@@ -1029,7 +1014,6 @@
     background: transparent;
     cursor: pointer;
     touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
   }
 
   .cook-dot {
@@ -1038,43 +1022,27 @@
     justify-content: center;
     width: 28px;
     height: 28px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 70%, var(--accent)));
-    color: var(--on-primary);
+    border: var(--line-w) solid var(--ink);
+    background: var(--accent);
+    color: var(--on-accent);
     font-size: 13px;
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     line-height: 1;
-    box-shadow: 0 0 0 2px rgba(6, 20, 45, 0.7), 0 2px 6px rgba(0, 0, 0, 0.3);
-    transition: transform 0.15s;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
-  /* Personne : icône toque en contour sur fond sombre (lisible sur la photo) */
-  .cook-dot-empty {
-    background: rgba(6, 20, 45, 0.78);
-    color: #FFFFFF;
-    box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.55);
-  }
+  /* Personne : toque sur fond beurre */
+  .cook-dot-empty { background: var(--butter); color: var(--ink); }
 
-  .cook-btn:active .cook-dot {
-    transform: scale(0.88);
-  }
-
-  .cook-btn:focus-visible {
-    outline: none;
-  }
-
-  .cook-btn:focus-visible .cook-dot {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
+  .cook-btn:active .cook-dot { transform: translate(2px, 2px); }
 
   /* ── Filtre « Mes repas » ── */
   .filter-row {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 4px 10px;
-    margin-top: 12px;
+    gap: var(--sp-1) var(--sp-3);
+    margin-top: var(--sp-3);
   }
 
   .filter-chip {
@@ -1083,22 +1051,23 @@
     gap: 7px;
     min-height: 44px;
     padding: 0 8px 0 14px;
-    border-radius: 999px;
-    border: 1px solid var(--border-strong);
+    border: var(--line-w) solid var(--line);
     background: var(--surface);
     color: var(--text);
     font-family: var(--font-body);
-    font-size: 14px;
-    font-weight: 700;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
     cursor: pointer;
     touch-action: manipulation;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
+  .filter-chip:active { transform: translate(2px, 2px); }
+
   .filter-chip.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: var(--on-primary);
+    background: var(--accent);
+    color: var(--on-accent);
+    box-shadow: var(--shadow-sm);
   }
 
   .filter-count {
@@ -1108,144 +1077,109 @@
     min-width: 26px;
     height: 26px;
     padding: 0 7px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.14);
+    background: var(--band);
+    color: var(--text-on-band);
     font-size: 13px;
   }
 
-  .filter-chip.active .filter-count {
-    background: rgba(6, 34, 58, 0.16);
-  }
-
-  .filter-hint {
-    font-size: 13px;
-    color: var(--text-secondary);
-  }
+  .filter-hint { font-size: 13px; color: var(--text-secondary); }
 
   /* Filtre actif : mes repas mis en avant, les autres atténués (rien n'est caché) */
-  .slot {
-    transition: opacity 0.2s ease;
-  }
+  .slot.dimmed { opacity: 0.4; }
 
-  .slot.dimmed {
-    opacity: 0.38;
-  }
-
-  .slot.filled.mine {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 1px var(--primary);
-  }
+  .slot.filled.mine { box-shadow: var(--shadow-sm); }
 
   @media (hover: hover) and (pointer: fine) {
-    .cook-btn:hover .cook-dot { transform: scale(1.1); }
-    .filter-chip:not(.active):hover { border-color: var(--primary); color: var(--primary); }
     .slot.dimmed:hover { opacity: 0.75; }
     .nav-btn:hover { background: var(--surface-hover); }
-    .slot.empty:hover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
-    .slot.filled:hover { border-color: var(--border-strong); }
-    .slot-title:hover { color: var(--primary); }
-    .portions-display:hover { color: var(--primary); border-color: var(--primary); }
+    .slot.empty:hover { background: var(--surface-hover); }
+    .slot-title:hover { text-decoration: underline; text-decoration-thickness: 2px; }
     .remove-btn:hover { background: var(--error-bg); color: var(--error); }
+    .picker-item:not(:disabled):hover { background: var(--surface-hover); }
   }
 
-  /* ── Overlay / Modal ── */
-  .overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    z-index: 200; /* au-dessus de la barre d'onglets (100) */
-    padding: 0;
-  }
-
+  /* ── Fenêtre de choix de recette (.ui-overlay / .ui-sheet globaux) ── */
   .picker {
-    background: var(--bg);
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    width: 100%;
-    max-width: 500px;
-    max-height: 80dvh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    padding: 0;
+    max-height: 80dvh;
   }
 
   .picker-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 16px 8px;
+    gap: var(--sp-3);
+    padding: var(--sp-4) var(--gutter) var(--sp-2);
     flex-shrink: 0;
   }
 
-  .picker-header h2 {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text);
-  }
+  .picker-header h2 { font-size: var(--fs-lg); text-transform: uppercase; color: var(--text); }
 
   .picker-close {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: none;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border: var(--line-w) solid var(--line);
     background: var(--surface);
-    color: var(--text-secondary);
+    color: var(--text);
+    box-shadow: var(--shadow-sm);
     cursor: pointer;
+    touch-action: manipulation;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
+
+  .picker-close:active { transform: translate(var(--press), var(--press)); box-shadow: none; }
 
   .picker-search {
     position: relative;
-    padding: 0 16px 12px;
+    padding: 0 var(--gutter) var(--sp-3);
     flex-shrink: 0;
   }
 
   .picker-search .search-icon {
     position: absolute;
-    left: 28px;
-    top: 50%;
+    left: calc(var(--gutter) + 13px);
+    top: 24px;
     transform: translateY(-50%);
-    color: var(--text-placeholder);
+    color: var(--text);
     pointer-events: none;
-    margin-top: -6px;
   }
 
   .picker-search .search-input {
     width: 100%;
-    padding: 10px 12px 10px 38px;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-md);
-    background: var(--surface);
+    height: var(--tap);
+    padding: 0 12px 0 42px;
+    border: var(--line-w) solid var(--line);
+    border-radius: 0;
+    background: var(--bg);
     color: var(--text);
-    font-size: 15px;
+    font-size: var(--fs-base);
     font-family: var(--font-body);
+    -webkit-appearance: none;
+    appearance: none;
   }
 
-  .picker-search .search-input:focus {
-    outline: none;
-    border-color: var(--primary);
-  }
-
-  .picker-search .search-input::placeholder {
-    color: var(--text-placeholder);
-  }
+  .picker-search .search-input:focus { outline: none; box-shadow: var(--shadow-sm); }
+  .picker-search .search-input::placeholder { color: var(--text-placeholder); opacity: 1; }
 
   .picker-list {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 0 16px 16px;
+    padding: var(--sp-1) var(--gutter) var(--sp-5);
   }
 
   .picker-empty {
     text-align: center;
-    padding: 32px 16px;
+    padding: var(--sp-6) var(--sp-4);
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: var(--fs-sm);
   }
 
   .picker-item {
@@ -1253,31 +1187,24 @@
     align-items: center;
     gap: 10px;
     width: 100%;
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
+    min-height: 56px;
+    padding: 6px 10px 6px 6px;
+    border: var(--line-w) solid var(--line);
     background: var(--surface);
     text-align: left;
     cursor: pointer;
     font-family: var(--font-body);
-    transition: all 0.15s;
-    margin-bottom: 6px;
+    margin-bottom: var(--sp-2);
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
-  .picker-item:hover {
-    border-color: var(--primary);
-    background: color-mix(in srgb, var(--primary) 5%, transparent);
-  }
-
-  .picker-item:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  .picker-item:active:not(:disabled) { transform: translate(2px, 2px); }
+  .picker-item:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .picker-thumb {
     width: 44px;
     height: 44px;
-    border-radius: var(--radius-sm);
+    border: var(--line-w) solid var(--line);
     object-fit: cover;
     flex-shrink: 0;
   }
@@ -1288,26 +1215,29 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: color-mix(in srgb, var(--primary) 8%, transparent);
-    border-radius: var(--radius-sm);
+    border: var(--line-w) solid var(--line);
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: var(--fw-bold);
     font-size: 20px;
     text-transform: uppercase;
-    color: var(--primary);
+    color: var(--ink); /* toujours noir : posé sur l'aplat de la catégorie */
     flex-shrink: 0;
   }
 
   .picker-item-info {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
   }
 
   .picker-item-title {
-    font-size: 14px;
-    font-weight: 600;
+    max-width: 100%;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
     color: var(--text);
-    display: block;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1315,13 +1245,18 @@
 
   .picker-item-cat {
     font-size: 11px;
-    font-weight: 600;
+    font-weight: var(--fw-bold);
     text-transform: uppercase;
-    letter-spacing: 0.02em;
+    letter-spacing: var(--tracking-caps);
+    border-color: var(--ink);
   }
 
   .picker-item-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
     font-size: 12px;
+    font-weight: var(--fw-medium);
     color: var(--text-secondary);
     flex-shrink: 0;
   }
@@ -1333,21 +1268,16 @@
     padding: 48px 16px;
   }
 
-  .error-msg {
-    color: var(--error);
-    font-size: 14px;
-  }
+  .error-msg { color: var(--error); font-size: var(--fs-sm); font-weight: var(--fw-medium); }
 
+  /* Rond d'une icône dessinée (indicateur de chargement) */
   .spinner {
     width: 28px;
     height: 28px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
+    border: 3px solid var(--line);
+    border-top-color: var(--accent);
     animation: spin 0.7s linear infinite;
   }
 
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>

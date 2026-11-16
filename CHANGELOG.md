@@ -21,6 +21,29 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+**Aucune migration.** Refonte graphique complète (direction artistique n° 6 « Brutal beurre ») :
+mêmes écrans, mêmes fonctions, mêmes textes.
+
+### Modifié
+- Nouveau design system « Brutal beurre » (`src/app.css`, règles dans `docs/design.md`) : fond beurre, encre noire,
+  orange pour les actions, zéro arrondi, bordures 2 px, ombres franches, police unique Bricolage Grotesque (OFL,
+  hébergée avec le site ; remplace Outfit et DM Sans). Tous les réglages (couleurs, tailles, espacements,
+  ombres, mouvements) sont centralisés en variables.
+- Mode sombre automatique (suit le téléphone), contrastes AA vérifiés.
+- Pièces communes globales : boutons qui s'enfoncent sur leur ombre, champs, puces, cartes, bandeaux,
+  case à cocher, fenêtres (voile opaque, fenêtre qui monte du bas, fenêtre centrée), bouton +.
+- Barre d'onglets : bloc orange qui glisse d'un onglet à l'autre (64 px de haut).
+- Couleurs des catégories de recettes recalculées dans l'appli (`src/lib/categoryColors.ts`), texte noir dessus ;
+  la couleur stockée en base n'est plus affichée.
+- Icônes au trait carré ; couleur de la barre du navigateur et du manifeste en beurre (noir en sombre).
+
+### Ajouté
+- Fond animé « pluie lente » d'aliments au trait (`AppBackdrop.svelte`, `src/lib/motifs.ts`) : transform seulement,
+  pause en arrière-plan, immobile si « réduire les animations ».
+
+### Retiré
+- Photo de mer de fond (`public/bg/mer-640.webp`, `mer-1280.webp`) et ses voiles.
+
 ## [1.8.0] — 2026-11-16
 
 **Migrations 25 et 25 bis à exécuter AVANT la mise en ligne**, dans l'ordre :

@@ -84,21 +84,15 @@
 </div>
 
 <style>
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    padding: 18px;
-  }
   .page {
     padding: var(--gutter);
     padding-top: 0;
     max-width: 560px;
     margin: 0 auto;
-    padding-bottom: 32px;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--sp-4);
   }
   .back-link {
     display: inline-flex;
@@ -107,32 +101,46 @@
     gap: 6px;
     min-height: 44px;
     margin-top: calc(8px + env(safe-area-inset-top, 0px));
-    color: var(--primary);
-    font-weight: 600;
+    color: var(--text);
+    font-weight: var(--fw-bold);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
     touch-action: manipulation;
   }
-  .head h1 { font-family: var(--font-display); font-size: 28px; padding-right: 48px; }
-  .head-sub { margin-top: 4px; font-size: 15px; color: var(--text-secondary); }
-
+  .head h1 { padding-right: 56px; }
+  .head-sub { margin-top: var(--sp-1); font-size: 15px; font-weight: var(--fw-medium); color: var(--text-secondary); }
+  .card { padding: var(--sp-4); }
   form, .done { display: flex; flex-direction: column; gap: 10px; }
-  .kinds { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-  .kinds legend { font-weight: 600; margin-bottom: 8px; padding: 0; }
+  .kinds { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+  .kinds legend {
+    padding: 0; margin-bottom: var(--sp-2);
+    font-size: var(--fs-sm); font-weight: var(--fw-bold);
+    text-transform: uppercase; letter-spacing: var(--tracking-caps);
+  }
   .kind {
     position: relative;
     display: inline-flex;
     align-items: center;
     min-height: 44px;
     padding: 0 14px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
     cursor: pointer;
-    font-weight: 600;
+    font-weight: var(--fw-medium);
     touch-action: manipulation;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
-  .kind.active { border-color: var(--primary); color: var(--primary); }
+  .kind:active { transform: translate(2px, 2px); }
+  .kind.active { background: var(--accent); color: var(--on-accent); font-weight: var(--fw-bold); box-shadow: var(--shadow-sm); }
   .kind input { position: absolute; opacity: 0; pointer-events: none; }
-  .kind:has(input:focus-visible) { outline: 2px solid var(--primary); outline-offset: 2px; }
-  .field-label { font-weight: 600; margin-top: 4px; }
+  .kind:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .field-label {
+    margin-top: var(--sp-1);
+    font-size: var(--fs-sm); font-weight: var(--fw-bold);
+    text-transform: uppercase; letter-spacing: var(--tracking-caps);
+  }
   .hint { margin: 0; font-size: 13px; color: var(--text-secondary); }
   textarea { resize: vertical; min-height: 140px; font: inherit; }
+  .done { border-color: var(--line); background: var(--success-bg); color: var(--text); }
 </style>

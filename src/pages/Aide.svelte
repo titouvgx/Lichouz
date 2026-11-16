@@ -49,8 +49,8 @@
   </section>
 
   <div class="sections">
-    {#each sections as s (s.id)}
-      <details class="card fold" id={`aide-${s.id}`}>
+    {#each sections as s, i (s.id)}
+      <details class="card fold" id={`aide-${s.id}`} style="--i: {Math.min(i, 8)}">
         <summary>
           <span class="section-icon"><Icon name={s.icon} size={18} /></span>
           <span class="fold-title">{s.title}</span>
@@ -177,76 +177,76 @@
     padding-top: calc(var(--gutter) + env(safe-area-inset-top, 0px));
     max-width: 560px;
     margin: 0 auto;
-    padding-bottom: 32px;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--sp-4);
   }
   @media (min-width: 900px) {
     .page { padding-top: calc(32px + env(safe-area-inset-top, 0px)); }
   }
-  .head { margin-bottom: 4px; }
-  .head h1 { font-family: var(--font-display); font-size: 28px; }
-  .head-sub { margin-top: 4px; font-size: 15px; color: var(--text-secondary); }
+  .head h1 { padding-right: 56px; }
+  .head-sub { margin-top: var(--sp-1); font-size: 15px; font-weight: var(--fw-medium); color: var(--text-secondary); }
 
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    padding: 18px;
-  }
+  .card { padding: var(--sp-4); }
   .section-title {
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 8px;
+    font-size: var(--fs-lg);
+    text-transform: uppercase;
+    margin-bottom: var(--sp-2);
   }
   .intro p, .fold-body p, .faq dd { font-size: 15px; line-height: 1.5; color: var(--text-secondary); }
   .intro strong, .fold-body strong { color: var(--text); }
-  .cycle { margin: 12px 0 0; padding-left: 20px; display: grid; gap: 6px; font-size: 15px; line-height: 1.45; color: var(--text-secondary); }
+  .cycle { margin: var(--sp-3) 0 0; padding-left: 20px; display: grid; gap: 6px; font-size: 15px; line-height: 1.45; color: var(--text-secondary); }
+  .cycle li::marker { font-weight: var(--fw-bold); color: var(--text); }
 
-  .sections { display: grid; gap: 10px; }
-  .fold { padding: 0; }
+  .sections { display: grid; gap: var(--sp-3); }
+  .fold { padding: 0; animation: fade-up var(--dur-sheet) var(--ease-out) calc(var(--i, 0) * 45ms) backwards; }
   .fold summary {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--sp-3);
     min-height: 56px;
-    padding: 10px 16px;
+    padding: 8px var(--sp-3);
     cursor: pointer;
     list-style: none;
-    border-radius: var(--radius-xl);
     touch-action: manipulation;
   }
   .fold summary::-webkit-details-marker { display: none; }
-  .fold summary:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
-  .fold-title { flex: 1; font-weight: 600; }
-  .chev { display: inline-flex; color: var(--text-secondary); transition: transform 0.2s ease; }
+  .fold summary:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+  .fold-title { flex: 1; font-weight: var(--fw-bold); }
+  .chev { display: inline-flex; color: var(--text); transition: transform var(--dur-base) var(--ease-out); }
   .fold[open] .chev { transform: rotate(180deg); }
-  .fold-body { padding: 0 16px 16px 60px; display: grid; gap: 10px; }
+  .fold[open] summary { background: var(--highlight); border-bottom: var(--line-w) solid var(--line); }
+  .fold-body { padding: var(--sp-4) var(--sp-4) var(--sp-4) 60px; display: grid; gap: 10px; }
   .fold-body ul { margin: 0; padding-left: 18px; display: grid; gap: 8px; font-size: 15px; line-height: 1.5; color: var(--text-secondary); }
-  .fold-body a, .back a { color: var(--primary); font-weight: 600; }
-  .you { padding: 8px 12px; background: var(--primary-light); border-radius: 10px; }
+  .fold-body a, .faq a, .back a {
+    color: var(--text);
+    font-weight: var(--fw-bold);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+  .you { padding: var(--sp-2) var(--sp-3); background: var(--highlight); border: var(--line-w) solid var(--line); color: var(--text); }
+  .you strong { color: var(--text); }
 
+  /* Icône dans un petit carré bordé */
   .section-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
+    width: 34px;
+    height: 34px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: var(--primary-light);
-    color: var(--primary);
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
+    color: var(--text);
     flex-shrink: 0;
   }
 
   .faq dl { margin: 0; display: grid; gap: 4px; }
-  .faq dt { font-weight: 600; margin-top: 10px; }
+  .faq dt { font-weight: var(--fw-bold); margin-top: var(--sp-3); }
   .faq dt:first-child { margin-top: 0; }
   .faq dd { margin: 0; }
 
-  .back { text-align: center; padding: 8px 0 4px; }
-  .back a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; text-decoration: none; }
-
-  @media (prefers-reduced-motion: reduce) { .chev { transition: none; } }
+  .back { text-align: center; padding: var(--sp-2) 0 var(--sp-1); }
+  .back a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
 </style>

@@ -5,6 +5,8 @@
   // restaurer (admin de la famille). Le catalogue n'apparaît pas ici.
   // Les droits sont vérifiés par la base : l'écran ne fait que montrer les bons boutons.
   import Icon from '../components/Icon.svelte'
+  import { sizedImage } from '../lib/images'
+  import { categoryColor } from '../lib/categoryColors'
   import { auth } from '../lib/auth.svelte'
   import { profileState } from '../lib/profile.svelte'
   import { href } from '../lib/router.svelte'
@@ -96,13 +98,22 @@
   {:else}
     {#each sections as section (section.key)}
       {#if section.items.length > 0}
-        <section class="group" aria-labelledby="g-{section.key}">
-          <h2 id="g-{section.key}">{section.title} <span class="count">{section.items.length}</span></h2>
+        <section class="group card" aria-labelledby="g-{section.key}">
+          <h2 id="g-{section.key}" class="band">{section.title} <span class="count">{section.items.length}</span></h2>
           <p class="group-sub">{section.sub}</p>
           <ul>
-            {#each section.items as r (r.id)}
-              <li class="row">
-                <a class="row-title" href={href('recette', r.id)}>{r.title}</a>
+            {#each section.items as r, i (r.id)}
+              <li class="row" style="--i: {Math.min(i, 8)}">
+                <a class="row-main" href={href('recette', r.id)}>
+                  <span class="thumb" style="--cat: {categoryColor(r.recipe_categories?.name)}" aria-hidden="true">
+                    {#if sizedImage(r.image_url, 96, 96)}
+                      <img src={sizedImage(r.image_url, 96, 96)} alt="" loading="lazy" decoding="async" />
+                    {:else}
+                      <span class="thumb-initial">{r.title.trim().charAt(0)}</span>
+                    {/if}
+                  </span>
+                  <span class="row-title">{r.title}</span>
+                </a>
                 <div class="row-actions">
                   {#if !r.archived_at}
                     <a class="act" href={href('editer-recette', r.id)}>Modifier</a>
@@ -134,10 +145,10 @@
     padding-top: 0;
     max-width: 560px;
     margin: 0 auto;
-    padding-bottom: 32px;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--sp-4);
   }
   .back-link {
     display: inline-flex;
@@ -146,35 +157,63 @@
     gap: 6px;
     min-height: 44px;
     margin-top: calc(8px + env(safe-area-inset-top, 0px));
-    color: var(--primary);
-    font-weight: 600;
+    color: var(--text);
+    font-weight: var(--fw-bold);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
     touch-action: manipulation;
   }
-  .head { margin-bottom: 4px; }
-  .head h1 { font-family: var(--font-display); font-size: 28px; padding-right: 48px; }
-  .head-sub { margin-top: 4px; font-size: 15px; color: var(--text-secondary); }
+  .head h1 { padding-right: 56px; }
+  .head-sub { margin-top: var(--sp-1); font-size: 15px; font-weight: var(--fw-medium); color: var(--text-secondary); }
 
-  .group {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    padding: 16px 18px 6px;
+  /* Un groupe = une carte, bandeau noir en tête */
+  .group { padding: 0 0 var(--sp-1); }
+  .group h2.band { font-size: 13px; letter-spacing: var(--tracking-caps); }
+  .count {
+    display: inline-grid; place-items: center;
+    min-width: 22px; height: 22px; padding: 0 4px;
+    background: var(--text-on-band); color: var(--band);
+    font-size: 12px; font-weight: var(--fw-bold);
   }
-  .group h2 { font-size: 17px; display: flex; align-items: center; gap: 8px; }
-  .count { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
-  .group-sub { margin: 2px 0 6px; font-size: 13px; color: var(--text-secondary); }
+  .group-sub { margin: var(--sp-2) var(--sp-3) var(--sp-1); font-size: 13px; color: var(--text-secondary); }
   .group ul { list-style: none; margin: 0; padding: 0; }
 
-  .row { padding: 10px 0; border-top: 1px solid var(--border); }
-  .row:first-child { border-top: 0; }
-  .row-title {
+  .group .row {
     display: block;
-    font-weight: 600;
+    min-height: 0;
+    padding: var(--sp-2) var(--sp-3);
+    animation: fade-up var(--dur-sheet) var(--ease-out) calc(var(--i, 0) * 45ms) backwards;
+  }
+  .row-main {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    min-height: 56px;
     color: var(--text);
     text-decoration: none;
-    padding: 4px 0;
+    touch-action: manipulation;
   }
-  .row-actions { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+  .row-main:active .row-title { text-decoration: underline; }
+  .row-title { font-weight: var(--fw-bold); min-width: 0; overflow-wrap: anywhere; }
+
+  /* Vignette carrée : photo, sinon initiale noire sur l'aplat de la catégorie */
+  .thumb {
+    position: relative;
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    overflow: hidden;
+    border: var(--line-w) solid var(--line);
+    background: var(--cat);
+    color: var(--ink);
+  }
+  .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .thumb-initial { font-weight: var(--fw-bold); font-size: var(--fs-2xl); line-height: 1; text-transform: uppercase; }
+
+  .row-actions { display: flex; flex-wrap: wrap; gap: 0 var(--sp-3); }
   .act {
     min-height: 44px;
     display: inline-flex;
@@ -184,17 +223,20 @@
     background: none;
     font: inherit;
     font-size: 14px;
-    font-weight: 600;
-    color: var(--primary);
-    text-decoration: none;
+    font-weight: var(--fw-bold);
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
     cursor: pointer;
     touch-action: manipulation;
   }
-  .act.danger { color: #FF8A8D; } /* rouge éclairci : lisible sur le fond bleu nuit */
+  .act:active:not(:disabled) { transform: translate(1px, 1px); }
+  .act.danger { color: var(--error); }
   .act:disabled { opacity: 0.5; }
 
-  .empty { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+  .empty { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-3); }
   .muted { color: var(--text-secondary); }
   .small { font-size: 13px; }
-  .error { color: #FF8A8D; }
+  .error { color: var(--error); font-weight: var(--fw-medium); }
 </style>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Petites icônes au trait, même style que la barre d'onglets.
+  // Petites icônes au trait carré (v1.9.0 : extrémités et angles nets), même style que la barre d'onglets.
   // Remplacent les émojis décoratifs (on garde les émojis des rayons et des ingrédients).
   // Usage : <Icon name="clock" /> — la couleur suit le texte (currentColor).
   export type IconName =
@@ -30,8 +30,8 @@
   fill="none"
   stroke="currentColor"
   stroke-width={strokeWidth}
-  stroke-linecap="round"
-  stroke-linejoin="round"
+  stroke-linecap="square"
+  stroke-linejoin="miter"
   role={label ? 'img' : undefined}
   aria-label={label}
   aria-hidden={label ? undefined : 'true'}
@@ -51,10 +51,10 @@
   {:else if name === 'moon'}
     <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
   {:else if name === 'calendar'}
-    <rect x="3" y="5" width="18" height="16" rx="2" /><path d="M8 3v4M16 3v4M3 10h18" />
+    <rect x="3" y="5" width="18" height="16" /><path d="M8 3v4M16 3v4M3 10h18" />
   {:else if name === 'cart'}
-    <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
-    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+    <path d="M9 20h1M18 20h1" />
+    <path d="M1 2h4l3 13h12l3-9H6" />
   {:else if name === 'pencil'}
     <path d="M4 20h4L19 9l-4-4L4 16v4z" /><path d="M14 6l4 4" />
   {:else if name === 'trash'}
@@ -66,9 +66,9 @@
   {:else if name === 'check-circle'}
     <circle cx="12" cy="12" r="9" /><path d="M8 12.5l3 3 5-6" />
   {:else if name === 'list'}
-    <rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 3h6v3H9zM9 11h6M9 15h4" />
+    <rect x="5" y="4" width="14" height="17" /><path d="M9 3h6v3H9zM9 11h6M9 15h4" />
   {:else if name === 'lock'}
-    <rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    <rect x="5" y="11" width="14" height="10" /><path d="M8 11V8a4 4 0 0 1 8 0v3" />
   {:else if name === 'logout'}
     <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11" />
   {:else if name === 'user'}
@@ -77,7 +77,7 @@
     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
   {:else if name === 'archive'}
-    <rect x="3" y="4" width="18" height="5" rx="1" /><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4" />
+    <rect x="3" y="4" width="18" height="5" /><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4" />
   {:else if name === 'star'}
     <path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />
   {:else if name === 'plate'}
@@ -86,7 +86,7 @@
     <path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" />
     <circle cx="12" cy="13.5" r="3.5" />
   {:else if name === 'image'}
-    <rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" />
+    <rect x="3" y="4" width="18" height="16" /><circle cx="8.5" cy="9.5" r="1.5" />
     <path d="M21 16l-5-5-9 9" />
   {:else if name === 'plus'}
     <path d="M12 5v14M5 12h14" />
@@ -107,7 +107,7 @@
   {:else if name === 'chef'}
     <path d="M6 13.5V20h12v-6.5" /><path d="M6 13.5a4 4 0 1 1 2.2-7.4A4.5 4.5 0 0 1 16 5.6a4 4 0 1 1 2 7.9" /><path d="M6 17h12" />
   {:else if name === 'mail'}
-    <rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" />
+    <rect x="3" y="5" width="18" height="14" /><path d="m3 7 9 6 9-6" />
   {:else if name === 'eye'}
     <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" />
   {:else if name === 'eye-off'}
@@ -124,7 +124,7 @@
     <path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.2 1.2" />
     <path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2" />
   {:else if name === 'copy'}
-    <rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+    <rect x="9" y="9" width="12" height="12" /><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
   {:else if name === 'shield'}
     <path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6z" /><path d="m9 12 2 2 4-4" />
   {:else if name === 'user-plus'}

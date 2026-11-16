@@ -12,6 +12,7 @@
   import { fetchRecipe, setRecipeArchived } from '../lib/api/recipes'
   import { formatIngredient } from '../lib/quantities'
   import { sizedImage } from '../lib/images'
+  import { categoryColor } from '../lib/categoryColors'
   import { toast } from '../lib/toast.svelte'
   import type { RecipeDetail } from '../lib/types'
   import { budgetLabel, cleanKeys, origineLabel, regimeLabel, REGIMES, themeLabel, THEMES, BUDGETS } from '../lib/etiquettes'
@@ -94,7 +95,7 @@
     if (recipe.budget) out.push({ label: budgetLabel(recipe.budget), title: BUDGETS.find((b) => b.value === recipe!.budget)?.long })
     return out
   })
-  const catColor = $derived(recipe?.recipe_categories?.color ?? 'var(--primary)')
+  const catColor = $derived(categoryColor(recipe?.recipe_categories?.name))
 
   const gotCount = $derived(recipe ? recipe.recipe_ingredients.filter((i) => gotIng[i.id]).length : 0)
   const doneCount = $derived(recipe ? recipe.recipe_steps.filter((s) => doneStep[s.id]).length : 0)
@@ -169,7 +170,7 @@
       {:else}
         <span class="monogram" aria-hidden="true">{recipe.title.trim().charAt(0)}</span>
       {/if}
-      <a href={href('recettes')} class="hero-btn back" aria-label="Retour aux recettes">
+      <a href={href('recettes')} class="btn btn-icon hero-btn back" aria-label="Retour aux recettes">
         <Icon name="arrow-left" size={22} />
       </a>
       <!-- Pas de bouton à droite : le coin haut-droit est occupé par l'avatar (AppHeader, fixe) -->
@@ -182,7 +183,7 @@
         <ul class="chips" aria-label="Infos">
           {#if recipe.recipe_categories}
             <li class="chip cat" style:--cat={catColor}>
-              <span class="dot" aria-hidden="true"></span>{recipe.recipe_categories.name}
+              {recipe.recipe_categories.name}
             </li>
           {/if}
           {#if recipe.prep_time_min}
@@ -203,7 +204,7 @@
           </ul>
         {/if}
         {#if recipe.recipe_steps.length > 0}
-          <button class="cook-btn" onclick={() => (cookOpen = true)}>
+          <button class="btn cook-btn" onclick={() => (cookOpen = true)}>
             <Icon name="chef" size={20} />
             {doneCount > 0 && doneCount < recipe.recipe_steps.length ? 'Reprendre en cuisine' : 'En cuisine'}
             <span class="cook-hint">une étape à la fois</span>
@@ -216,10 +217,10 @@
         {#if recipe.recipe_ingredients.length > 0}
           <section class="section ingredients" aria-labelledby="h-ing">
             <div class="section-head">
-              <h2 id="h-ing">Ingrédients</h2>
+              <h2 id="h-ing" class="band-title">Ingrédients</h2>
               <div class="stepper" role="group" aria-label="Nombre de portions">
                 <button
-                  class="step-btn"
+                  class="btn btn-icon step-btn"
                   onclick={() => setPortions(portions - 1)}
                   disabled={portions <= MIN_PORTIONS}
                   aria-label="Une portion de moins"
@@ -229,7 +230,7 @@
                   <span>pers.</span>
                 </output>
                 <button
-                  class="step-btn"
+                  class="btn btn-icon step-btn"
                   onclick={() => setPortions(portions + 1)}
                   disabled={portions >= MAX_PORTIONS}
                   aria-label="Une portion de plus"
@@ -249,18 +250,17 @@
               {/if}
             </p>
 
-            <ul class="ingredient-list">
-              {#each recipe.recipe_ingredients as ing (ing.id)}
+            <ul class="ingredient-list card">
+              {#each recipe.recipe_ingredients as ing, i (ing.id)}
                 {@const qty = formatIngredient(ing.quantity, ing.unit, scale)}
-                <li>
-                  <label class="ingredient" class:got={gotIng[ing.id]}>
+                <li style="--i: {Math.min(i, 8)}">
+                  <label class="row ingredient" class:got={gotIng[ing.id]}>
                     <input
                       type="checkbox"
-                      class="sr-only"
+                      class="check"
                       checked={!!gotIng[ing.id]}
                       onchange={(e) => (gotIng[ing.id] = e.currentTarget.checked)}
                     />
-                    <span class="tick" aria-hidden="true"><Icon name="check" size={14} strokeWidth={3} /></span>
                     <span class="ing-name">{ing.name}</span>
                     {#if qty}<span class="ing-qty">{qty}</span>{/if}
                   </label>
@@ -274,7 +274,7 @@
         {#if recipe.recipe_steps.length > 0}
           <section class="section steps" aria-labelledby="h-steps">
             <div class="section-head">
-              <h2 id="h-steps">Préparation</h2>
+              <h2 id="h-steps" class="band-title">Préparation</h2>
               <span class="count">{doneCount}/{recipe.recipe_steps.length}</span>
             </div>
             <p class="hint">
@@ -286,7 +286,7 @@
             </p>
             <ol class="step-list">
               {#each recipe.recipe_steps as step, i (step.id)}
-                <li>
+                <li style="--i: {Math.min(i, 8)}">
                   <button
                     class="step"
                     class:done={doneStep[step.id]}
@@ -307,11 +307,11 @@
 
       {#if canEdit}
         <div class="admin">
-          <a href={href('editer-recette', recipe.id)} class="admin-btn">
+          <a href={href('editer-recette', recipe.id)} class="btn btn-outline admin-btn">
             <Icon name="pencil" size={18} /> Modifier
           </a>
           {#if canDelete && !isArchived}
-            <button class="admin-btn danger" onclick={() => (showDeleteConfirm = true)}>
+            <button class="btn btn-outline admin-btn danger" onclick={() => (showDeleteConfirm = true)}>
               <Icon name="trash" size={18} /> Archiver
             </button>
           {/if}
@@ -324,15 +324,15 @@
     <div class="action-bar archived-bar" role="status">
       <span>Recette archivée : elle n'apparaît plus dans les listes.</span>
       {#if canDelete}
-        <button class="act secondary" onclick={() => setArchived(false)} disabled={deleting}>Restaurer</button>
+        <button class="btn btn-outline act" onclick={() => setArchived(false)} disabled={deleting}>Restaurer</button>
       {/if}
     </div>
     {:else}
     <div class="action-bar">
-      <button class="act primary" onclick={() => (dialogMode = 'plan')}>
+      <button class="btn btn-primary act primary" onclick={() => (dialogMode = 'plan')}>
         <Icon name="calendar" size={19} /> Ajouter à ma semaine
       </button>
-      <button class="act secondary" onclick={() => (dialogMode = 'cart')} aria-label="Juste les ingrédients">
+      <button class="btn btn-outline act secondary" onclick={() => (dialogMode = 'cart')} aria-label="Juste les ingrédients">
         <Icon name="cart" size={20} /> <span>Ingrédients</span>
       </button>
     </div>
@@ -365,18 +365,7 @@
   .detail {
     max-width: 1080px;
     margin: 0 auto;
-  }
-
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
   }
 
   .back-link {
@@ -385,27 +374,26 @@
     gap: 6px;
     min-height: 44px;
     margin: calc(8px + env(safe-area-inset-top, 0px)) var(--gutter) 0;
-    color: var(--primary);
-    font-weight: 600;
-    text-decoration: none;
+    color: var(--text);
+    font-weight: var(--fw-bold);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
   }
 
-  /* ── Photo bord à bord ── */
+  /* ── Grande photo : bloc carré bordé, ombre franche ── */
   .hero {
     position: relative;
     aspect-ratio: 4 / 3;
     max-height: 62svh;
-    width: 100%;
+    margin: calc(var(--gutter) + env(safe-area-inset-top, 0px)) var(--gutter) 0;
     overflow: hidden;
-    border-radius: 0 0 28px 28px;
-    background: color-mix(in srgb, var(--cat) 35%, var(--bg));
+    background: var(--cat);
+    border: var(--line-w) solid var(--line);
+    box-shadow: var(--shadow-lg);
     container-type: inline-size;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
   }
-
-  .hero.no-photo {
-    aspect-ratio: 16 / 10;
-  }
+  .hero.no-photo { aspect-ratio: 16 / 10; }
 
   .hero-img {
     position: absolute;
@@ -415,17 +403,7 @@
     object-fit: cover;
   }
 
-  /* Voile haut (lisibilité des boutons sur une photo claire) + fondu bas */
-  .hero::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background:
-      linear-gradient(to bottom, rgba(6, 20, 40, 0.45) 0%, transparent 28%),
-      linear-gradient(to top, rgba(6, 20, 40, 0.5) 0%, transparent 35%);
-  }
-
+  /* Recette sans photo : grande initiale noire sur l'aplat de la catégorie */
   .monogram {
     position: absolute;
     inset: 0;
@@ -433,51 +411,26 @@
     align-items: center;
     justify-content: center;
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: var(--fw-bold);
     font-size: clamp(120px, 42cqw, 260px);
     line-height: 1;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.9);
-    text-shadow: 8px 8px 0 rgba(0, 0, 0, 0.18);
-    background:
-      repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.08) 0 12px, transparent 12px 24px),
-      linear-gradient(150deg, var(--cat), color-mix(in srgb, var(--cat) 55%, #000));
+    color: var(--ink);
   }
 
   .hero-btn {
     position: absolute;
     z-index: 1;
-    top: calc(12px + env(safe-area-inset-top, 0px));
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* Fond opaque plutôt qu'un backdrop-filter (coûteux sur téléphone) */
-    background: rgba(6, 20, 40, 0.62);
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    color: #fff;
-    text-decoration: none;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    transition: transform 0.1s;
+    top: var(--sp-3);
+    left: var(--sp-3);
+    color: var(--text);
   }
-
-  .hero-btn:active { transform: scale(0.94); }
-  .hero-btn.back { left: calc(12px + env(safe-area-inset-left, 0px)); }
 
   /* ── Contenu ── */
-  .content {
-    padding: 22px var(--gutter) 8px;
-  }
+  .content { padding: var(--sp-5) var(--gutter) var(--sp-2); }
 
   .intro h1 {
-    font-family: var(--font-display);
     font-size: clamp(30px, 8.4vw, 44px);
-    font-weight: 700;
-    line-height: 1.08;
-    letter-spacing: -0.01em;
     overflow-wrap: break-word;
     hyphens: auto;
     text-wrap: balance;
@@ -485,115 +438,104 @@
 
   .chips {
     list-style: none;
-    margin: 14px 0 0;
+    margin: var(--sp-3) 0 0;
     padding: 0;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--sp-2);
   }
 
-  .chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    min-height: 34px;
-    padding: 0 13px;
-    border-radius: 999px;
-    background: var(--bg-raised);
-    border: 1px solid var(--border);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
+  /* Infos (temps, portions, visibilité) : simple texte avec icône, SANS cadre,
+     pour ne pas ressembler à des boutons (on ne peut pas les toucher) */
+  .chips .chip {
+    min-height: 32px;
+    padding: 0 6px 0 0;
+    border-color: transparent;
+    background: transparent;
+    cursor: default;
+    font-weight: var(--fw-bold);
+    transition: none;
   }
-
-  .chip :global(.icon) { color: var(--primary); }
+  .chips .chip:active { transform: none; }
+  .chips .chip.cat {
+    padding: 0 10px;
+    background: var(--cat);
+    color: var(--ink);
+    border-color: var(--ink);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+    font-size: 13px;
+  }
 
   .tags {
     list-style: none;
-    margin: 10px 0 0;
+    margin: var(--sp-3) 0 0;
     padding: 0;
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
   }
-  .tag {
-    padding: 3px 10px;
-    border-radius: 6px;
-    background: color-mix(in srgb, var(--primary) 10%, transparent);
-    color: var(--text);
-    font-size: 13px;
-    font-weight: 500;
-  }
-
-  .chip .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--cat);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--cat) 35%, transparent);
-  }
+  .tag { font-size: 13px; padding: 2px 8px; }
 
   .cook-btn {
-    margin-top: 18px;
+    margin-top: var(--sp-4);
     width: 100%;
     min-height: 54px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 0 18px;
-    border-radius: var(--radius-lg);
-    border: none;
-    background: var(--primary);
-    color: var(--on-primary);
-    font-family: var(--font-body);
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    transition: transform 0.1s, opacity 0.15s;
+    justify-content: flex-start;
+    padding: 0 var(--sp-4);
+    background: var(--band);
+    color: var(--text-on-band);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
   }
-
-  .cook-btn:active { transform: scale(0.98); }
 
   .cook-hint {
     margin-left: auto;
     font-size: 13px;
-    font-weight: 500;
-    opacity: 0.75;
+    font-weight: var(--fw-medium);
+    text-transform: none;
+    letter-spacing: 0;
   }
 
   .columns {
-    margin-top: 28px;
+    margin-top: var(--sp-5);
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: var(--sp-5);
   }
 
   .section-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: var(--sp-3);
   }
 
-  .section-head h2 {
-    font-family: var(--font-display);
-    font-size: 23px;
-    font-weight: 700;
+  /* Titre de rubrique : bandeau */
+  .band-title {
+    display: inline-block;
+    padding: 5px 12px;
+    background: var(--band);
+    color: var(--text-on-band);
+    font-size: var(--fs-base);
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
   }
 
   .count {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text-secondary);
+    padding: 2px 8px;
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
     font-variant-numeric: tabular-nums;
   }
 
   .hint {
-    margin: 6px 0 12px;
+    margin: var(--sp-2) 0 var(--sp-3);
     min-height: 20px;
-    font-size: 14px;
+    font-size: var(--fs-sm);
     color: var(--text-secondary);
   }
 
@@ -602,10 +544,11 @@
     border: none;
     padding: 6px 2px; /* zone de tap agrandie sans décaler le texte */
     margin: -6px 0;
-    color: var(--primary);
+    color: var(--text);
     font: inherit;
-    font-weight: 600;
+    font-weight: var(--fw-bold);
     text-decoration: underline;
+    text-decoration-thickness: 2px;
     text-underline-offset: 3px;
     cursor: pointer;
     touch-action: manipulation;
@@ -615,31 +558,10 @@
   .stepper {
     display: inline-flex;
     align-items: center;
-    gap: 2px;
-    padding: 3px;
-    border-radius: 999px;
-    background: var(--bg-raised);
-    border: 1px solid var(--border-strong);
+    gap: var(--sp-2);
   }
 
-  .step-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: none;
-    background: transparent;
-    color: var(--primary);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    transition: transform 0.1s;
-  }
-
-  .step-btn:active:not(:disabled) { transform: scale(0.9); }
-  .step-btn:disabled { opacity: 0.35; cursor: default; }
+  .step-btn:disabled { opacity: 0.35; }
 
   .step-val {
     min-width: 46px;
@@ -648,97 +570,61 @@
     display: flex;
     flex-direction: column;
   }
-
   .step-val strong {
     font-family: var(--font-display);
-    font-size: 19px;
+    font-size: 20px;
     font-variant-numeric: tabular-nums;
   }
-
   .step-val span {
     font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
     color: var(--text-secondary);
   }
 
-  /* ── Ingrédients ── */
+  /* ── Ingrédients : carte + lignes ── */
   .ingredient-list {
     list-style: none;
     margin: 0;
     padding: 0;
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    overflow: hidden;
   }
 
-  .ingredient-list li + li .ingredient {
-    border-top: 1px solid var(--border);
+  .ingredient-list li {
+    animation: fade-up var(--dur-sheet) var(--ease-out) calc(var(--i, 0) * 45ms) backwards;
   }
+  .ingredient-list li + li .ingredient { border-top: var(--line-thin) solid var(--line); }
 
   .ingredient {
-    display: flex;
-    align-items: center;
-    gap: 12px;
     min-height: 52px;
-    padding: 10px 14px;
-    font-size: 16px;
+    padding: 10px var(--sp-3);
+    font-size: var(--fs-base);
     line-height: 1.3;
     cursor: pointer;
     touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
   }
-
   .ingredient:focus-within {
-    outline: 2px solid var(--primary);
-    outline-offset: -2px;
-  }
-
-  .tick {
-    flex-shrink: 0;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    border: 2px solid var(--border-strong);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: transparent;
-    transition: background-color 0.15s, border-color 0.15s;
+    outline: 3px solid var(--accent);
+    outline-offset: -3px;
   }
 
   .ing-name {
     flex: 1;
     min-width: 0;
-    color: var(--text);
     overflow-wrap: break-word;
   }
 
   .ing-qty {
     flex-shrink: 0;
-    font-weight: 700;
-    color: var(--primary);
+    font-weight: var(--fw-bold);
     font-variant-numeric: tabular-nums;
     text-align: right;
   }
 
-  .ingredient.got .tick {
-    background: var(--success);
-    border-color: var(--success);
-    color: var(--on-success);
-    animation: check-pop 0.25s ease-out;
-  }
-
   .ingredient.got .ing-name,
   .ingredient.got .ing-qty {
-    opacity: 0.5;
+    color: var(--text-secondary);
     text-decoration: line-through;
-    text-decoration-thickness: 1.5px;
-  }
-
-  @keyframes check-pop {
-    0% { transform: scale(0.7); }
-    60% { transform: scale(1.12); }
-    100% { transform: scale(1); }
+    text-decoration-thickness: 2px;
   }
 
   /* ── Étapes ── */
@@ -748,44 +634,44 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--sp-3);
+  }
+
+  .step-list li {
+    animation: fade-up var(--dur-sheet) var(--ease-out) calc(var(--i, 0) * 45ms) backwards;
   }
 
   .step {
     width: 100%;
     display: flex;
     align-items: flex-start;
-    gap: 14px;
-    padding: 14px 16px 16px 14px;
-    border-radius: var(--radius-lg);
+    gap: var(--sp-3);
+    padding: var(--sp-3);
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: var(--line-w) solid var(--line);
+    box-shadow: var(--shadow-sm);
     color: var(--text);
     font: inherit;
     text-align: left;
     cursor: pointer;
     touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    transition: opacity 0.2s, transform 0.1s;
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .step:active {
+    transform: translate(var(--press), var(--press));
+    box-shadow: none;
   }
 
-  .step:active { transform: scale(0.99); }
-
-  .step:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
-
+  /* Numéro dans un carré noir */
   .step-num {
     flex-shrink: 0;
     width: 40px;
     height: 40px;
-    border-radius: 50%;
-    background: var(--primary);
-    color: var(--on-primary);
+    background: var(--band);
+    color: var(--text-on-band);
     font-family: var(--font-display);
     font-size: 20px;
-    font-weight: 800;
+    font-weight: var(--fw-bold);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -794,125 +680,59 @@
   .step-text {
     flex: 1;
     min-width: 0;
-    padding-top: 7px;
+    padding-top: 6px;
     font-size: 17px;
-    line-height: 1.6;
+    line-height: 1.55;
     overflow-wrap: break-word;
   }
 
-  .step.done { opacity: 0.55; }
-  .step.done .step-num {
-    background: var(--success);
-    color: var(--on-success);
-    animation: check-pop 0.25s ease-out;
-  }
+  .step.done { background: var(--surface-sunken); box-shadow: none; }
+  .step.done .step-text { color: var(--text-secondary); }
+  .step.done .step-num { background: var(--accent); color: var(--on-accent); }
 
   /* ── Admin ── */
   .admin {
     display: flex;
-    gap: 10px;
-    margin-top: 32px;
-    padding-top: 18px;
-    border-top: 1px solid var(--border);
+    gap: var(--sp-3);
+    margin-top: var(--sp-6);
+    padding-top: var(--sp-4);
+    border-top: var(--line-w) solid var(--line);
   }
+  .admin-btn { flex: 1; }
+  .admin-btn.danger { color: var(--error); }
 
-  .admin-btn {
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    min-height: 48px;
-    border-radius: var(--radius-lg);
-    border: 1.5px solid var(--border-strong);
-    background: transparent;
-    color: var(--text);
-    font-family: var(--font-body);
-    font-size: 15px;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    touch-action: manipulation;
-  }
-
-  .admin-btn.danger {
-    color: #FF8A8D; /* rouge éclairci : lisible sur le fond bleu nuit */
-    border-color: color-mix(in srgb, var(--error) 55%, transparent);
-  }
-
-  /* ── Barre d'actions collée en bas ── */
+  /* ── Barre d'actions collée en bas (au-dessus de la barre d'onglets, 64 px) ── */
+  /* Pleine largeur, collée à la barre d'onglets, sur le fond de la page :
+     la liste ne défile plus dans un interstice au-dessous */
   .action-bar {
     position: sticky;
     z-index: 50; /* sous la barre d'onglets (100) et les fenêtres (200) */
-    bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 10px);
-    margin: 22px 12px 0;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    margin: var(--sp-5) 0 0;
     display: flex;
-    gap: 6px;
-    padding: 8px;
-    border-radius: var(--radius-xl);
-    background: rgba(9, 24, 50, 0.94);
-    border: 1px solid var(--border-strong);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--gutter) calc(var(--sp-3) + 3px);
+    background: var(--page);
+    border-top: var(--line-w) solid var(--line);
   }
 
   .archived-bar {
     align-items: center;
-    padding-left: 14px;
-    font-size: 14px;
-    color: var(--text-secondary);
+    padding-left: var(--sp-3);
+    font-size: var(--fs-sm);
+    color: var(--text);
   }
   .archived-bar span { flex: 1; min-width: 0; }
 
-  .act {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-height: 52px;
-    border-radius: var(--radius-lg);
-    font-family: var(--font-body);
-    font-size: 15px;
-    font-weight: 700;
-    white-space: nowrap;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    transition: transform 0.1s, opacity 0.15s;
-  }
-
-  .act:active { transform: scale(0.97); }
-
-  .act.primary {
-    flex: 1;
-    min-width: 0;
-    border: none;
-    background: var(--accent);
-    color: #fff;
-    box-shadow: 0 6px 16px var(--accent-shadow);
-  }
-
-  .act.secondary {
-    flex: 0 0 auto;
-    padding: 0 12px;
-    font-size: 14px;
-    background: transparent;
-    color: var(--text);
-    border: 1.5px solid var(--border-strong);
-  }
-
-  .act:focus-visible,
-  .cook-btn:focus-visible,
-  .hero-btn:focus-visible,
-  .step-btn:focus-visible,
-  .admin-btn:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
+  .act { white-space: nowrap; }
+  /* Sans majuscules : « Ajouter à ma semaine » tient à côté du bouton Ingrédients */
+  .act.primary { flex: 1; width: auto; min-width: 0; padding: 0 var(--sp-2); gap: 6px; text-transform: none; letter-spacing: 0; font-size: var(--fs-sm); }
+  .act.secondary { flex: 0 0 auto; padding: 0 var(--sp-3); font-size: var(--fs-sm); }
 
   /* Très petits écrans : le bouton secondaire passe en icône seule */
   @media (max-width: 359px) {
     .act.secondary span { display: none; }
-    .act.primary { font-size: 14px; }
+    .act.primary { font-size: var(--fs-sm); }
   }
 
   /* ── Grands écrans : photo en bandeau, ingrédients et étapes côte à côte ── */
@@ -920,68 +740,62 @@
     .hero {
       aspect-ratio: 3 / 1;
       max-height: 360px;
-      margin-top: 20px;
-      border-radius: 28px;
+      margin-top: var(--sp-5);
     }
     .hero.no-photo { aspect-ratio: 4 / 1; }
-    .content { padding: 28px 8px 8px; }
+    .content { padding: var(--sp-5) var(--gutter) var(--sp-2); }
     .intro {
       display: flex;
       flex-wrap: wrap;
       align-items: flex-end;
-      column-gap: 24px;
+      column-gap: var(--sp-5);
     }
     .intro h1 { flex: 1 1 100%; }
     .cook-btn {
       width: auto;
       margin-left: auto;
-      margin-top: 14px;
+      margin-top: var(--sp-3);
     }
     .columns {
       display: grid;
       grid-template-columns: minmax(300px, 380px) 1fr;
       align-items: start;
-      gap: 40px;
+      gap: var(--sp-6);
     }
     .ingredients {
       position: sticky;
       top: 20px;
     }
     .action-bar {
-      margin-inline: auto 8px;
+      margin-inline: auto var(--gutter);
       width: min(480px, 100%);
     }
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .hero-btn:hover { background: rgba(6, 20, 40, 0.8); }
-    .cook-btn:hover,
-    .act.primary:hover { opacity: 0.92; }
-    .act.secondary:hover,
-    .admin-btn:hover,
-    .step-btn:not(:disabled):hover { background: var(--surface); }
-    .step:hover,
+    .step:hover { background: var(--surface-hover); }
+    .step.done:hover { background: var(--surface-sunken); }
     .ingredient:hover { background: var(--surface-hover); }
   }
 
   .center-msg {
     display: flex;
     justify-content: center;
-    padding: 48px 16px;
+    padding: 48px var(--sp-4);
   }
 
   .error-msg {
     color: var(--error);
-    font-size: 14px;
+    font-size: var(--fs-sm);
   }
 
+  /* Chargement : carré qui tourne par quarts (sec, pas de cercle) */
   .spinner {
     width: 28px;
     height: 28px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
+    border: var(--line-w) solid var(--line);
+    border-top-color: var(--accent);
+    animation: spin 0.8s steps(4) infinite;
   }
 
   @keyframes spin {

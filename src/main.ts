@@ -1,8 +1,9 @@
 import { mount } from 'svelte'
 // Polices hébergées avec le site (plus d'appel à Google Fonts : rien n'est envoyé
 // à un tiers, et elles marchent hors connexion)
-import '@fontsource-variable/outfit'
-import '@fontsource-variable/dm-sans'
+// Bricolage Grotesque (licence OFL), avec l'axe « taille optique » :
+// les grands titres prennent automatiquement un dessin plus marqué.
+import '@fontsource-variable/bricolage-grotesque/opsz.css'
 import './app.css'
 import App from './App.svelte'
 import { installErrorReporting } from './lib/errorReport'

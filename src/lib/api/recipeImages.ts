@@ -167,7 +167,7 @@ export async function compressRecipeImage(file: File): Promise<CompressedImage> 
       const ctx = canvas.getContext('2d')
       if (!ctx) throw new PhotoError('Ton navigateur ne permet pas de préparer la photo.')
       // Fond opaque : une image PNG transparente ne devient pas noire en JPEG
-      ctx.fillStyle = '#10264A'
+      ctx.fillStyle = '#FFFFFF'
       ctx.fillRect(0, 0, w, h)
       ctx.imageSmoothingEnabled = true
       ctx.imageSmoothingQuality = 'high'

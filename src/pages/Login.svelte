@@ -121,11 +121,11 @@
   }
 </script>
 
-<main class="login-page">
-  <div class="login-inner">
+<main class="auth-page">
+  <div class="auth-inner">
     <header class="brand">
-      <div class="logo-circle" aria-hidden="true">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="logo-box" aria-hidden="true">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="square" stroke-linejoin="miter">
           <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
           <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
         </svg>
@@ -134,12 +134,12 @@
       <p class="tagline">Les recettes, la semaine et la liste de courses, partagées à la maison.</p>
     </header>
 
-    <section class="login-card" aria-labelledby="login-title">
+    <section class="auth-card card" aria-labelledby="login-title">
       <h2 id="login-title">Connexion</h2>
 
       <form onsubmit={handleSubmit} novalidate>
         <div class="field">
-          <label for="login-email" class="label-text">Adresse e-mail</label>
+          <label for="login-email" class="label">Adresse e-mail</label>
           <div class="input-wrap">
             <span class="input-icon"><Icon name="mail" size={18} /></span>
             <input
@@ -163,7 +163,7 @@
         </div>
 
         <div class="field">
-          <label for="login-password" class="label-text">Mot de passe</label>
+          <label for="login-password" class="label">Mot de passe</label>
           <div class="input-wrap">
             <span class="input-icon"><Icon name="lock" size={18} /></span>
             <input
@@ -199,7 +199,7 @@
           <p id="login-error" class="error-msg" role="alert">{errorMessage}</p>
         {/if}
         {#if notConfirmed}
-          <button type="button" class="resend-btn" disabled={resending} aria-busy={resending} onclick={handleResend}>
+          <button type="button" class="btn btn-outline resend-btn" disabled={resending} aria-busy={resending} onclick={handleResend}>
             <Icon name="mail" size={16} /> {resending ? 'Envoi…' : 'Renvoyer l’e-mail de confirmation'}
           </button>
           {#if resendMsg}
@@ -230,129 +230,109 @@
   </div>
 </main>
 
-<style>
-  .resend-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    min-height: 44px;
-    margin-top: -4px;
-    padding: 0 14px;
-    border-radius: var(--radius-lg);
-    border: 1.5px solid var(--primary);
-    background: transparent;
-    color: var(--primary);
-    font-size: 14px;
-    font-weight: 600;
-    touch-action: manipulation;
-  }
-  .resend-btn:disabled { opacity: 0.6; cursor: progress; }
-  .resend-msg {
-    font-size: 14px;
-    line-height: 1.4;
-    padding: 10px 14px;
-    border-radius: var(--radius-lg);
-  }
-  .resend-msg[data-tone='ok'] { background: var(--success-bg); color: var(--success); }
-  .resend-msg[data-tone='error'] { background: var(--error-bg); color: #FF9A9D; }
 
-  .login-page {
+
+
+<style>
+  .auth-page {
     min-height: 100svh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: calc(24px + env(safe-area-inset-top, 0px)) var(--gutter) calc(24px + env(safe-area-inset-bottom, 0px));
-    animation: page-in 0.3s ease-out;
+    padding:
+      calc(var(--sp-5) + env(safe-area-inset-top, 0px))
+      calc(var(--gutter) + env(safe-area-inset-right, 0px))
+      calc(var(--sp-5) + env(safe-area-inset-bottom, 0px))
+      calc(var(--gutter) + env(safe-area-inset-left, 0px));
+    animation: page-in var(--dur-page) var(--ease-out);
   }
 
-  .login-inner {
+  .auth-inner {
     width: 100%;
     max-width: 400px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: var(--sp-5);
   }
 
-  /* ── Accueil (posé directement sur la photo) ── */
+  /* ── En-tête : carré orange + nom en très gros ── */
   .brand {
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: var(--sp-3);
   }
 
-  .logo-circle {
-    width: 72px;
-    height: 72px;
-    border-radius: 22px;
-    background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 70%, var(--accent)));
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
-    color: var(--on-primary);
-    margin-bottom: 18px;
+  .logo-box {
+    width: 76px;
+    height: 76px;
+    display: grid;
+    place-items: center;
+    background: var(--accent);
+    color: var(--on-accent);
+    border: var(--line-w) solid var(--line);
+    box-shadow: var(--shadow-md);
+    animation: snap-in var(--dur-sheet) var(--ease-snap) backwards;
   }
 
   h1 {
-    font-family: var(--font-display);
-    font-size: 30px;
-    line-height: 1.1;
+    font-size: clamp(44px, 15vw, 60px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
     color: var(--text);
-    letter-spacing: -0.01em;
-    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
   }
 
-  .tagline {
-    margin-top: 8px;
-    max-width: 300px;
-    color: var(--text);
-    opacity: 0.88;
-    font-size: 15px;
-    line-height: 1.45;
-    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
-  }
-
-  /* ── Carte formulaire ── */
-  .login-card {
-    /* Pas de backdrop-filter : la photo derrière bouge, le flou serait recalculé
-       à chaque image. Un fond presque opaque suffit à rester lisible. */
-    background: rgba(9, 24, 50, 0.86);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-xl);
-    padding: 24px 20px 20px;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.38);
+  /* ── Carte ── */
+  .auth-card {
+    padding: var(--sp-5) var(--sp-4) var(--sp-4);
+    animation: fade-up var(--dur-sheet) var(--ease-out) 60ms backwards;
   }
 
   h2 {
-    font-family: var(--font-display);
-    font-size: 20px;
+    font-size: var(--fs-xl);
+    line-height: 1.15;
+    text-transform: uppercase;
+    margin-bottom: var(--sp-4);
+    overflow-wrap: anywhere;
+  }
+  h2:focus { outline: none; }
+
+  .app-version {
+    margin: 0;
+    text-align: center;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-height: 640px) {
+    .auth-inner { gap: var(--sp-3); }
+    .logo-box { width: 56px; height: 56px; }
+    .logo-box svg { width: 30px; height: 30px; }
+    h1 { font-size: 40px; }
+  }
+
+  .tagline {
+    max-width: 300px;
     color: var(--text);
-    margin-bottom: 18px;
+    font-size: var(--fs-base);
+    line-height: 1.4;
   }
 
   form {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--sp-4);
   }
 
   .field {
     display: flex;
     flex-direction: column;
-    gap: 6px;
   }
 
-  .label-text {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-secondary);
-  }
-
-  .input-wrap {
-    position: relative;
-  }
+  .input-wrap { position: relative; }
 
   .input-icon {
     position: absolute;
@@ -360,21 +340,14 @@
     top: 50%;
     transform: translateY(-50%);
     display: flex;
-    color: var(--text-secondary);
+    color: var(--text);
     pointer-events: none;
   }
 
-  .input {
-    min-height: 52px;
-  }
+  .input { min-height: 52px; }
+  .input-has-icon { padding-left: 44px; }
 
-  .input-has-icon {
-    padding-left: 44px;
-  }
-
-  .input-has-toggle {
-    padding-right: 52px;
-  }
+  .input-has-toggle { padding-right: 52px; }
 
   .eye-btn {
     position: absolute;
@@ -387,57 +360,32 @@
     align-items: center;
     justify-content: center;
     border: none;
-    border-radius: var(--radius-sm);
     background: transparent;
     color: var(--text-secondary);
     cursor: pointer;
     touch-action: manipulation;
   }
-
-  .eye-btn[aria-pressed='true'] {
-    color: var(--primary);
-  }
-
-  .eye-btn:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: -2px;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .eye-btn:hover {
-      color: var(--text);
-      background: var(--surface);
-    }
-  }
+  .eye-btn[aria-pressed='true'] { color: var(--text); background: var(--highlight); }
+  .eye-btn:focus-visible { outline-offset: -3px; }
 
   .error-msg {
-    font-size: 14px;
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
     line-height: 1.4;
-    color: #FFD9DA;
+    color: var(--error);
     background: var(--error-bg);
-    border: 1px solid color-mix(in srgb, var(--error) 55%, transparent);
-    padding: 10px 14px;
-    border-radius: var(--radius-md);
+    border: var(--line-w) solid var(--error);
+    padding: var(--sp-3);
   }
 
-  .btn-login {
-    margin-top: 4px;
-    min-height: 52px;
-    font-size: 16px;
-    touch-action: manipulation;
-  }
-
-  .btn-login[aria-busy='true'] {
-    cursor: progress;
-    opacity: 0.85;
-  }
+  .btn-login { margin-top: var(--sp-1); min-height: 52px; }
+  .btn-login[aria-busy='true'] { cursor: progress; opacity: 0.85; }
 
   .btn-spinner {
     width: 18px;
     height: 18px;
-    border: 2px solid rgba(255, 255, 255, 0.35);
-    border-top-color: #FFFFFF;
-    border-radius: 50%;
+    border: 3px solid var(--on-accent);
+    border-top-color: transparent;
     animation: spin 0.7s linear infinite;
   }
 
@@ -445,58 +393,52 @@
     to { transform: rotate(360deg); }
   }
 
-  /* Version de l'appli (voir src/lib/version.ts) */
-  .app-version {
-    margin: 0;
-    text-align: center;
-    font-size: 12px;
-    color: var(--text-secondary);
-    opacity: 0.8;
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* Lien discret sous le bouton (zone de tap 44 px) */
-  .forgot {
-    margin-top: 6px;
-    display: flex;
-    justify-content: center;
-  }
-
-  .forgot-link {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    padding: 0 12px;
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    touch-action: manipulation;
-  }
-
-  .forgot-link:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .forgot-link:hover {
-      color: var(--primary);
-      text-decoration: underline;
-    }
-  }
-
   .hint {
-    margin-top: 8px;
-    font-size: 13px;
+    margin-top: var(--sp-3);
+    font-size: var(--fs-sm);
     line-height: 1.45;
     color: var(--text-secondary);
     text-align: center;
   }
 
-  @media (max-height: 640px) {
-    .login-inner { gap: 16px; }
-    .logo-circle { width: 56px; height: 56px; border-radius: 18px; margin-bottom: 12px; }
-    h1 { font-size: 26px; }
+  .resend-msg {
+    margin-top: var(--sp-3);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-medium);
+    line-height: 1.4;
+    padding: var(--sp-3);
+    border: var(--line-w) solid var(--line);
+  }
+  .resend-msg[data-tone='ok'] { background: var(--success-bg); color: var(--success); border-color: var(--success); }
+  .resend-msg[data-tone='error'] { background: var(--error-bg); color: var(--error); border-color: var(--error); }
+
+  .resend-btn {
+    width: 100%;
+    margin-top: -4px;
+    font-size: var(--fs-sm);
+  }
+
+  .forgot {
+    margin-top: var(--sp-2);
+    display: flex;
+    justify-content: center;
+  }
+  .forgot-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 var(--sp-3);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+    touch-action: manipulation;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .eye-btn:hover { color: var(--text); background: var(--surface-hover); }
+    .forgot-link:hover { background: var(--highlight); }
   }
 </style>

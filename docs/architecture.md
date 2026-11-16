@@ -57,11 +57,11 @@ Piège Svelte 5 : la variable qui garde le canal Realtime ne doit **pas** être 
 src/
 ├── App.svelte                    # Shell : auth guard + routing
 ├── main.ts                       # Point d'entrée + SW registration
-├── app.css                       # Design system complet (tokens « Mer », reset)
+├── app.css                       # Design system complet « Brutal beurre » (variables clair/sombre, pièces communes, animations)
 ├── globals.d.ts                  # Constantes injectées au build (__APP_VERSION__, __APP_COMMIT__)
 ├── components/
 │   ├── AppHeader.svelte          # Avatar → Mon compte (position absolute : part au défilement)
-│   ├── AppBackdrop.svelte        # Fond de TOUTES les pages : photo de mer floutée (public/bg/, WebP 640/1280) + zoom lent + voile (variant home/page)
+│   ├── AppBackdrop.svelte        # Fond de TOUTES les pages : couleur unie + pluie lente d'aliments au trait (src/lib/motifs.ts)
 │   ├── Icon.svelte               # Icônes au trait (remplacent les émojis décoratifs)
 │   ├── FloatingRecipeCard.svelte # Carte flottante de l'accueil (couches : position/parallaxe, drift x, drift y, rotation, carte)
 │   ├── ConfirmDialog.svelte      # Fenêtre de confirmation centrée commune

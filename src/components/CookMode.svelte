@@ -117,7 +117,7 @@
   tabindex="-1"
 >
   <header class="cook-top">
-    <button class="round" onclick={onclose} aria-label="Fermer le mode cuisine">
+    <button class="btn btn-icon round" onclick={onclose} aria-label="Fermer le mode cuisine">
       <Icon name="x" size={22} />
     </button>
     <div class="cook-heading">
@@ -126,7 +126,7 @@
     </div>
     {#if recipe.recipe_ingredients.length > 0}
       <button
-        class="pill"
+        class="btn btn-sm pill"
         class:on={showIngredients}
         onclick={() => (showIngredients = !showIngredients)}
         aria-expanded={showIngredients}
@@ -161,15 +161,15 @@
     </div>
 
     <nav class="cook-nav" aria-label="Étapes">
-      <button class="nav-btn prev" onclick={() => go(-1)} disabled={isFirst}>
+      <button class="btn btn-outline nav-btn prev" onclick={() => go(-1)} disabled={isFirst}>
         <Icon name="arrow-left" size={22} /> Précédent
       </button>
       {#if isLast}
-        <button class="nav-btn next finish" onclick={onclose}>
+        <button class="btn btn-primary nav-btn next finish" onclick={onclose}>
           <Icon name="check" size={22} /> Terminé
         </button>
       {:else}
-        <button class="nav-btn next" onclick={() => go(1)}>
+        <button class="btn btn-primary nav-btn next" onclick={() => go(1)}>
           Suivant <Icon name="arrow-right" size={22} />
         </button>
       {/if}
@@ -181,24 +181,32 @@
   {#if showIngredients}
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="sheet-backdrop" onclick={() => (showIngredients = false)}></div>
-    <section id="cook-ingredients" class="sheet" aria-label="Ingrédients pour {portions} portions">
+    <div class="ui-overlay" onclick={() => (showIngredients = false)}>
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <section
+      id="cook-ingredients"
+      class="ui-sheet sheet"
+      aria-label="Ingrédients pour {portions} portions"
+      onclick={(e) => e.stopPropagation()}
+    >
       <div class="sheet-head">
         <h3>Ingrédients <span class="sheet-sub">· {portions} portion{portions > 1 ? 's' : ''}</span></h3>
-        <button class="round small" onclick={() => (showIngredients = false)} aria-label="Masquer les ingrédients">
+        <button class="btn btn-icon round small" onclick={() => (showIngredients = false)} aria-label="Masquer les ingrédients">
           <Icon name="chevron-down" size={20} />
         </button>
       </div>
       <ul class="sheet-list">
-        {#each recipe.recipe_ingredients as ing (ing.id)}
+        {#each recipe.recipe_ingredients as ing, i (ing.id)}
           {@const qty = formatIngredient(ing.quantity, ing.unit, scale)}
-          <li>
+          <li style="--i: {Math.min(i, 8)}">
             <span class="sheet-qty">{qty}</span>
             <span class="sheet-name">{ing.name}</span>
           </li>
         {/each}
       </ul>
     </section>
+    </div>
   {/if}
 </div>
 
@@ -209,7 +217,7 @@
     z-index: 200; /* au-dessus de la barre d'onglets (100) */
     display: flex;
     flex-direction: column;
-    /* Opaque : on cuisine, la photo de fond n'apporte rien et gêne la lecture */
+    /* Opaque : on cuisine, le fond animé n'apporte rien et gêne la lecture */
     background: var(--bg);
     color: var(--text);
     padding:
@@ -218,7 +226,7 @@
       calc(16px + env(safe-area-inset-bottom, 0px))
       calc(16px + env(safe-area-inset-left, 0px));
     outline: none;
-    animation: cook-in 0.22s ease-out;
+    animation: cook-in var(--dur-sheet) var(--ease-out);
     overscroll-behavior: contain;
   }
 
@@ -231,29 +239,11 @@
   .cook-top {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--sp-3);
   }
 
-  .round {
-    flex-shrink: 0;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: 1px solid var(--border-strong);
-    background: var(--surface);
-    color: var(--text);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .round.small {
-    width: 44px;
-    height: 44px;
-  }
+  .round { width: 48px; height: 48px; min-height: 48px; }
+  .round.small { width: 44px; height: 44px; min-height: 44px; }
 
   .cook-heading {
     flex: 1;
@@ -265,64 +255,45 @@
     align-items: center;
     gap: 5px;
     font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--tracking-caps);
     text-transform: uppercase;
-    color: var(--primary);
+    color: var(--text-secondary);
   }
 
   .cook-title {
     font-family: var(--font-display);
     font-size: 17px;
-    font-weight: 600;
+    font-weight: var(--fw-bold);
     line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .pill {
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    min-height: 44px;
-    padding: 0 14px;
-    border-radius: 999px;
-    border: 1px solid var(--border-strong);
-    background: transparent;
-    color: var(--text);
-    font-family: var(--font-body);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
+  .pill { flex-shrink: 0; }
 
   .pill.on {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: var(--on-primary);
+    background: var(--accent);
+    color: var(--on-accent);
   }
 
-  /* ── Progression ── */
+  /* ── Progression : un carré plat par étape ── */
   .progress {
     display: flex;
-    gap: 4px;
-    margin: 16px 0 0;
+    gap: var(--sp-1);
+    margin: var(--sp-4) 0 0;
   }
 
   .seg {
     flex: 1;
-    height: 4px;
-    border-radius: 2px;
-    background: var(--border-strong);
-    transition: background-color 0.2s;
+    height: 10px;
+    border: var(--line-thin) solid var(--line);
+    background: var(--surface-sunken);
   }
 
-  .seg.done { background: color-mix(in srgb, var(--primary) 55%, transparent); }
-  .seg.current { background: var(--primary); }
+  .seg.done { background: var(--band); }
+  .seg.current { background: var(--accent); }
 
   /* ── Étape ── */
   .stage {
@@ -345,8 +316,8 @@
     width: 100%;
     max-width: 760px;
     margin-inline: auto;
-    padding: 24px 4px;
-    animation: step-in 0.22s ease-out;
+    padding: var(--sp-5) var(--sp-1);
+    animation: step-in var(--dur-sheet) var(--ease-out);
   }
 
   .step.back { animation-name: step-in-back; }
@@ -361,18 +332,23 @@
     to   { opacity: 1; transform: none; }
   }
 
+  /* « Étape 2 sur 3 » : petit bandeau */
   .step-count {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--primary);
-    letter-spacing: 0.02em;
-    margin-bottom: 14px;
+    display: inline-block;
+    padding: 4px 10px;
+    margin-bottom: var(--sp-4);
+    background: var(--band);
+    color: var(--text-on-band);
+    font-size: 13px;
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
   }
 
   .step-text {
     font-family: var(--font-display);
     font-size: clamp(26px, 7.2vw, 40px);
-    font-weight: 500;
+    font-weight: var(--fw-medium);
     line-height: 1.38;
     color: var(--text);
     overflow-wrap: break-word; /* pas de césure : un mot coupé se lit mal d'un coup d'œil */
@@ -381,110 +357,51 @@
   /* ── Navigation ── */
   .cook-nav {
     display: flex;
-    gap: 12px;
+    gap: var(--sp-3);
     max-width: 760px;
     width: 100%;
     margin: 0 auto;
+    padding-bottom: var(--sp-1); /* place pour l'ombre */
   }
 
   .nav-btn {
     flex: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    width: auto;
     min-height: 60px;
-    border-radius: var(--radius-xl);
-    font-family: var(--font-body);
     font-size: 17px;
-    font-weight: 700;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    transition: opacity 0.15s, transform 0.1s;
   }
 
-  .nav-btn:active:not(:disabled) { transform: scale(0.97); }
+  .prev { flex: 0 1 42%; text-transform: uppercase; letter-spacing: 0.02em; }
+  .prev:disabled { opacity: 0.35; }
 
-  .prev {
-    flex: 0 1 42%;
-    background: transparent;
-    color: var(--text);
-    border: 1.5px solid var(--border-strong);
-  }
-
-  .prev:disabled {
-    opacity: 0.35;
-    cursor: default;
-  }
-
-  .next {
-    background: var(--primary);
-    color: var(--on-primary);
-    border: none;
-  }
-
-  .next.finish {
-    background: var(--success);
-    color: var(--on-success);
-  }
-
-  .round:focus-visible,
-  .pill:focus-visible,
-  .nav-btn:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
-
-  /* ── Rappel des ingrédients (panneau du bas) ── */
-  .sheet-backdrop {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    animation: fade 0.18s ease-out;
-  }
-
-  @keyframes fade {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-
+  /* ── Rappel des ingrédients : fenêtre commune (.ui-overlay / .ui-sheet) ── */
   .sheet {
-    position: absolute;
-    inset: auto 0 0 0;
     max-height: 70svh;
     display: flex;
     flex-direction: column;
-    background: #0B1D3B; /* un ton plus profond que --bg, pour détacher le panneau */
-    border-top: 1px solid var(--border-strong);
-    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-    padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
-    box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.35);
-    animation: sheet-in 0.22s ease-out;
-  }
-
-  @keyframes sheet-in {
-    from { transform: translateY(40px); opacity: 0; }
-    to   { transform: none; opacity: 1; }
+    padding-top: var(--sp-3);
+    padding-bottom: calc(var(--sp-4) + env(safe-area-inset-bottom, 0px));
   }
 
   .sheet-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 6px;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-2);
   }
 
   .sheet-head h3 {
     font-family: var(--font-display);
     font-size: 20px;
+    text-transform: uppercase;
   }
 
   .sheet-sub {
     font-family: var(--font-body);
     font-size: 15px;
-    font-weight: 500;
+    font-weight: var(--fw-medium);
+    text-transform: none;
     color: var(--text-secondary);
   }
 
@@ -496,38 +413,29 @@
     max-width: 760px;
     width: 100%;
     margin-inline: auto;
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
   }
 
   .sheet-list li {
     display: flex;
-    gap: 14px;
+    gap: var(--sp-3);
     align-items: baseline;
-    padding: 12px 2px;
-    border-bottom: 1px solid var(--border);
+    padding: var(--sp-3);
+    border-top: var(--line-thin) solid var(--line);
     font-size: 18px;
     line-height: 1.35;
+    animation: fade-up var(--dur-sheet) var(--ease-out) calc(var(--i, 0) * 45ms) backwards;
   }
 
-  .sheet-list li:last-child { border-bottom: none; }
+  .sheet-list li:first-child { border-top: none; }
 
   .sheet-qty {
     flex-shrink: 0;
     min-width: 76px;
-    font-weight: 700;
-    color: var(--primary);
+    font-weight: var(--fw-bold);
     font-variant-numeric: tabular-nums;
   }
 
   .sheet-name { color: var(--text); }
-
-  @media (hover: hover) and (pointer: fine) {
-    .round:hover,
-    .pill:not(.on):hover {
-      background: var(--surface-hover);
-    }
-    .prev:not(:disabled):hover {
-      background: var(--surface);
-    }
-    .next:hover { opacity: 0.92; }
-  }
 </style>

@@ -3,6 +3,7 @@
   import { profileState } from '../lib/profile.svelte'
   import { href } from '../lib/router.svelte'
   import { sizedImage } from '../lib/images'
+  import { categoryColor } from '../lib/categoryColors'
   import {
     fetchRecipeCategories,
     fetchRecipeIndex,
@@ -237,8 +238,8 @@
   <!-- Barre de recherche + filtres -->
   <div class="search-row">
   <div class="search-bar" role="search">
-    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" aria-hidden="true">
+      <circle cx="11" cy="11" r="7"/><path d="m21 21-5-5"/>
     </svg>
     <input
       type="search"
@@ -251,7 +252,7 @@
     />
     {#if search}
       <button class="search-clear" onclick={() => { search = ''; query = '' }} aria-label="Effacer la recherche">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     {/if}
   </div>
@@ -295,7 +296,7 @@
           class:active={selectedCategory === cat.id}
           onclick={() => (selectedCategory = selectedCategory === cat.id ? null : cat.id)}
           aria-pressed={selectedCategory === cat.id}
-          style="--chip-color: {cat.color}"
+          style="--chip-color: {categoryColor(cat.name)}"
         ><span class="chip-dot" aria-hidden="true"></span>{cat.name}</button>
       {/each}
     </div>
@@ -348,9 +349,9 @@
     </div>
   {:else}
     <div class="recipe-grid" class:refreshing={pageLoading}>
-      {#each shown as recipe (recipe.id)}
-        <a href={href('recette', recipe.id)} class="recipe-card">
-          <div class="card-visual">
+      {#each shown as recipe, i (recipe.id)}
+        <a href={href('recette', recipe.id)} class="recipe-card" style="--i: {Math.min(i, 8)}">
+          <div class="card-visual" style="--cat: {categoryColor(recipe.recipe_categories?.name)}">
             {#if sizedImage(recipe.image_url, 240, 180)}
               <img
                 src={sizedImage(recipe.image_url, 240, 180)}
@@ -365,7 +366,7 @@
           </div>
           <div class="card-body">
             {#if recipe.recipe_categories}
-              <span class="card-badge" style="--cat: {recipe.recipe_categories.color}">{recipe.recipe_categories.name}</span>
+              <span class="card-badge" style="--cat: {categoryColor(recipe.recipe_categories.name)}">{recipe.recipe_categories.name}</span>
             {/if}
             <h2 class="card-title">{recipe.title}</h2>
             <div class="card-meta">
@@ -414,7 +415,7 @@
 
   <!-- FAB : ajouter une recette (au-dessus de la barre d'onglets) -->
   <a href="#/nouvelle-recette" class="fab" aria-label="Nouvelle recette">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" aria-hidden="true">
       <path d="M12 5v14M5 12h14"/>
     </svg>
   </a>
@@ -424,52 +425,32 @@
 </div>
 
 <style>
-  .archives {
-    margin: 28px 0 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  .archives ul { list-style: none; margin: 0; padding: 0; width: 100%; }
-  .archives li a {
-    display: flex;
-    align-items: center;
-    min-height: 44px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text-secondary);
-    text-decoration: none;
-  }
-  .archives-empty { margin: 0; color: var(--text-secondary); font-size: 14px; }
-
   .page {
     padding: var(--gutter);
     padding-top: calc(var(--gutter) + env(safe-area-inset-top, 0px));
-    /* Place pour le FAB sous la dernière rangée */
-    padding-bottom: calc(var(--gutter) + 72px);
+    /* Place pour le bouton + sous la dernière rangée */
+    padding-bottom: calc(var(--gutter) + 76px);
     max-width: 1400px;
     margin: 0 auto;
   }
 
   /* ── En-tête ── */
-  .head { margin-bottom: 14px; }
+  .head { margin-bottom: var(--sp-4); }
 
-  .head h1 {
-    font-size: 28px;
-    padding-right: 48px; /* avatar en haut à droite */
-  }
+  .head h1 { padding-right: 56px; /* avatar en haut à droite */ }
 
   .head-sub {
-    margin-top: 4px;
+    margin-top: var(--sp-1);
     font-size: 15px;
+    font-weight: var(--fw-medium);
     color: var(--text-secondary);
   }
 
   /* ── Recherche ── */
   .search-row {
     display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 10px;
+    margin-bottom: var(--sp-3);
     max-width: 640px;
   }
 
@@ -479,95 +460,33 @@
     min-width: 0;
   }
 
-  .filter-btn {
-    flex-shrink: 0;
-    min-height: 48px;
-    min-width: 48px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 0 14px;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-xl);
-    background: rgba(9, 24, 50, 0.6);
-    color: var(--text);
-    font: 600 15px var(--font-body);
-    cursor: pointer;
-    touch-action: manipulation;
-  }
-  .filter-btn.on { border-color: var(--primary); color: var(--primary); }
-  .filter-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-  .filter-count {
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
-    border-radius: 10px;
-    background: var(--primary);
-    color: var(--on-primary);
-    font-size: 12px;
-    line-height: 20px;
-    text-align: center;
-  }
-  @media (max-width: 360px) { .filter-txt { display: none; } }
-
-  .active-filters {
-    list-style: none;
-    margin: 0 0 12px;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .active-chip {
-    min-height: 36px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 0 8px 0 12px;
-    border: 1px solid var(--primary);
-    border-radius: 8px;
-    background: color-mix(in srgb, var(--primary) 14%, transparent);
-    color: var(--text);
-    font: 600 13px var(--font-body);
-    cursor: pointer;
-    touch-action: manipulation;
-    position: relative;
-  }
-  /* zone de tap ≥ 44 px sans grossir la puce */
-  .active-chip::after { content: ''; position: absolute; inset: -4px 0; }
-
   .search-icon {
     position: absolute;
-    left: 14px;
+    left: 13px;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--text-secondary);
+    color: var(--text);
     pointer-events: none;
   }
 
   .search-input {
     width: 100%;
-    min-height: 48px;
-    padding: 12px 48px 12px 42px;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-xl);
-    background: rgba(9, 24, 50, 0.6);
+    height: 48px;
+    padding: 0 44px 0 42px;
+    border: var(--line-w) solid var(--line);
+    border-radius: 0;
+    background: var(--bg);
     color: var(--text);
-    font-size: 16px; /* 16 px : pas de zoom auto sur iOS */
     font-family: var(--font-body);
-    transition: border-color 0.15s;
+    font-size: var(--fs-base);
+    outline: none;
     -webkit-appearance: none;
     appearance: none;
   }
 
   .search-input::-webkit-search-cancel-button { display: none; }
-  .search-input::placeholder { color: var(--text-placeholder); }
-
-  .search-input:focus {
-    outline: none;
-    border-color: var(--primary);
-  }
+  .search-input::placeholder { color: var(--text-placeholder); opacity: 1; }
+  .search-input:focus { box-shadow: var(--shadow-sm); }
 
   .search-clear {
     position: absolute;
@@ -576,117 +495,146 @@
     transform: translateY(-50%);
     width: 44px;
     height: 44px;
-    border: none;
-    border-radius: 50%;
-    background: none;
-    color: var(--text-secondary);
     display: flex;
     align-items: center;
     justify-content: center;
+    border: none;
+    background: none;
+    color: var(--text);
     cursor: pointer;
     touch-action: manipulation;
   }
 
-  .search-clear:active { color: var(--text); }
-
-  /* ── Puces ── */
-  .chips {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    /* Bord à bord sur téléphone : la rangée défile jusqu'au bord de l'écran */
-    margin: 0 calc(-1 * var(--gutter)) 16px;
-    padding: 2px var(--gutter) 4px;
-    scroll-padding-inline: var(--gutter);
-    scrollbar-width: none;
-    overscroll-behavior-x: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .chips::-webkit-scrollbar { display: none; }
-
-  .chip {
+  .filter-btn {
     flex-shrink: 0;
-    min-height: 44px;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 0 16px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
+    gap: 6px;
+    min-height: 48px;
+    min-width: 48px;
+    padding: 0 14px;
+    border: var(--line-w) solid var(--line);
     background: var(--surface);
     color: var(--text);
-    font-size: 14px;
-    font-weight: 600;
+    box-shadow: var(--shadow-sm);
     font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: var(--fw-bold);
     cursor: pointer;
-    white-space: nowrap;
     touch-action: manipulation;
-    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .filter-btn:active { transform: translate(var(--press), var(--press)); box-shadow: none; }
+  .filter-btn.on { background: var(--accent); color: var(--on-accent); }
+
+  .filter-count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 4px;
+    background: var(--ink);
+    color: var(--butter);
+    font-size: 12px;
+    font-weight: var(--fw-bold);
   }
 
+  @media (max-width: 360px) { .filter-txt { display: none; } }
+
+  /* Filtres actifs : étiquettes à retirer d'un tap */
+  .active-filters {
+    list-style: none;
+    margin: 0 0 var(--sp-3);
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+
+  .active-chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 36px;
+    padding: 0 8px 0 10px;
+    border: var(--line-w) solid var(--line);
+    background: var(--highlight);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: var(--fw-bold);
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  /* zone de tap agrandie à 44 px sans changer le dessin */
+  .active-chip::after { content: ''; position: absolute; inset: -4px 0; }
+
+  /* ── Puces de catégorie ── */
+  .chips {
+    display: flex;
+    gap: var(--sp-2);
+    overflow-x: auto;
+    margin: 0 calc(var(--gutter) * -1) var(--sp-4);
+    padding: 2px var(--gutter) 6px; /* place pour l'ombre */
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+
+  .chip { min-height: 44px; flex-shrink: 0; }
+
+  /* Petit carré de la couleur de la catégorie */
   .chip-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--chip-color, var(--primary));
+    width: 10px;
+    height: 10px;
+    background: var(--chip-color);
+    border: var(--line-thin) solid var(--ink);
   }
 
-  .chip:active { transform: scale(0.97); }
-
-  .chip.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: var(--on-primary);
-  }
-
-  .chip.active .chip-dot { background: var(--on-primary); }
-
-  /* ── Grille : 2 colonnes sur téléphone, plus sur grand écran ── */
+  /* ── Grille de recettes ── */
   .recipe-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    transition: opacity 0.2s;
+    gap: 14px;
+    transition: opacity var(--dur-base);
   }
 
   .recipe-grid.refreshing { opacity: 0.55; }
 
   @media (min-width: 640px) {
-    .recipe-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .recipe-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
   }
-
   @media (min-width: 960px) {
-    .recipe-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+    .recipe-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
   }
-
   @media (min-width: 1240px) {
     .recipe-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   }
 
+  /* Carte : bloc carré, ombre franche ; apparaît en montant, l'une après l'autre */
   .recipe-card {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    border-radius: var(--radius-xl);
     background: var(--surface);
-    border: 1px solid var(--border);
-    overflow: hidden;
+    border: var(--line-w) solid var(--line);
+    box-shadow: var(--shadow-md);
+    color: var(--text);
     text-decoration: none;
-    color: inherit;
     touch-action: manipulation;
-    transition: transform 0.15s;
+    animation: fade-up var(--dur-sheet) var(--ease-out) calc(var(--i, 0) * 45ms) backwards;
+    transition: transform var(--dur-fast) var(--ease-out);
   }
 
-  .recipe-card:active { transform: scale(0.98); }
+  .recipe-card:active { transform: translate(4px, 4px); box-shadow: none; }
 
   .card-visual {
+    position: relative;
     aspect-ratio: 4 / 3;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: color-mix(in srgb, var(--primary) 12%, rgba(9, 24, 50, 0.5));
     overflow: hidden;
+    background: var(--cat, var(--surface-sunken));
+    border-bottom: var(--line-w) solid var(--line);
   }
 
   .card-img {
@@ -696,52 +644,60 @@
     display: block;
   }
 
-  /* Pas de photo : grande initiale (même style que l'accueil) */
+  /* Recette sans photo : grande initiale noire sur l'aplat de la catégorie */
   .card-initial {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-family: var(--font-display);
-    font-weight: 800;
-    font-size: 56px;
+    font-size: 72px;
+    font-weight: var(--fw-bold);
     line-height: 1;
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--primary) 75%, white);
+    color: var(--ink);
   }
 
   .card-body {
-    flex: 1;
-    padding: 10px 12px 12px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
+    padding: 9px 10px 11px;
+    min-width: 0;
   }
 
   .card-badge {
     align-self: flex-start;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 999px;
-    letter-spacing: 0.04em;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 1px 5px;
+    border: var(--line-thin) solid var(--ink);
+    background: var(--cat);
+    color: var(--ink);
+    font-size: 10px;
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--tracking-caps);
     text-transform: uppercase;
-    color: color-mix(in srgb, var(--cat) 55%, white);
-    background: color-mix(in srgb, var(--cat) 24%, transparent);
   }
 
   .card-title {
     font-size: 15px;
-    font-weight: 700;
-    line-height: 1.25;
-    color: var(--text);
+    font-weight: var(--fw-bold);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    hyphens: auto;
   }
 
   .card-meta {
-    margin-top: auto;
-    padding-top: 2px;
     display: flex;
     flex-wrap: wrap;
     gap: 4px 10px;
@@ -752,142 +708,107 @@
   .card-meta span {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
+    white-space: nowrap;
   }
 
-  /* ── Squelettes ── */
-  .skeleton {
-    pointer-events: none;
-    animation: sk-pulse 1.2s ease-in-out infinite alternate;
-  }
-
-  .skeleton .card-visual { background: rgba(255, 255, 255, 0.08); }
+  /* ── Chargement ── */
+  .skeleton { animation: sk-pulse 1s ease-in-out infinite alternate; }
+  .skeleton .card-visual { background: var(--surface-sunken); }
 
   .sk-line {
     display: block;
+    width: 90%;
     height: 12px;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--surface-sunken);
   }
-
   .sk-short { width: 40%; height: 10px; }
   .sk-mid { width: 65%; }
 
   @keyframes sk-pulse {
     from { opacity: 1; }
-    to { opacity: 0.45; }
+    to   { opacity: 0.5; }
   }
 
-  /* ── États (vide, aucun résultat, erreur) ── */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-  }
-
+  /* ── États (vide, erreur) ── */
   .state {
-    max-width: 480px;
-    margin: 8px auto 0;
-    padding: 32px 20px;
-    text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: var(--sp-2);
+    padding: 32px 20px;
+    text-align: center;
   }
 
-  .state-icon { color: var(--text-secondary); }
+  .state-icon { color: var(--text); }
 
   .state-title {
-    font-family: var(--font-display);
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--text);
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
   }
 
   .state-text {
-    font-size: 15px;
-    line-height: 1.45;
+    font-size: var(--fs-sm);
     color: var(--text-secondary);
-    overflow-wrap: anywhere;
+    max-width: 320px;
   }
 
   .error-text { color: var(--error); }
 
-  .state-btn {
-    margin-top: 8px;
-    min-height: 46px;
-    border-radius: 14px;
-    background: rgba(9, 24, 50, 0.6);
-    color: var(--text);
-    touch-action: manipulation;
-  }
-
-  .state-cta {
-    margin-top: 12px;
-    width: auto;
-    padding: 14px 22px;
-    touch-action: manipulation;
-  }
+  .state-btn { margin-top: var(--sp-2); }
+  .state-cta { margin-top: var(--sp-3); width: auto; padding: 0 24px; }
 
   /* ── Voir plus ── */
   .load-more-wrap {
     display: flex;
     justify-content: center;
-    padding: 20px 0 8px;
+    margin-top: var(--sp-5);
   }
-
-  .btn-load-more {
-    min-height: 48px;
-    padding: 0 24px;
-    border-radius: 999px;
-    font-size: 15px;
-    background: rgba(9, 24, 50, 0.6);
-    color: var(--text);
-    touch-action: manipulation;
-  }
-
-  .btn-load-more:disabled { opacity: 0.7; }
 
   .btn-spinner {
     width: 14px;
     height: 14px;
-    border: 2px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-  /* ── FAB (au-dessus de la barre d'onglets : 76 px réservés + safe area) ── */
-  .fab {
-    position: fixed;
-    bottom: calc(76px + env(safe-area-inset-bottom, 0px) + 12px);
-    right: max(16px, env(safe-area-inset-right, 0px));
-    width: 56px;
-    height: 56px;
-    border-radius: var(--radius-fab);
     background: var(--accent);
-    color: #FFFFFF;
+    border: var(--line-w) solid var(--line);
+    animation: spin 0.6s var(--ease-snap) infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(90deg); } }
+
+  /* ── Archives ── */
+  .archives {
+    margin: 32px 0 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sp-3);
+  }
+  .archives ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    background: var(--surface);
+    border: var(--line-w) solid var(--line);
+  }
+  .archives li + li { border-top: var(--line-thin) solid var(--line); }
+  .archives li a {
     display: flex;
     align-items: center;
-    justify-content: center;
-    box-shadow: 0 6px 18px var(--accent-shadow), 0 2px 6px rgba(0, 0, 0, 0.3);
+    min-height: 48px;
+    padding: 0 var(--sp-3);
+    color: var(--text);
+    font-weight: var(--fw-medium);
     text-decoration: none;
-    touch-action: manipulation;
-    transition: transform 0.15s;
-    z-index: 50;
   }
+  .archives-empty { margin: 0; color: var(--text-secondary); font-size: var(--fs-sm); }
 
-  .fab:active { transform: scale(0.94); }
+  /* Le bouton + : styles communs dans app.css (.fab) */
+  .fab { text-decoration: none; touch-action: manipulation; }
 
   @media (hover: hover) and (pointer: fine) {
-    .chip:not(.active):hover { border-color: var(--primary); background: var(--surface-hover); }
-    .recipe-card:hover { transform: translateY(-2px); border-color: var(--border-strong); }
-    .search-clear:hover { color: var(--text); }
-    .fab:hover { transform: scale(1.05); }
+    .recipe-card:hover { transform: translate(-2px, -2px); box-shadow: var(--shadow-lg); }
+    .filter-btn:hover:not(.on) { background: var(--surface-hover); }
+    .archives li a:hover { background: var(--surface-hover); }
   }
 </style>

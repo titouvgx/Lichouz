@@ -100,8 +100,8 @@
   }
 </script>
 
-<!-- Fond photo commun à toutes les pages (y compris connexion et chargement) -->
-<AppBackdrop variant={auth.user && router.current === 'accueil' ? 'home' : 'page'} />
+<!-- Fond commun à toutes les pages (y compris connexion et chargement) : pluie lente d'aliments -->
+<AppBackdrop />
 <ToastContainer />
 
 {#if isPublicPage}
@@ -197,23 +197,24 @@
     justify-content: center;
   }
 
+  /* Chargement : un carré orange qui bascule d'un quart de tour, sec, en boucle */
   .spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
+    width: 28px;
+    height: 28px;
+    border: var(--line-w) solid var(--line);
+    background: var(--accent);
+    box-shadow: var(--shadow-sm);
+    animation: spin 0.7s var(--ease-snap) infinite;
   }
 
   @keyframes spin {
-    to { transform: rotate(360deg); }
+    to { transform: rotate(90deg); }
   }
 
   .app-shell {
     min-height: 100dvh;
     /* Place pour la tab bar + safe area bottom */
-    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
   }
 
   .page-404 {
