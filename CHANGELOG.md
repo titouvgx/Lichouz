@@ -21,6 +21,8 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [1.9.0] — 2026-11-16
+
 **Aucune migration.** Refonte graphique complète (direction artistique n° 6 « Brutal beurre ») :
 mêmes écrans, mêmes fonctions, mêmes textes.
 
