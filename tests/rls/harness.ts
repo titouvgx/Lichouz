@@ -87,6 +87,10 @@ export const ID = {
   pantryA: 'a0000000-0000-4000-8000-000000000061',
   pantryA2: 'a2000000-0000-4000-8000-000000000061',
   pantryB: 'b0000000-0000-4000-8000-000000000061',
+  errA: 'a0000000-0000-4000-8000-000000000071',
+  errB: 'b0000000-0000-4000-8000-000000000071',
+  feedbackA: 'a0000000-0000-4000-8000-000000000081',
+  feedbackB: 'b0000000-0000-4000-8000-000000000081',
   objA: 'a0000000-0000-4000-8000-000000000071',
   objAshared: 'a0000000-0000-4000-8000-000000000072',
   objA2: 'a2000000-0000-4000-8000-000000000071',
@@ -268,6 +272,14 @@ INSERT INTO public.pantry_items (id, family_id, name) VALUES
   ('${ID.pantryA}',  '${ID.famA}',  'Sel (A)'),
   ('${ID.pantryB}',  '${ID.famB}',  'Sel (B)'),
   ('${ID.pantryA2}', '${ID.famA2}', 'Sel (A2)');
+
+-- Migration 23 : journal des erreurs et retours (écrits ici en super-utilisateur)
+INSERT INTO public.app_errors (id, user_id, family_id, message) VALUES
+  ('${ID.errA}', '${ID.memberA}', '${ID.famA}', 'Erreur (A)'),
+  ('${ID.errB}', '${ID.memberB}', '${ID.famB}', 'Erreur (B)');
+INSERT INTO public.feedback (id, user_id, family_id, kind, message) VALUES
+  ('${ID.feedbackA}', '${ID.memberA}', '${ID.famA}', 'idee', 'Idée (A)'),
+  ('${ID.feedbackB}', '${ID.memberB}', '${ID.famB}', 'bug', 'Bug (B)');
 
 -- 6. Photos
 INSERT INTO storage.buckets (id, name, public) VALUES ('${OTHER_BUCKET}', '${OTHER_BUCKET}', false);

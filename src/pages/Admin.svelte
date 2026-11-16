@@ -16,6 +16,10 @@
     type InvitationStatus, type SuperFamilyOverview, type AdminStats,
   } from '../lib/api/famille'
   import type { Invitation } from '../lib/types'
+  import {
+    fetchFeedback, setFeedbackStatus, fetchErrors, clearErrors,
+    type FeedbackRow, type FeedbackStatus, type ErrorRow,
+  } from '../lib/api/feedback'
 
   const ctx = $derived(profileState.context)
   const isSuperAdmin = $derived(!!ctx?.isSuperAdmin)
@@ -48,8 +52,75 @@
       void loadInvites()
       void loadOverview()
       void loadStats()
+      void loadFeedback()
+      void loadErrors()
     })
   })
+
+  // ── Retours et journal des erreurs (v1.6.0) ──
+  let feedback = $state<FeedbackRow[]>([])
+  let feedbackLoading = $state(true)
+  let feedbackError = $state<string | null>(null)
+  let showDoneFeedback = $state(false)
+  let errors = $state<ErrorRow[]>([])
+  let errorsLoading = $state(true)
+  let errorsError = $state<string | null>(null)
+  let confirmClearErrors = $state(false)
+  let clearing = $state(false)
+
+  const KIND_LABEL = { idee: 'Idée', bug: 'Bug', autre: 'Autre' } as const
+  const openFeedback = $derived(feedback.filter((f) => f.status !== 'fait'))
+  const doneFeedback = $derived(feedback.filter((f) => f.status === 'fait'))
+  const dateTime = (iso: string) =>
+    new Date(iso).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+
+  async function loadFeedback() {
+    feedbackLoading = true
+    feedbackError = null
+    try {
+      feedback = await fetchFeedback()
+    } catch (e) {
+      feedbackError = messageOf(e, 'Les retours n’ont pas pu être chargés.')
+    } finally {
+      feedbackLoading = false
+    }
+  }
+
+  async function markFeedback(f: FeedbackRow, status: FeedbackStatus) {
+    try {
+      await setFeedbackStatus(f.id, status)
+      feedback = feedback.map((x) => (x.id === f.id ? { ...x, status } : x))
+    } catch (e) {
+      toast.error(messageOf(e, 'Le statut n’a pas pu être changé.'))
+    }
+  }
+
+  async function loadErrors() {
+    errorsLoading = true
+    errorsError = null
+    try {
+      errors = await fetchErrors()
+    } catch (e) {
+      errorsError = messageOf(e, 'Le journal n’a pas pu être chargé.')
+    } finally {
+      errorsLoading = false
+    }
+  }
+
+  async function doClearErrors() {
+    if (clearing) return
+    clearing = true
+    try {
+      const n = await clearErrors()
+      errors = []
+      toast.success(`${n} erreur${n > 1 ? 's' : ''} supprimée${n > 1 ? 's' : ''}`)
+      confirmClearErrors = false
+    } catch (e) {
+      toast.error(messageOf(e, 'Le journal n’a pas pu être vidé.'))
+    } finally {
+      clearing = false
+    }
+  }
 
   async function loadInvites() {
     invitesLoading = true
@@ -378,8 +449,102 @@
         </button>
       {/if}
     </section>
+
+    <!-- ── Idées et retours (v1.6.0) ── -->
+    <section class="card" aria-labelledby="feedback-title">
+      <h2 id="feedback-title" class="section-title">
+        <span class="section-icon"><Icon name="mail" size={18} /></span>
+        Idées et retours {#if openFeedback.length > 0}<span class="count">{openFeedback.length}</span>{/if}
+      </h2>
+      {#if feedbackLoading}
+        <p class="empty" aria-busy="true">Chargement…</p>
+      {:else if feedbackError}
+        {@render errorBox(feedbackError, loadFeedback)}
+      {:else if openFeedback.length === 0}
+        <p class="empty">Rien de nouveau.</p>
+      {:else}
+        <ul class="msg-list">
+          {#each openFeedback as f (f.id)}
+            <li class="msg" class:unread={f.status === 'nouveau'}>
+              <p class="msg-meta">
+                <span class="tag">{KIND_LABEL[f.kind]}</span>
+                {f.profiles?.display_name ?? 'Compte supprimé'}{f.families ? ` · ${f.families.name}` : ''} · {dateTime(f.created_at)}{f.app_version ? ` · v${f.app_version}` : ''}
+              </p>
+              <p class="msg-text">{f.message}</p>
+              <div class="msg-actions">
+                {#if f.status === 'nouveau'}
+                  <button class="link-btn" onclick={() => markFeedback(f, 'lu')}>Marquer comme lu</button>
+                {/if}
+                <button class="link-btn" onclick={() => markFeedback(f, 'fait')}>Fait</button>
+              </div>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+      {#if doneFeedback.length > 0}
+        <button class="link-btn" onclick={() => (showDoneFeedback = !showDoneFeedback)} aria-expanded={showDoneFeedback}>
+          {showDoneFeedback ? 'Masquer' : 'Voir'} les {doneFeedback.length} retours traités
+        </button>
+        {#if showDoneFeedback}
+          <ul class="msg-list">
+            {#each doneFeedback as f (f.id)}
+              <li class="msg done">
+                <p class="msg-meta"><span class="tag">{KIND_LABEL[f.kind]}</span> {f.profiles?.display_name ?? 'Compte supprimé'} · {dateTime(f.created_at)}</p>
+                <p class="msg-text">{f.message}</p>
+                <div class="msg-actions"><button class="link-btn" onclick={() => markFeedback(f, 'lu')}>Rouvrir</button></div>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      {/if}
+      <button class="link-btn" onclick={loadFeedback} disabled={feedbackLoading} aria-busy={feedbackLoading}>
+        <Icon name="refresh" size={16} /> Actualiser
+      </button>
+    </section>
+
+    <!-- ── Journal des erreurs (v1.6.0) ── -->
+    <section class="card" aria-labelledby="errors-title">
+      <h2 id="errors-title" class="section-title">
+        <span class="section-icon"><Icon name="alert-circle" size={18} /></span>
+        Erreurs de l’appli {#if errors.length > 0}<span class="count">{errors.length}</span>{/if}
+      </h2>
+      <p class="card-text">Gardées 90 jours. Rien de personnel : ni e-mail, ni jeton, ni adresse complète.</p>
+      {#if errorsLoading}
+        <p class="empty" aria-busy="true">Chargement…</p>
+      {:else if errorsError}
+        {@render errorBox(errorsError, loadErrors)}
+      {:else if errors.length === 0}
+        <p class="empty">Aucune erreur.</p>
+      {:else}
+        <ul class="msg-list">
+          {#each errors as e (e.id)}
+            <li class="msg">
+              <p class="msg-meta">{dateTime(e.created_at)} · {e.route ?? '?'}{e.app_version ? ` · v${e.app_version}` : ''} · {e.profiles?.display_name ?? 'Compte supprimé'}</p>
+              <p class="msg-text mono">{e.message}</p>
+            </li>
+          {/each}
+        </ul>
+        <button class="link-btn btn-cancel" onclick={() => (confirmClearErrors = true)}>Vider le journal</button>
+      {/if}
+      <button class="link-btn" onclick={loadErrors} disabled={errorsLoading} aria-busy={errorsLoading}>
+        <Icon name="refresh" size={16} /> Actualiser
+      </button>
+    </section>
   {/if}
 </div>
+
+{#if confirmClearErrors}
+  <ConfirmDialog
+    title="Vider le journal des erreurs ?"
+    confirmLabel="Vider"
+    danger
+    busy={clearing}
+    onconfirm={doClearErrors}
+    oncancel={() => (confirmClearErrors = false)}
+  >
+    <p>Les {errors.length} erreurs affichées seront supprimées définitivement.</p>
+  </ConfirmDialog>
+{/if}
 
 {#if inviting}
   <InviteDialog
@@ -449,6 +614,27 @@
   }
 
   /* ── Cartes ── */
+  .msg-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .msg { padding: 10px 0; border-top: 1px solid var(--border); }
+  .msg:first-child { border-top: 0; }
+  .msg.unread .msg-text { font-weight: 600; }
+  .msg.done { opacity: 0.75; }
+  .msg-meta { margin: 0; font-size: 13px; color: var(--text-secondary); }
+  .msg-text { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
+  .msg-text.mono { font-family: ui-monospace, monospace; font-size: 13px; }
+  .msg-actions { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+  .tag {
+    display: inline-block;
+    padding: 1px 8px;
+    margin-right: 4px;
+    border-radius: var(--radius-md);
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 12px;
+  }
+  .count { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+
   .card {
     background: var(--surface);
     border: 1px solid var(--border);

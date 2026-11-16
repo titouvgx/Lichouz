@@ -251,6 +251,22 @@
       </span>
       <Icon name="chevron-right" size={18} />
     </a>
+    <a class="link-row" href={href('avis')}>
+      <span class="section-icon"><Icon name="mail" size={18} /></span>
+      <span class="link-text">
+        <span class="link-title">Idées et retours</span>
+        <span class="link-sub">Une idée, un bug : écris à Titouan</span>
+      </span>
+      <Icon name="chevron-right" size={18} />
+    </a>
+    <a class="link-row" href={href('nouveautes')}>
+      <span class="section-icon"><Icon name="star" size={18} /></span>
+      <span class="link-text">
+        <span class="link-title">Nouveautés</span>
+        <span class="link-sub">Ce qui a changé dans l’appli</span>
+      </span>
+      <Icon name="chevron-right" size={18} />
+    </a>
     {#if profileState.context?.isSuperAdmin}
       <a class="link-row" href={href('admin')}>
         <span class="section-icon"><Icon name="lock" size={18} /></span>

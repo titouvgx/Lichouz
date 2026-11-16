@@ -227,7 +227,7 @@ const PAIRS_SF: [Foyer, Foyer][] = [
 const lien = (x: Foyer, y: Foyer) => (superFam[x] === superFam[y] ? 'même super-famille' : 'autre super-famille')
 
 // ── Description des tables ─────────────────────────────────────────────────
-/** Les 17 tables du schéma public couvertes par le banc. */
+/** Les 19 tables du schéma public couvertes par le banc. */
 const PUBLIC_TABLES = [
   'super_families',
   'families',
@@ -246,6 +246,8 @@ const PUBLIC_TABLES = [
   'known_ingredients',
   'staples',
   'pantry_items',
+  'app_errors',
+  'feedback',
 ] as const
 type Table = (typeof PUBLIC_TABLES)[number]
 const PK: Partial<Record<Table, string>> = { super_admins: 'user_id' }
@@ -363,6 +365,14 @@ const INSERT_A: Record<Table, [string, unknown[]]> = {
     `INSERT INTO public.recipe_steps (recipe_id, position, instruction) VALUES ($1, 99, 'PIRATE') RETURNING id`,
     [ID.recA],
   ],
+  app_errors: [
+    `INSERT INTO public.app_errors (user_id, message) VALUES (coalesce(auth.uid(), $1), 'PIRATE') RETURNING id`,
+    [ID.memberA],
+  ],
+  feedback: [
+    `INSERT INTO public.feedback (user_id, message) VALUES (coalesce(auth.uid(), $1), 'PIRATE') RETURNING id`,
+    [ID.memberA],
+  ],
   ...(Object.fromEntries(SCOPED.map((t) => [t.table, t.insert('A')])) as Partial<Record<Table, [string, unknown[]]>>),
 } as Record<Table, [string, unknown[]]>
 
@@ -430,7 +440,7 @@ async function becomeFounderC(s: Scenario) {
 
 // ════════════════════════════════════════════════════════════════════════════
 describe('Structure du schéma et fidélité du banc', () => {
-  structure('les 17 tables de public sont toutes couvertes par le banc (aucune table oubliée)', async (s) => {
+  structure('les 19 tables de public sont toutes couvertes par le banc (aucune table oubliée)', async (s) => {
     const rows = await s.su<{ t: string }>(`SELECT tablename AS t FROM pg_tables WHERE schemaname = 'public' ORDER BY 1`)
     const found = rows.map((r) => r.t)
     const missing = found.filter((t) => !(PUBLIC_TABLES as readonly string[]).includes(t))
@@ -2899,5 +2909,94 @@ describe('Migration 22 : recettes archivées, limites de texte, liste recalculé
     expect(await countRows(s, 'public.shopping_list_items', `shopping_list_id = $1 AND name = 'Ajout main'`, [ID.listA])).toBe(1)
     expect(await countRows(s, 'public.shopping_list_items', `shopping_list_id = $1 AND name = 'Tomates' AND checked AND cardinality(source_recipe_ids) = 2`, [ID.listA])).toBe(1)
     expect(await countRows(s, 'public.shopping_list_items', 'id = $1', [ID.itemA])).toBe(0)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════
+describe('Migration 23 : journal des erreurs et retours des utilisateurs', () => {
+  // Sans RETURNING : un membre n'a pas le droit de relire le journal (l'appli envoie
+  // donc sans relire, « return=minimal »).
+  const ADD_ERR = `INSERT INTO public.app_errors (user_id, family_id, message) VALUES ($1, $2, 'Boum')`
+  const sent = (o: Outcome, ctx: string) => expect(o.error, `${ctx} — ${fmt(o)}`).toBeUndefined()
+  const ADD_FB = `INSERT INTO public.feedback (user_id, family_id, kind, message, status) VALUES ($1, $2, 'idee', $3, $4) RETURNING id`
+
+  // ── Journal des erreurs ──
+  attaque('un membre lit le journal des erreurs (même les siennes)', async (s) => {
+    expectBlocked(await s.as('memberA', `SELECT * FROM public.app_errors`), 'memberA SELECT app_errors')
+    expectBlocked(await s.as('adminB', `SELECT * FROM public.app_errors`), 'adminB SELECT app_errors')
+  })
+  attaque('un membre efface ou modifie le journal des erreurs', async (s) => {
+    await attemptOnRow(s, 'memberA', { table: 'public.app_errors', id: ID.errA }, `DELETE FROM public.app_errors WHERE id = $1 RETURNING id`, [ID.errA])
+    await attemptOnRow(s, 'adminA', { table: 'public.app_errors', id: ID.errA }, `UPDATE public.app_errors SET message = 'X' WHERE id = $1 RETURNING id`, [ID.errA])
+  })
+  attaque('membre A envoie une erreur au nom de membre B et du foyer B (la base remet son nom)', async (s) => {
+    sent(await s.as('memberA', ADD_ERR, [ID.memberB, ID.famB]), 'envoi')
+    expect(await countRows(s, 'public.app_errors', `message = 'Boum' AND user_id = $1 AND family_id = $2`, [ID.memberA, ID.famA])).toBe(1)
+    expect(await countRows(s, 'public.app_errors', `message = 'Boum' AND user_id = $1`, [ID.memberB])).toBe(0)
+  })
+  attaque('plus de 30 erreurs en une heure : la 31e est refusée', async (s) => {
+    // 1 erreur de A dans les données de test + 28 = 29 ; la 30e passe, la 31e non
+    await s.su(`INSERT INTO public.app_errors (user_id, message, created_at)
+                SELECT $1, 'x', now() FROM generate_series(1, 28)`, [ID.memberA])
+    sent(await s.as('memberA', ADD_ERR, [ID.memberA, ID.famA]), '30e')
+    expectRefused(await s.as('memberA', ADD_ERR, [ID.memberA, ID.famA]), '54000', '31e')
+  })
+  controle('le super-admin lit et purge le journal ; les erreurs de plus de 90 jours disparaissent', async (s) => {
+    expectOk(await s.as('superAdmin', `SELECT id FROM public.app_errors WHERE id IN ($1, $2)`, [ID.errA, ID.errB]), 'lecture', 2)
+    await s.su(`UPDATE public.app_errors SET created_at = now() - interval '91 days' WHERE id = $1`, [ID.errB])
+    sent(await s.as('memberA', ADD_ERR, [ID.memberA, ID.famA]), 'nouvelle erreur')
+    expect(await countRows(s, 'public.app_errors', 'id = $1', [ID.errB])).toBe(0)
+    expectOk(await s.as('superAdmin', `DELETE FROM public.app_errors WHERE id = $1 RETURNING id`, [ID.errA]), 'purge', 1)
+  })
+
+  // ── Retours ──
+  attaque('membre A lit les retours de membre B', async (s) => {
+    expectBlocked(await s.as('memberA', `SELECT * FROM public.feedback WHERE id = $1`, [ID.feedbackB]), 'retour B')
+    expectBlocked(await s.as('adminA', `SELECT * FROM public.feedback WHERE id = $1`, [ID.feedbackB]), 'admin A, retour B')
+  })
+  attaque('l\'auteur change le statut, le texte ou supprime son propre retour', async (s) => {
+    await attemptOnRow(s, 'memberA', { table: 'public.feedback', id: ID.feedbackA }, `UPDATE public.feedback SET status = 'fait' WHERE id = $1 RETURNING id`, [ID.feedbackA])
+    await attemptOnRow(s, 'memberA', { table: 'public.feedback', id: ID.feedbackA }, `DELETE FROM public.feedback WHERE id = $1 RETURNING id`, [ID.feedbackA])
+  })
+  attaque('membre A envoie un retour au nom de B, déjà « fait » (la base remet son nom et « nouveau »)', async (s) => {
+    const o = await s.as('memberA', ADD_FB, [ID.memberB, ID.famB, 'Faux', 'fait'])
+    expectOk(o, 'envoi', 1)
+    expect(await countRows(s, 'public.feedback', `id = $1 AND user_id = $2 AND family_id = $3 AND status = 'nouveau'`,
+      [o.rows[0].id, ID.memberA, ID.famA])).toBe(1)
+  })
+  attaque('le super-admin réécrit le texte d\'un retour', async (s) => {
+    await refusedOnRow(s, 'superAdmin', { table: 'public.feedback', id: ID.feedbackA },
+      `UPDATE public.feedback SET message = 'Réécrit' WHERE id = $1 RETURNING id`, [ID.feedbackA], '42501', /statut/)
+  })
+  attaque('plus de 10 retours en 24 h : le 11e est refusé', async (s) => {
+    await s.su(`INSERT INTO public.feedback (user_id, message) SELECT $1, 'x' FROM generate_series(1, 8)`, [ID.memberA])
+    expectOk(await s.as('memberA', ADD_FB, [ID.memberA, ID.famA, 'Dixième', 'nouveau']), '10e', 1)
+    expectRefused(await s.as('memberA', ADD_FB, [ID.memberA, ID.famA, 'Onzième', 'nouveau']), '54000', '11e')
+  })
+  structure('retour vide ou de plus de 2 000 caractères refusé', async (s) => {
+    expectRefused(await s.as('memberA', ADD_FB, [ID.memberA, ID.famA, '   ', 'nouveau']), '23514', 'vide')
+    expectRefused(await s.as('memberA', ADD_FB, [ID.memberA, ID.famA, 'a'.repeat(2001), 'nouveau']), '23514', 'trop long')
+  })
+  controle('l\'auteur relit ses retours ; le super-admin lit tout et change le statut', async (s) => {
+    expectOk(await s.as('memberA', `SELECT id FROM public.feedback`), 'mes retours', 1)
+    expectOk(await s.as('superAdmin', `SELECT id FROM public.feedback WHERE id IN ($1, $2)`, [ID.feedbackA, ID.feedbackB]), 'tout', 2)
+    expectOk(await s.as('superAdmin', `UPDATE public.feedback SET status = 'lu' WHERE id = $1 RETURNING id`, [ID.feedbackA]), 'statut', 1)
+  })
+  attaque('le super-admin déplace un retour vers une autre famille', async (s) => {
+    await refusedOnRow(s, 'superAdmin', { table: 'public.feedback', id: ID.feedbackA },
+      `UPDATE public.feedback SET family_id = $2 WHERE id = $1 RETURNING id`, [ID.feedbackA, ID.famB], '42501', /statut/)
+  })
+  controle('la famille d\'un retour peut être remise à vide (ce que fait la suppression d\'une famille)', async (s) => {
+    // ON DELETE SET NULL passe par la garde de modification : on rejoue exactement cette modification
+    await s.su(`INSERT INTO public.feedback (user_id, family_id, message) VALUES ($1, $2, 'Cite A2')`, [ID.memberB, ID.famA2])
+    const before = await countRows(s, 'public.feedback', `message = 'Cite A2' AND family_id = $1`, [ID.famA2])
+    expect(before).toBe(1)
+    await s.su(`UPDATE public.feedback SET family_id = NULL WHERE message = 'Cite A2'`)
+    expect(await countRows(s, 'public.feedback', `message = 'Cite A2' AND family_id IS NULL`)).toBe(1)
+  })
+  controle('supprimer un compte supprime ses erreurs et ses retours', async (s) => {
+    await s.su(`DELETE FROM auth.users WHERE id = $1`, [ID.memberB])
+    expect(await countRows(s, 'public.app_errors', 'id = $1', [ID.errB])).toBe(0)
+    expect(await countRows(s, 'public.feedback', 'id = $1', [ID.feedbackB])).toBe(0)
   })
 })

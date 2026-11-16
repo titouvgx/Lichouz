@@ -20,6 +20,11 @@
   import MonCompte from './pages/MonCompte.svelte'
   import Famille from './pages/Famille.svelte'
   import MesRecettes from './pages/MesRecettes.svelte'
+  import Avis from './pages/Avis.svelte'
+  import Nouveautes from './pages/Nouveautes.svelte'
+  import ConfirmDialog from './components/ConfirmDialog.svelte'
+  import { RELEASE_NOTES, shouldShowNews, lastSeenNews, markNewsSeen } from './lib/nouveautes'
+  import { APP_VERSION } from './lib/version'
   import Aide from './pages/Aide.svelte'
   import Bienvenue from './components/Bienvenue.svelte'
   import { welcome, welcomeSeen } from './lib/bienvenue.svelte'
@@ -68,6 +73,26 @@
     !!auth.user && !!profileState.profile?.id && !isPublicPage && router.current !== 'aide'
       && !welcome.closedThisLaunch && !welcomeSeen(profileState.profile.id),
   )
+
+  // Nouveautés (v1.6.0) : une fois par version, après la bienvenue, jamais en même temps.
+  // Une personne qui n'a encore rien vu (première ouverture) ne les voit pas :
+  // on note la version actuelle pour lui montrer seulement les suivantes.
+  let newsClosed = $state(false)
+  const newsUserId = $derived(auth.user && profileState.profile?.id && !isPublicPage ? profileState.profile.id : null)
+  const showNews = $derived(
+    !!newsUserId && !showWelcome && !newsClosed && router.current !== 'nouveautes'
+      && shouldShowNews({ version: APP_VERSION, lastSeen: lastSeenNews(newsUserId), welcomeDone: welcomeSeen(newsUserId) }),
+  )
+  $effect(() => {
+    if (newsUserId && lastSeenNews(newsUserId) === null && !welcomeSeen(newsUserId)) {
+      markNewsSeen(newsUserId, APP_VERSION)
+    }
+  })
+  const currentNotes = RELEASE_NOTES.find((n) => n.version === APP_VERSION)
+  function closeNews() {
+    if (newsUserId) markNewsSeen(newsUserId, APP_VERSION)
+    newsClosed = true
+  }
 
   function handleSignOut() {
     clearProfile(true) // déconnexion : on efface aussi les données gardées sur le téléphone
@@ -124,6 +149,10 @@
       <Famille />
     {:else if router.current === 'mes-recettes'}
       <MesRecettes />
+    {:else if router.current === 'avis'}
+      <Avis />
+    {:else if router.current === 'nouveautes'}
+      <Nouveautes />
     {:else if router.current === 'aide'}
       <Aide />
     {:else if router.current === 'admin'}
@@ -141,9 +170,26 @@
   {#if showWelcome}
     <Bienvenue />
   {/if}
+  {#if showNews && currentNotes}
+    <ConfirmDialog
+      title="Nouveau dans Lichouz {APP_VERSION}"
+      confirmLabel="C’est noté"
+      cancelLabel="Fermer"
+      onconfirm={closeNews}
+      oncancel={closeNews}
+    >
+      <ul class="news-list">
+        {#each currentNotes.items as item, i (i)}
+          <li>{item}</li>
+        {/each}
+      </ul>
+    </ConfirmDialog>
+  {/if}
 {/if}
 
 <style>
+  .news-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; text-align: left; line-height: 1.45; }
+
   .loading {
     min-height: 100dvh;
     display: flex;

@@ -21,3 +21,10 @@ supabase/.branches
 
 # SQL assemblé pour une installation neuve (npm run prod:sql)
 supabase/prod/sortie/
+
+# Sauvegardes de la base : jamais dans le dépôt (données personnelles)
+sauvegardes/
+*-roles.sql
+*-schema.sql
+*-data.sql
+*.7z

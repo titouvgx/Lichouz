@@ -102,7 +102,7 @@ de **contrôles positifs** et de **contrôles de structure**, et la liste des é
 
 ### Couverture
 
-- les 17 tables de `public`, en SELECT / INSERT / UPDATE / DELETE, pour l'anonyme et pour un
+- les 19 tables de `public`, en SELECT / INSERT / UPDATE / DELETE, pour l'anonyme et pour un
   compte sans foyer ; un test balaie aussi les tables **futures** ;
 - entre foyers, dans quatre sens : A→B, B→A (**autre super-famille**) et A→A2, A2→A
   (**même super-famille**) : planning, créneaux, listes, articles, habituels, placard, profils,
@@ -144,7 +144,7 @@ de **contrôles positifs** et de **contrôles de structure**, et la liste des é
 ## Ajouter une table ou une règle
 
 Une **nouvelle table** dans `public` fait échouer le test de structure
-« les 17 tables de public sont toutes couvertes » : ajoute-la à `PUBLIC_TABLES` et à
+« les 19 tables de public sont toutes couvertes » : ajoute-la à `PUBLIC_TABLES` et à
 `INSERT_A` dans `rls.test.ts` (et à `SCOPED` si elle appartient à un foyer : il faudra alors
 une ligne pour A, A2 et B dans les données de test). Une nouvelle
 fonction `SECURITY DEFINER` appelable par `anon` fait échouer le test correspondant.

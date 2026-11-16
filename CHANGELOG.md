@@ -21,6 +21,27 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [1.6.0] — 2026-11-16
+
+**Migration 23 à exécuter AVANT la mise en ligne** :
+`supabase/migrations/20261116120000_journal_retours.sql`, puis la requête de contrôle
+`supabase/tests/controle_23_journal_retours.sql` (une ligne, tout à `true`).
+
+### Ajouté
+- **Idées et retours** (Mon compte) : envoyer une idée, un bug ou une remarque ; lus dans
+  Administration (statuts « nouveau », « lu », « fait »). 10 envois par jour et par personne.
+- **Nouveautés** : une fenêtre une fois par version (pas pour une première ouverture), et la page
+  Mon compte → Nouveautés (`src/lib/nouveautes.ts`, à compléter à chaque version visible).
+- **Journal des erreurs** : les erreurs non rattrapées sont envoyées à la base (nettoyées : ni
+  e-mail, ni jeton, ni paramètres d'adresse, ni détails d'erreur de la base ; page réduite à son
+  nom) ; lisibles et purgeables dans Administration ; 30 par heure et par personne ; gardées 90 jours.
+- **Guide de sauvegarde manuelle** de la prod : `docs/sauvegardes.md` (+ `.gitignore` protège les exports).
+
+### Sécurité
+- Tables `app_errors` et `feedback` : RLS (écriture pour soi-même, lecture du journal par le
+  super-admin seul, statut seul modifiable), auteur et famille forcés par la base, limites de débit,
+  suppression avec le compte. Banc RLS : 913 attaques bloquées, 202 contrôles, 18 de structure.
+
 ## [1.5.0] — 2026-11-16
 
 Pas de migration, aucun réglage Supabase.

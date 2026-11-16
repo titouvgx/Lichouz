@@ -19,6 +19,8 @@ export type Route =
   | 'aide'             // aide : à quoi sert l'appli, onglet par onglet, FAQ
   | 'famille'          // ma famille : membres, invitations ; fondateur : ses familles
   | 'mes-recettes'     // mes recettes : partagées, famille seulement, archivées
+  | 'avis'             // idées et retours envoyés à Titouan (v1.6.0)
+  | 'nouveautes'       // ce qui a changé, version par version (v1.6.0)
   | 'admin'            // super-admin : liens fondateur, vue d'ensemble
   | 'rejoindre'        // public : #/rejoindre/<jeton> (création de compte par lien)
   | 'mot-de-passe-oublie'  // public : demande d'e-mail de réinitialisation
@@ -32,7 +34,7 @@ export type TabRoute = (typeof TAB_ROUTES)[number]
 
 const STATIC_ROUTES: string[] = [
   'login', 'accueil', 'frigo', 'recettes', 'nouvelle-recette', 'semaine', 'courses', 'historique', 'compte',
-  'famille', 'mes-recettes', 'admin', 'aide', 'mot-de-passe-oublie', 'nouveau-mot-de-passe', 'confirmer-email',
+  'famille', 'mes-recettes', 'avis', 'nouveautes', 'admin', 'aide', 'mot-de-passe-oublie', 'nouveau-mot-de-passe', 'confirmer-email',
 ]
 
 /** Pages accessibles sans être connecté (en plus de « login »). */
@@ -100,7 +102,7 @@ const ORDER: Record<Route, number> = {
   semaine: 20,
   courses: 30,
   historique: 40,
-  compte: 50, famille: 51, 'mes-recettes': 51, admin: 52, aide: 53,
+  compte: 50, famille: 51, 'mes-recettes': 51, avis: 51, nouveautes: 51, admin: 52, aide: 53,
   rejoindre: -10, 'mot-de-passe-oublie': -9, 'nouveau-mot-de-passe': -9, 'confirmer-email': -9,
   introuvable: 60,
 }

@@ -145,8 +145,18 @@
         dernier admin d’une famille qui a d’autres membres, nomme d’abord un autre admin ; un fondateur doit d’abord
         demander au super-admin de transmettre son rôle.
       </dd>
+      <dt>J’ai une idée, ou j’ai trouvé un bug.</dt>
+      <dd>
+        <a href={href('avis')}>Mon compte → Idées et retours</a> : écris-le, Titouan le lit (10 envois par jour au
+        maximum). Ce qui a changé récemment est dans <a href={href('nouveautes')}>Mon compte → Nouveautés</a>.
+      </dd>
       <dt>Qui voit mes données ?</dt>
-      <dd>Seulement les membres de ta famille (et les familles liées pour les recettes partagées). Ton e-mail n’est montré à personne.</dd>
+      <dd>
+        Seulement les membres de ta famille (et les familles liées pour les recettes partagées). Ton e-mail n’est montré
+        à personne. Si l’appli plante, l’erreur est envoyée à Titouan avec ton prénom, la page, la version de l’appli et le type de
+        navigateur, mais sans e-mail ni contenu de tes recettes ; elle est effacée après 90 jours. Tes idées et retours, eux, ne sont
+        lus que par Titouan. Supprimer ton compte efface aussi tes retours et ces erreurs.
+      </dd>
     </dl>
   </section>
 

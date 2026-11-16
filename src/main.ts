@@ -5,6 +5,10 @@ import '@fontsource-variable/outfit'
 import '@fontsource-variable/dm-sans'
 import './app.css'
 import App from './App.svelte'
+import { installErrorReporting } from './lib/errorReport'
+
+// Journal des erreurs (v1.6.0) : avant le montage, pour voir aussi les erreurs de démarrage
+installErrorReporting()
 
 const app = mount(App, {
   target: document.getElementById('app')!,
