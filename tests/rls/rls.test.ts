@@ -204,6 +204,7 @@ const fam: Record<Foyer, string> = { A: ID.famA, A2: ID.famA2, B: ID.famB }
 const superFam: Record<Foyer, string> = { A: ID.sfA, A2: ID.sfA, B: ID.sfB }
 const rec: Record<Foyer, string> = { A: ID.recA, A2: ID.recA2, B: ID.recB }
 const plan: Record<Foyer, string> = { A: ID.planA, A2: ID.planA2, B: ID.planB }
+const tpl: Record<Foyer, string> = { A: ID.tplA, A2: ID.tplA2, B: ID.tplB }
 const list: Record<Foyer, string> = { A: ID.listA, A2: ID.listA2, B: ID.listB }
 const member: Record<Foyer, Actor> = { A: 'memberA', A2: 'memberA2', B: 'memberB' }
 const admin: Record<Foyer, Actor> = { A: 'adminA', A2: 'adminA2', B: 'adminB' }
@@ -227,7 +228,7 @@ const PAIRS_SF: [Foyer, Foyer][] = [
 const lien = (x: Foyer, y: Foyer) => (superFam[x] === superFam[y] ? 'même super-famille' : 'autre super-famille')
 
 // ── Description des tables ─────────────────────────────────────────────────
-/** Les 19 tables du schéma public couvertes par le banc. */
+/** Les 21 tables du schéma public couvertes par le banc. */
 const PUBLIC_TABLES = [
   'super_families',
   'families',
@@ -248,6 +249,8 @@ const PUBLIC_TABLES = [
   'pantry_items',
   'app_errors',
   'feedback',
+  'week_templates',
+  'week_template_slots',
 ] as const
 type Table = (typeof PUBLIC_TABLES)[number]
 const PK: Partial<Record<Table, string>> = { super_admins: 'user_id' }
@@ -337,6 +340,32 @@ const SCOPED: Scoped[] = [
     set: `name = 'PIRATE'`,
     moveCol: 'family_id',
     moveVal: fam,
+    memberDelete: true,
+  },
+  {
+    table: 'week_templates',
+    label: 'les semaines types',
+    row: tpl,
+    ownedBy: 'family_id = $1',
+    insert: (f) => [`INSERT INTO public.week_templates (family_id, name) VALUES ($1, 'PIRATE') RETURNING id`, [fam[f]]],
+    set: `name = 'PIRATE'`,
+    moveCol: 'family_id',
+    moveVal: fam,
+    memberDelete: true,
+  },
+  {
+    table: 'week_template_slots',
+    label: 'les repas des semaines types',
+    row: { A: ID.tplSlotA, A2: ID.tplSlotA2, B: ID.tplSlotB },
+    ownedBy: 'template_id IN (SELECT id FROM public.week_templates WHERE family_id = $1)',
+    insert: (f) => [
+      `INSERT INTO public.week_template_slots (template_id, day_of_week, meal_type, recipe_id, portions)
+       VALUES ($1, 4, 'midi', $2, 2) RETURNING id`,
+      [tpl[f], rec[f]],
+    ],
+    set: 'portions = 9',
+    moveCol: 'template_id',
+    moveVal: tpl,
     memberDelete: true,
   },
 ]
@@ -440,7 +469,7 @@ async function becomeFounderC(s: Scenario) {
 
 // ════════════════════════════════════════════════════════════════════════════
 describe('Structure du schéma et fidélité du banc', () => {
-  structure('les 19 tables de public sont toutes couvertes par le banc (aucune table oubliée)', async (s) => {
+  structure('les 21 tables de public sont toutes couvertes par le banc (aucune table oubliée)', async (s) => {
     const rows = await s.su<{ t: string }>(`SELECT tablename AS t FROM pg_tables WHERE schemaname = 'public' ORDER BY 1`)
     const found = rows.map((r) => r.t)
     const missing = found.filter((t) => !(PUBLIC_TABLES as readonly string[]).includes(t))
@@ -3159,3 +3188,359 @@ describe('Migration 25 : étiquettes des recettes (liste fixe, mêmes droits que
   })
 })
 
+
+// ════════════════════════════════════════════════════════════════════════════
+describe('Migration 26 : entrée/plat/dessert, restes planifiés, semaines types (planning_plus)', () => {
+  const addCourse = `INSERT INTO public.meal_slots (meal_plan_id, day_of_week, meal_type, course, recipe_id, portions, leftover_of)
+                     VALUES ($1, $2, $3, $4, $5, 4, $6) RETURNING id`
+  // slotA = planA (semaine du 09/11), lundi midi, recA
+
+  controle('membre A met une entrée et un dessert sur le même repas que le plat', async (s) => {
+    expectOk(await s.as('memberA', addCourse, [ID.planA, 0, 'midi', 'entree', ID.recA, null]), 'entrée', 1)
+    expectOk(await s.as('memberA', addCourse, [ID.planA, 0, 'midi', 'dessert', ID.recAshared, null]), 'dessert', 1)
+    expect(await countRows(s, 'public.meal_slots', 'meal_plan_id = $1 AND day_of_week = 0 AND meal_type = $2', [ID.planA, 'midi'])).toBe(3)
+  })
+  attaque('deux plats de la même sorte sur un repas : refusé (unicité)', async (s) => {
+    expectRefused(await s.as('memberA', addCourse, [ID.planA, 0, 'midi', 'plat', ID.recAshared, null]), '23505', 'doublon')
+  })
+  attaque('une sorte de plat inconnue est refusée', async (s) => {
+    expectRefused(await s.as('memberA', addCourse, [ID.planA, 3, 'soir', 'gouter', ID.recA, null]), '23514', 'course')
+  })
+
+  controle('membre A prévoit les restes de lundi midi pour mardi soir', async (s) => {
+    expectOk(await s.as('memberA', addCourse, [ID.planA, 1, 'soir', 'plat', ID.recA, ID.slotA]), 'restes', 1)
+  })
+  controle('restes la semaine suivante (dimanche → lundi) dans le même foyer', async (s) => {
+    const p = (await s.su<{ id: string }>(`INSERT INTO public.meal_plans (family_id, week_start) VALUES ($1, '2026-11-16') RETURNING id`, [ID.famA]))[0].id
+    const sun = (await s.su<{ id: string }>(
+      `INSERT INTO public.meal_slots (meal_plan_id, day_of_week, meal_type, recipe_id) VALUES ($1, 6, 'soir', $2) RETURNING id`, [ID.planA, ID.recA]))[0].id
+    expectOk(await s.as('memberA', addCourse, [p, 0, 'midi', 'plat', ID.recA, sun]), 'restes semaine suivante', 1)
+  })
+  attaque('restes AVANT le repas cuisiné : refusé', async (s) => {
+    const later = (await s.su<{ id: string }>(
+      `INSERT INTO public.meal_slots (meal_plan_id, day_of_week, meal_type, recipe_id) VALUES ($1, 3, 'soir', $2) RETURNING id`, [ID.planA, ID.recA]))[0].id
+    const before = await countRows(s, 'public.meal_slots')
+    expectRefused(await s.as('memberA', addCourse, [ID.planA, 2, 'midi', 'plat', ID.recA, later]), '42501', 'restes avant', /après/)
+    expect(await countRows(s, 'public.meal_slots')).toBe(before)
+  })
+  attaque('restes au MÊME repas que le repas cuisiné : refusé', async (s) => {
+    expectRefused(await s.as('memberA', addCourse, [ID.planA, 0, 'midi', 'dessert', ID.recA, ID.slotA]), '42501', 'même repas', /après/)
+  })
+  attaque('restes d\'une AUTRE recette : refusé', async (s) => {
+    expectRefused(await s.as('memberA', addCourse, [ID.planA, 1, 'soir', 'plat', ID.recAshared, ID.slotA]), '42501', 'autre recette', /même recette/)
+  })
+  attaque('restes de restes : refusé', async (s) => {
+    const left = (await s.su<{ id: string }>(
+      `INSERT INTO public.meal_slots (meal_plan_id, day_of_week, meal_type, recipe_id, leftover_of) VALUES ($1, 1, 'soir', $2, $3) RETURNING id`,
+      [ID.planA, ID.recA, ID.slotA]))[0].id
+    expectRefused(await s.as('memberA', addCourse, [ID.planA, 2, 'soir', 'plat', ID.recA, left]), '42501', 'chaîne', /restes/)
+  })
+  for (const [X, Y] of PAIRS) {
+    attaque(`membre ${X} ne rattache pas des restes à un repas de ${Y} (${lien(X, Y)}) : « introuvable »`, async (s) => {
+      const target = { A: ID.slotA, A2: ID.slotA2, B: ID.slotB }[Y]
+      const recY = rec[Y]
+      const before = await countRows(s, 'public.meal_slots')
+      const o = await s.as(member[X], addCourse, [plan[X], 6, 'soir', 'plat', recY, target])
+      expectRefused(o, '42501', 'restes chez un autre foyer')
+      expect(o.error!.message, 'aucun indice sur le repas de l\'autre foyer').not.toMatch(/foyer|recette|après/)
+      expect(await countRows(s, 'public.meal_slots')).toBe(before)
+    })
+  }
+  attaque('changer la recette d\'un repas qui a des restes : refusé (restes incohérents)', async (s) => {
+    await s.su(`INSERT INTO public.meal_slots (meal_plan_id, day_of_week, meal_type, recipe_id, leftover_of) VALUES ($1, 1, 'soir', $2, $3)`,
+      [ID.planA, ID.recA, ID.slotA])
+    await refusedOnRow(s, 'memberA', { table: 'public.meal_slots', id: ID.slotA },
+      `UPDATE public.meal_slots SET recipe_id = $2 WHERE id = $1 RETURNING id`, [ID.slotA, ID.recAshared], '42501', /restes/)
+  })
+  controle('supprimer le repas cuisiné supprime ses restes', async (s) => {
+    const left = (await s.su<{ id: string }>(
+      `INSERT INTO public.meal_slots (meal_plan_id, day_of_week, meal_type, recipe_id, leftover_of) VALUES ($1, 1, 'soir', $2, $3) RETURNING id`,
+      [ID.planA, ID.recA, ID.slotA]))[0].id
+    expectOk(await s.as('memberA', `DELETE FROM public.meal_slots WHERE id = $1 RETURNING id`, [ID.slotA]), 'suppression', 1)
+    expect(await snapshot(s, 'public.meal_slots', 'id', left)).toBeNull()
+  })
+
+  // ── Recopier une semaine ──
+  const COPY = `SELECT public.copy_week_slots($1, $2, $3) AS n`
+  async function newPlan(s: Scenario, f: Foyer, week: string) {
+    return (await s.su<{ id: string }>(`INSERT INTO public.meal_plans (family_id, week_start) VALUES ($1, $2) RETURNING id`, [fam[f], week]))[0].id
+  }
+  controle('membre A recopie sa semaine (repas + restes reliés) dans une semaine vide', async (s) => {
+    await s.su(`INSERT INTO public.meal_slots (meal_plan_id, day_of_week, meal_type, recipe_id, leftover_of) VALUES ($1, 1, 'soir', $2, $3)`,
+      [ID.planA, ID.recA, ID.slotA])
+    const to = await newPlan(s, 'A', '2026-12-07')
+    const o = await s.as('memberA', COPY, [ID.planA, to, false])
+    expectOk(o, 'copie', 1)
+    expect(Number(o.rows[0].n)).toBe(2)
+    const r = await s.su<{ day: number; parent_day: number | null }>(
+      `SELECT s.day_of_week AS day, p.day_of_week AS parent_day FROM public.meal_slots s
+         LEFT JOIN public.meal_slots p ON p.id = s.leftover_of WHERE s.meal_plan_id = $1 ORDER BY s.day_of_week`, [to])
+    expect(r).toEqual([{ day: 0, parent_day: null }, { day: 1, parent_day: 0 }])
+  })
+  controle('recopier sans remplacer garde les cases déjà prises ; avec remplacement, la semaine est vidée d\'abord', async (s) => {
+    const to = await newPlan(s, 'A', '2026-12-14')
+    await s.su(`INSERT INTO public.meal_slots (meal_plan_id, day_of_week, meal_type, recipe_id) VALUES ($1, 0, 'midi', $2)`, [to, ID.recAshared])
+    await s.su(`INSERT INTO public.meal_slots (meal_plan_id, day_of_week, meal_type, recipe_id) VALUES ($1, 5, 'midi', $2)`, [to, ID.recAshared])
+    expect(Number((await s.as('memberA', COPY, [ID.planA, to, false])).rows[0].n)).toBe(0)
+    expect(await countRows(s, 'public.meal_slots', 'meal_plan_id = $1', [to])).toBe(2)
+    expect(Number((await s.as('memberA', COPY, [ID.planA, to, true])).rows[0].n)).toBe(1)
+    expect(await countRows(s, 'public.meal_slots', 'meal_plan_id = $1', [to])).toBe(1)
+  })
+  for (const [X, Y] of PAIRS) {
+    attaque(`membre ${X} ne recopie pas la semaine de ${Y} chez lui (${lien(X, Y)})`, async (s) => {
+      const to = await newPlan(s, X, '2027-02-01')
+      expectRefused(await s.as(member[X], COPY, [plan[Y], to, false]), '42501', 'copie depuis un autre foyer')
+      expect(await countRows(s, 'public.meal_slots', 'meal_plan_id = $1', [to])).toBe(0)
+    })
+    attaque(`membre ${X} ne recopie pas sa semaine DANS celle de ${Y} (${lien(X, Y)})`, async (s) => {
+      const before = await tableHash(s, 'public.meal_slots')
+      expectRefused(await s.as(member[X], COPY, [plan[X], plan[Y], true]), '42501', 'copie vers un autre foyer')
+      expect(await tableHash(s, 'public.meal_slots')).toBe(before)
+    })
+    attaque(`membre ${X} ne remplit pas la semaine de ${Y} avec fill_plan_slots (${lien(X, Y)})`, async (s) => {
+      const before = await tableHash(s, 'public.meal_slots')
+      const o = await s.as(member[X], `SELECT public.fill_plan_slots($1, $2::jsonb, true) AS n`,
+        [plan[Y], JSON.stringify([{ day_of_week: 3, meal_type: 'soir', recipe_id: rec[X] }])])
+      expectRefused(o, '42501', 'fill vers un autre foyer')
+      expect(await tableHash(s, 'public.meal_slots')).toBe(before)
+    })
+  }
+  attaque('fill_plan_slots : une recette illisible (autre foyer) est sautée, pas planifiée', async (s) => {
+    const to = await newPlan(s, 'A', '2027-03-01')
+    const o = await s.as('memberA', `SELECT public.fill_plan_slots($1, $2::jsonb, false) AS n`,
+      [to, JSON.stringify([{ day_of_week: 1, meal_type: 'soir', recipe_id: ID.recB }, { day_of_week: 2, meal_type: 'soir', recipe_id: ID.recA }])])
+    expectOk(o, 'fill', 1)
+    expect(Number(o.rows[0].n)).toBe(1)
+    expect(await countRows(s, 'public.meal_slots', 'meal_plan_id = $1 AND recipe_id = $2', [to, ID.recB])).toBe(0)
+  })
+  attaque('fill_plan_slots : plus de 42 repas refusés', async (s) => {
+    const to = await newPlan(s, 'A', '2027-03-08')
+    const many = Array.from({ length: 43 }, (_, i) => ({ day_of_week: i % 7, meal_type: 'midi', recipe_id: ID.recA }))
+    expectRefused(await s.as('memberA', `SELECT public.fill_plan_slots($1, $2::jsonb, false) AS n`, [to, JSON.stringify(many)]), '54000', '43 repas')
+  })
+  attaque('anonyme : aucune fonction de planification', async (s) => {
+    expectNoExecute(await s.as('anon', COPY, [ID.planA, ID.planA2, false]), 'copy anon')
+    expectNoExecute(await s.as('anon', `SELECT public.save_week_template($1, 'x') AS id`, [ID.planA]), 'save anon')
+    expectNoExecute(await s.as('anon', `SELECT public.apply_week_template($1, $2, false) AS n`, [ID.tplA, ID.planA]), 'apply anon')
+  })
+
+  // ── Semaines types ──
+  const SAVE = `SELECT public.save_week_template($1, $2) AS id`
+  const APPLY = `SELECT public.apply_week_template($1, $2, $3) AS n`
+  controle('membre A enregistre sa semaine comme semaine type puis l\'applique ailleurs', async (s) => {
+    await s.su(`INSERT INTO public.meal_slots (meal_plan_id, day_of_week, meal_type, recipe_id, leftover_of) VALUES ($1, 1, 'soir', $2, $3)`,
+      [ID.planA, ID.recA, ID.slotA])
+    const o = await s.as('memberA', SAVE, [ID.planA, '  Semaine rentrée  '])
+    expectOk(o, 'enregistrement', 1)
+    const tid = o.rows[0].id as string
+    const t = await s.su<{ name: string; created_by: string; n: number }>(
+      `SELECT name, created_by, (SELECT count(*)::int FROM public.week_template_slots WHERE template_id = t.id) AS n FROM public.week_templates t WHERE id = $1`, [tid])
+    expect(t[0]).toEqual({ name: 'Semaine rentrée', created_by: ID.memberA, n: 2 })
+    const to = await newPlan(s, 'A', '2027-01-11')
+    expect(Number((await s.as('memberA', APPLY, [tid, to, false])).rows[0].n)).toBe(2)
+    expect(await countRows(s, 'public.meal_slots', 'meal_plan_id = $1 AND leftover_of IS NOT NULL', [to])).toBe(1)
+  })
+  controle('réenregistrer sous le même nom remplace la semaine type', async (s) => {
+    const a = (await s.as('memberA', SAVE, [ID.planA, 'Pareil'])).rows[0].id
+    const b = (await s.as('memberA', SAVE, [ID.planA, 'Pareil'])).rows[0].id
+    expect(a).not.toBe(b)
+    expect(await countRows(s, 'public.week_templates', 'family_id = $1 AND name = $2', [ID.famA, 'Pareil'])).toBe(1)
+  })
+  attaque('membre A ne se fait pas passer pour un autre auteur de semaine type', async (s) => {
+    const o = await s.as('memberA', `INSERT INTO public.week_templates (family_id, name, created_by) VALUES ($1, 'Usurpée', $2) RETURNING created_by`,
+      [ID.famA, ID.adminA])
+    expectOk(o, 'insertion', 1)
+    expect(o.rows[0].created_by).toBe(ID.memberA)
+    await s.as('memberA', `UPDATE public.week_templates SET created_by = $2 WHERE id = $1`, [ID.tplA, ID.adminA])
+    expect((await s.su<{ c: string | null }>(`SELECT created_by AS c FROM public.week_templates WHERE id = $1`, [ID.tplA]))[0].c).toBeNull()
+  })
+  attaque('pas plus de 20 semaines types par famille', async (s) => {
+    for (let i = 0; i < 19; i++) await s.su(`INSERT INTO public.week_templates (family_id, name) VALUES ($1, $2)`, [ID.famA, `T${i}`])
+    expectRefused(await s.as('memberA', `INSERT INTO public.week_templates (family_id, name) VALUES ($1, 'Une de trop') RETURNING id`, [ID.famA]), '54000', '21e')
+  })
+  attaque('nom de semaine type vide ou trop long : refusé', async (s) => {
+    expectRefused(await s.as('memberA', `INSERT INTO public.week_templates (family_id, name) VALUES ($1, '   ') RETURNING id`, [ID.famA]), '23514', 'vide')
+    expectRefused(await s.as('memberA', `INSERT INTO public.week_templates (family_id, name) VALUES ($1, $2) RETURNING id`, [ID.famA, 'x'.repeat(41)]), '23514', 'long')
+  })
+  for (const [X, Y] of PAIRS) {
+    attaque(`membre ${X} n'enregistre pas la semaine de ${Y} en semaine type (${lien(X, Y)})`, async (s) => {
+      const before = await countRows(s, 'public.week_templates')
+      expectRefused(await s.as(member[X], SAVE, [plan[Y], 'Volée']), '42501', 'save autre foyer')
+      expect(await countRows(s, 'public.week_templates')).toBe(before)
+    })
+    attaque(`membre ${X} n'applique pas la semaine type de ${Y} (${lien(X, Y)})`, async (s) => {
+      const to = await newPlan(s, X, '2027-04-05')
+      expectRefused(await s.as(member[X], APPLY, [tpl[Y], to, false]), '42501', 'apply autre foyer')
+      expect(await countRows(s, 'public.meal_slots', 'meal_plan_id = $1', [to])).toBe(0)
+    })
+    attaque(`membre ${X} n'applique pas sa semaine type sur la semaine de ${Y} (${lien(X, Y)})`, async (s) => {
+      const before = await tableHash(s, 'public.meal_slots')
+      expectRefused(await s.as(member[X], APPLY, [tpl[X], plan[Y], true]), '42501', 'apply vers autre foyer')
+      expect(await tableHash(s, 'public.meal_slots')).toBe(before)
+    })
+    attaque(`membre ${X} ne met pas dans sa semaine type une recette privée de ${Y} (${lien(X, Y)})`, async (s) => {
+      await attemptInsert(s, member[X], 'public.week_template_slots',
+        `INSERT INTO public.week_template_slots (template_id, day_of_week, meal_type, recipe_id) VALUES ($1, 5, 'soir', $2) RETURNING id`,
+        [tpl[X], rec[Y]])
+    })
+  }
+  attaque('restes d\'une semaine type : pas vers une autre semaine type, pas avant, pas autre recette', async (s) => {
+    const add = `INSERT INTO public.week_template_slots (template_id, day_of_week, meal_type, recipe_id, leftover_of) VALUES ($1, $2, $3, $4, $5) RETURNING id`
+    const other = (await s.su<{ id: string }>(`INSERT INTO public.week_templates (family_id, name) VALUES ($1, 'Autre') RETURNING id`, [ID.famA]))[0].id
+    expectRefused(await s.as('memberA', add, [other, 3, 'soir', ID.recA, ID.tplSlotA]), '42501', 'autre semaine type')
+    expectRefused(await s.as('memberA', add, [ID.tplA, 0, 'midi', ID.recA, ID.tplSlotA]), '42501', 'avant', /après/)
+    expectRefused(await s.as('memberA', add, [ID.tplA, 3, 'soir', ID.recAshared, ID.tplSlotA]), '42501', 'autre recette')
+    expectOk(await s.as('memberA', add, [ID.tplA, 3, 'soir', ID.recA, ID.tplSlotA]), 'restes ok', 1)
+  })
+  structure('droits d\'exécution des fonctions de planification', async (s) => {
+    const can = async (role: string, fn: string) =>
+      (await s.su<{ v: boolean }>(`SELECT has_function_privilege($1, $2, 'EXECUTE') AS v`, [role, fn]))[0].v
+    for (const fn of ['public.fill_plan_slots(uuid, jsonb, boolean)', 'public.copy_week_slots(uuid, uuid, boolean)',
+      'public.save_week_template(uuid, text)', 'public.apply_week_template(uuid, uuid, boolean)']) {
+      expect(await can('anon', fn), `anon ${fn}`).toBe(false)
+      expect(await can('authenticated', fn), `authenticated ${fn}`).toBe(true)
+    }
+    for (const fn of ['public.guard_meal_slot_leftover()', 'public.guard_week_template()', 'public.guard_week_template_slot()']) {
+      expect(await can('anon', fn), `anon ${fn}`).toBe(false)
+      expect(await can('authenticated', fn), `authenticated ${fn}`).toBe(false)
+    }
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════
+describe('Migration 27 : comptes désactivés (set_account_disabled)', () => {
+  const DISABLE = `SELECT public.set_account_disabled($1, $2) AS v`
+  const disable = (s: Scenario, uid: string) => s.su(`INSERT INTO private.disabled_accounts (user_id) VALUES ($1)`, [uid])
+  const isDisabled = async (s: Scenario, uid: string) =>
+    (await s.su<{ v: boolean }>(`SELECT EXISTS (SELECT 1 FROM private.disabled_accounts WHERE user_id = $1) AS v`, [uid]))[0].v
+
+  // ── Un compte désactivé ne voit plus rien et n'écrit plus rien ──
+  for (const t of SCOPED) {
+    attaque(`membre A désactivé ne lit plus ${t.label} de son propre foyer`, async (s) => {
+      await disable(s, ID.memberA)
+      expectBlocked(await s.as('memberA', `SELECT * FROM public.${t.table} WHERE id = $1`, [t.row.A]), 'lecture désactivé')
+    })
+    attaque(`membre A désactivé n'ajoute rien dans ${t.label} de son foyer`, async (s) => {
+      await disable(s, ID.memberA)
+      const [sql, params] = t.insert('A')
+      await attemptInsert(s, 'memberA', `public.${t.table}`, sql, params)
+    })
+  }
+  attaque('membre A désactivé ne lit plus les recettes de son foyer ni le catalogue', async (s) => {
+    await disable(s, ID.memberA)
+    expectBlocked(await s.as('memberA', `SELECT id FROM public.recipes WHERE id = $1`, [ID.recA]), 'recette du foyer')
+    const c = await catalogue(s)
+    expectBlocked(await s.as('memberA', `SELECT id FROM public.recipes WHERE id = $1`, [c.recipes]), 'catalogue')
+  })
+  attaque('membre A désactivé ne voit plus les autres membres, seulement son propre profil', async (s) => {
+    await disable(s, ID.memberA)
+    const o = await s.as('memberA', `SELECT id FROM public.profiles`)
+    expect(o.error).toBeUndefined()
+    expect(o.rows.map((r) => r.id)).toEqual([ID.memberA])
+  })
+  attaque('admin A désactivé n\'invite plus personne', async (s) => {
+    await disable(s, ID.adminA)
+    const before = await countRows(s, 'public.invitations')
+    expectRefused(await s.as('adminA', CREATE_INV, ['membre', ID.famA, 'member', null]), '42501', 'invitation désactivé')
+    expect(await countRows(s, 'public.invitations')).toBe(before)
+  })
+  attaque('un compte désactivé ne se réactive pas lui-même', async (s) => {
+    await disable(s, ID.memberA)
+    expectRefused(await s.as('memberA', DISABLE, [ID.memberA, false]), '42501', 'auto-réactivation')
+    expect(await isDisabled(s, ID.memberA)).toBe(true)
+  })
+  attaque('un compte désactivé ne touche pas au schéma private', async (s) => {
+    await disable(s, ID.memberA)
+    for (const actor of ['memberA', 'adminA', 'anon'] as Actor[]) {
+      const o = await s.as(actor, `DELETE FROM private.disabled_accounts WHERE user_id = $1 RETURNING user_id`, [ID.memberA])
+      expectRefused(o, '42501', `${actor} private`)
+    }
+    expect(await isDisabled(s, ID.memberA)).toBe(true)
+  })
+  controle('membre A désactivé relit son profil et apprend qu\'il est désactivé', async (s) => {
+    await disable(s, ID.memberA)
+    expectOk(await s.as('memberA', `SELECT id FROM public.profiles WHERE id = $1`, [ID.memberA]), 'profil', 1)
+    expect((await s.as('memberA', `SELECT public.my_account_disabled() AS v`)).rows[0].v).toBe(true)
+    expect((await s.as('memberB', `SELECT public.my_account_disabled() AS v`)).rows[0].v).toBe(false)
+  })
+
+  // ── Qui peut désactiver ──
+  controle('admin A désactive puis réactive un membre de sa famille ; il retrouve tout', async (s) => {
+    expectOk(await s.as('adminA', DISABLE, [ID.memberA, true]), 'désactivation', 1)
+    expect(await isDisabled(s, ID.memberA)).toBe(true)
+    expectBlocked(await s.as('memberA', `SELECT id FROM public.meal_plans WHERE id = $1`, [ID.planA]), 'plus rien')
+    expectOk(await s.as('adminA', DISABLE, [ID.memberA, false]), 'réactivation', 1)
+    expect(await isDisabled(s, ID.memberA)).toBe(false)
+    expectOk(await s.as('memberA', `SELECT id FROM public.meal_plans WHERE id = $1`, [ID.planA]), 'retrouve', 1)
+  })
+  controle('le fondateur de SA (super-admin) désactive un membre de A2 ; admin B (fondateur de SB) un membre de B', async (s) => {
+    expectOk(await s.as('superAdmin', DISABLE, [ID.memberA2, true]), 'super-admin', 1)
+    expectOk(await s.as('adminB', DISABLE, [ID.memberB, true]), 'admin B', 1)
+  })
+  controle('disabled_members : l\'admin voit ses membres désactivés, un autre foyer ne voit rien', async (s) => {
+    await disable(s, ID.memberA)
+    const mine = await s.as('adminA', `SELECT user_id FROM public.disabled_members($1)`, [ID.famA])
+    expect(mine.rows.map((r) => r.user_id)).toEqual([ID.memberA])
+    for (const actor of ['adminB', 'adminA2', 'memberA2'] as Actor[]) {
+      const o = await s.as(actor, `SELECT user_id FROM public.disabled_members($1)`, [ID.famA])
+      expect(o.error, actor).toBeUndefined()
+      expect(o.rows, actor).toEqual([])
+    }
+  })
+  attaque('un simple membre ne désactive personne (même dans sa famille)', async (s) => {
+    expectRefused(await s.as('memberA', DISABLE, [ID.adminA, true]), '42501', 'membre', /introuvable/)
+    expect(await isDisabled(s, ID.adminA)).toBe(false)
+  })
+  for (const [X, Y] of PAIRS) {
+    attaque(`admin ${X} ne désactive pas un membre de ${Y} (${lien(X, Y)}) : « introuvable »`, async (s) => {
+      // admin B est fondateur de SB seulement : A et A2 restent hors de portée
+      const o = await s.as(admin[X], DISABLE, [memberId[Y], true])
+      expectRefused(o, '42501', 'autre foyer', /introuvable/)
+      expect(await isDisabled(s, memberId[Y])).toBe(false)
+    })
+  }
+  attaque('personne ne se désactive soi-même', async (s) => {
+    expectRefused(await s.as('adminA', DISABLE, [ID.adminA, true]), '42501', 'soi-même', /propre compte/)
+  })
+  attaque('le compte d\'un fondateur ne se désactive pas (admin B fondateur de SB, par le super-admin)', async (s) => {
+    expectRefused(await s.as('superAdmin', DISABLE, [ID.adminB, true]), '42501', 'fondateur', /fondateur/)
+    expect(await isDisabled(s, ID.adminB)).toBe(false)
+  })
+  attaque('un super-admin ne se désactive pas (même par l\'admin de sa famille)', async (s) => {
+    expectRefused(await s.as('adminA', DISABLE, [ID.superAdmin, true]), '42501', 'super-admin', /fondateur|super-admin/)
+    expect(await isDisabled(s, ID.superAdmin)).toBe(false)
+  })
+  attaque('anonyme : aucune fonction de désactivation', async (s) => {
+    expectNoExecute(await s.as('anon', DISABLE, [ID.memberA, true]), 'anon set')
+    expectNoExecute(await s.as('anon', `SELECT * FROM public.disabled_members($1)`, [ID.famA]), 'anon liste')
+    expectNoExecute(await s.as('anon', `SELECT public.my_account_disabled() AS v`), 'anon statut')
+  })
+  attaque('un admin désactivé ne désactive plus personne', async (s) => {
+    await disable(s, ID.adminA)
+    expectRefused(await s.as('adminA', DISABLE, [ID.memberA, true]), '42501', 'admin désactivé', /introuvable/)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════
+describe('v1.99.0 : gérer le catalogue dans l\'appli (super-admin)', () => {
+  controle('super-admin crée une recette directement au catalogue, lisible par toutes les familles', async (s) => {
+    const o = await s.as('superAdmin',
+      `INSERT INTO public.recipes (family_id, title, created_by, visibility) VALUES ($1, 'Nouvelle du catalogue', auth.uid(), 'catalogue') RETURNING id`,
+      [ID.famA])
+    expectOk(o, 'création catalogue', 1)
+    expectOk(await s.as('memberB', `SELECT id FROM public.recipes WHERE id = $1`, [o.rows[0].id]), 'lecture B', 1)
+    await attemptOnRow(s, 'memberB', { table: 'public.recipes', id: o.rows[0].id as string },
+      `UPDATE public.recipes SET title = 'PIRATE' WHERE id = $1 RETURNING id`, [o.rows[0].id])
+  })
+  controle('super-admin met une recette de famille au catalogue, puis l\'en sort', async (s) => {
+    expectOk(await s.as('superAdmin', `UPDATE public.recipes SET visibility = 'catalogue' WHERE id = $1 RETURNING id`, [ID.recA]), 'vers catalogue', 1)
+    expectOk(await s.as('memberB', `SELECT id FROM public.recipes WHERE id = $1`, [ID.recA]), 'B la voit', 1)
+    expectOk(await s.as('superAdmin', `UPDATE public.recipes SET visibility = 'famille' WHERE id = $1 RETURNING id`, [ID.recA]), 'retour famille', 1)
+    expectBlocked(await s.as('memberB', `SELECT id FROM public.recipes WHERE id = $1`, [ID.recA]), 'B ne la voit plus')
+  })
+  attaque('admin A ne sort pas une recette du catalogue (même livrée dans sa famille)', async (s) => {
+    const c = await catalogue(s)
+    await attemptOnRow(s, 'adminA', { table: 'public.recipes', id: c.recipes },
+      `UPDATE public.recipes SET visibility = 'famille' WHERE id = $1 RETURNING id`, [c.recipes])
+  })
+})

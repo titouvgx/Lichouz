@@ -1,11 +1,11 @@
 <script lang="ts">
-  // Filtres de l'écran Recettes (v1.8.0) : régime, budget, origine, thèmes.
+  // Filtres de l'écran Recettes (v1.8.0) : régime, budget, origine, thèmes ; temps (v1.99.0).
   // Les filtres s'appliquent tout de suite (la liste derrière se met à jour) ;
   // « Voir N recettes » ferme simplement la fenêtre.
   import { onMount } from 'svelte'
   import Icon from './Icon.svelte'
   import {
-    BUDGETS, NO_FILTERS, ORIGINES, REGIMES, THEMES, cleanKeys, countFilters, type TagFilters,
+    BUDGETS, NO_FILTERS, ORIGINES, REGIMES, TEMPS, THEMES, cleanKeys, countFilters, type TagFilters,
   } from '../lib/etiquettes'
 
   interface Props {
@@ -80,6 +80,21 @@
               aria-pressed={filters.budgetMax === b.value}
               onclick={() => (filters = { ...filters, budgetMax: filters.budgetMax === b.value ? null : b.value })}
             >{b.label} <span class="opt-sub">{b.long}</span></button>
+          {/each}
+        </div>
+      </section>
+
+      <section role="group" aria-labelledby="flt-time">
+        <h3 id="flt-time">Temps de préparation <span class="hint">au plus</span></h3>
+        <div class="opts">
+          {#each TEMPS as t (t.value)}
+            <button
+              type="button"
+              class="opt"
+              class:on={filters.timeMax === t.value}
+              aria-pressed={filters.timeMax === t.value}
+              onclick={() => (filters = { ...filters, timeMax: filters.timeMax === t.value ? null : t.value })}
+            >{t.label}</button>
           {/each}
         </div>
       </section>

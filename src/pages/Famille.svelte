@@ -17,7 +17,7 @@
   import { toast } from '../lib/toast.svelte'
   import {
     fetchMembers, setMemberRole, renameFamily, fetchFamilies, countMembers, createFamily,
-    revokeInvitation, fetchInvitations, invitationStatus, namesOf, removeMember, deleteFamily,
+    revokeInvitation, fetchInvitations, invitationStatus, namesOf, removeMember, deleteFamily, setAccountDisabled,
     type Member, type InvitationStatus,
   } from '../lib/api/famille'
   import type { Family, Invitation } from '../lib/types'
@@ -316,6 +316,27 @@
     }
   }
 
+  // ── Désactiver / réactiver un compte (v1.99.0) ──
+  let disableTarget = $state<Member | null>(null)
+  let togglingAccount = $state(false)
+
+  async function confirmToggleAccount() {
+    const m = disableTarget
+    if (!m || togglingAccount) return
+    const next = !m.disabled
+    togglingAccount = true
+    try {
+      await setAccountDisabled(m.id, next)
+      patchMember(m, (list) => list.map((x) => (x.id === m.id ? { ...x, disabled: next } : x)))
+      toast.success(next ? `Compte de ${m.display_name || 'cette personne'} désactivé` : `Compte de ${m.display_name || 'cette personne'} réactivé`)
+      disableTarget = null
+    } catch (e) {
+      toast.error(messageOf(e, next ? 'Ce compte n’a pas pu être désactivé.' : 'Ce compte n’a pas pu être réactivé.'))
+    } finally {
+      togglingAccount = false
+    }
+  }
+
   // ── Supprimer une famille vide ──
   let deleteTarget = $state<Family | null>(null)
   let deletingFamily = $state(false)
@@ -420,7 +441,7 @@
 
 {#snippet memberRow(m: Member, own: boolean)}
   {@const editable = canEditMember(m, own)}
-  <li class="row">
+  <li class="row" class:row-off={m.disabled}>
     <span class="avatar" class:avatar-admin={m.role === 'admin'} aria-hidden="true">{initialOf(m.display_name)}</span>
     <span class="row-main">
       <span class="row-name">
@@ -430,9 +451,11 @@
       <span class="row-meta">
         <span class="badge" class:badge-admin={m.role === 'admin'}>{m.role === 'admin' ? 'Admin' : 'Membre'}</span>
         {#if m.id === founderId}<span class="badge badge-founder">Fondateur</span>{/if}
+        {#if m.disabled}<span class="badge badge-off">Désactivé</span>{/if}
       </span>
     </span>
     {#if editable}
+      <span class="row-actions">
       <button
         class="btn btn-row-action"
         onclick={() => (roleTarget = m)}
@@ -440,9 +463,19 @@
       >
         {m.role === 'admin' ? 'Passer membre' : 'Passer admin'}
       </button>
+      <button
+        class="icon-btn"
+        class:icon-on={m.disabled}
+        onclick={() => (disableTarget = m)}
+        aria-label={m.disabled ? `Réactiver le compte de ${m.display_name}` : `Désactiver le compte de ${m.display_name}`}
+        title={m.disabled ? 'Réactiver le compte' : 'Désactiver le compte'}
+      >
+        <Icon name={m.disabled ? 'key' : 'lock'} size={18} />
+      </button>
       <button class="icon-btn icon-danger" onclick={() => (removeTarget = m)} aria-label={`Retirer ${m.display_name} de la famille`}>
         <Icon name="trash" size={18} />
       </button>
+      </span>
     {/if}
   </li>
 {/snippet}
@@ -824,6 +857,23 @@
   </ConfirmDialog>
 {/if}
 
+{#if disableTarget}
+  <ConfirmDialog
+    title={disableTarget.disabled ? `Réactiver ${disableTarget.display_name || 'ce compte'} ?` : `Désactiver ${disableTarget.display_name || 'ce compte'} ?`}
+    confirmLabel={disableTarget.disabled ? 'Réactiver' : 'Désactiver'}
+    danger={!disableTarget.disabled}
+    busy={togglingAccount}
+    onconfirm={confirmToggleAccount}
+    oncancel={() => (disableTarget = null)}
+  >
+    {#if disableTarget.disabled}
+      Cette personne retrouve tout de suite l’accès à {familyNameOf(disableTarget.family_id)}.
+    {:else}
+      Cette personne ne verra plus rien de {familyNameOf(disableTarget.family_id)} et ne pourra plus rien modifier. Son compte, ses recettes et l’historique sont gardés : tu pourras la réactiver à tout moment.
+    {/if}
+  </ConfirmDialog>
+{/if}
+
 {#if removeTarget}
   <ConfirmDialog
     title={`Retirer ${removeTarget.display_name || 'cette personne'} ?`}
@@ -973,6 +1023,7 @@
   .icon-btn:active { transform: translate(var(--press), var(--press)); box-shadow: none; }
   .icon-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   .icon-danger { color: var(--error); }
+  .icon-on { background: var(--highlight); }
   .link-btn.link-danger { color: var(--error); }
 
   .inline-actions { display: flex; gap: var(--sp-2); justify-content: flex-end; }
@@ -1086,7 +1137,10 @@
   .row.inactive .row-icon { background: var(--surface-sunken); color: var(--text-secondary); }
   .row.inactive .row-name { color: var(--text-secondary); }
 
-  .row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .row-main { flex: 1 1 140px; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  /* Actions d'un membre : à droite du nom, ou dessous (alignées à droite) si la place manque */
+  .rows .row { flex-wrap: wrap; }
+  .row-actions { display: flex; align-items: center; gap: var(--sp-2); margin-left: auto; }
 
   .row-name {
     display: flex;
@@ -1123,6 +1177,9 @@
   }
   .badge-admin { background: var(--highlight); }
   .badge-founder { background: var(--accent); color: var(--on-accent); }
+  .badge-off { background: var(--error); color: var(--on-error); border-color: var(--error); }
+  /* Compte désactivé : ligne en retrait (le nom reste lisible) */
+  .row-off .avatar, .row-off .row-name { opacity: 0.55; }
   .badge-own { background: var(--success-bg); color: var(--success); }
 
   .status {

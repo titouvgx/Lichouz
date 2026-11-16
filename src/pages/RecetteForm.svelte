@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { IMPORT_ENABLED, importFromUrl, toFormRecipe } from '../lib/importRecipe'
   import {
     RECIPE_TITLE_MAX, INGREDIENT_NAME_MAX, INGREDIENT_UNIT_MAX, STEP_TEXT_MAX, INGREDIENTS_MAX, STEPS_MAX,
   } from '../lib/limits'
@@ -92,7 +93,10 @@
   let prepTimeMin = $state<number | null>(null)
   let defaultPortions = $state<number | null>(4)
   // Qui voit la recette : sa famille (défaut, le plus prudent) ou toute la super-famille
-  let visibility = $state<'famille' | 'super_famille'>('famille')
+  let visibility = $state<'famille' | 'super_famille' | 'catalogue'>('famille')
+  // Gérer le catalogue dans l'appli (v1.99.0) : le super-admin peut créer une recette
+  // du catalogue commun, ou y mettre / en sortir une recette.
+  const canCatalogue = $derived(!!profileState.context?.isSuperAdmin)
   const superFamilyName = $derived(profileState.context?.superFamily?.name ?? null)
   let ingredients = $state<IngRow[]>([newIng()])
   let steps = $state<StepRow[]>([newStep()])
@@ -179,7 +183,8 @@
           if (r.visibility === 'catalogue' && !profileState.context?.isSuperAdmin) {
             throw new Error('Recette du catalogue commun : elle ne se modifie pas.')
           }
-          visibility = r.visibility === 'super_famille' ? 'super_famille' : 'famille'
+          // (avant la v1.99.0, une recette du catalogue repassait « famille » à l'enregistrement)
+          visibility = r.visibility === 'catalogue' ? 'catalogue' : r.visibility === 'super_famille' ? 'super_famille' : 'famille'
           title = r.title
           categoryId = r.category_id ?? ''
           diets = cleanKeys(r.diets ?? [], REGIMES)
@@ -293,6 +298,51 @@
       autocompleteResults = results
     } else {
       closeAutocomplete()
+    }
+  }
+
+  // ── Importer depuis un lien (v1.99.0, lot V1-3) ──
+  // Bouton présent mais SANS effet tant que IMPORT_ENABLED est faux (question
+  // juridique à trancher après la v1.99.0) : il affiche seulement « bientôt ».
+  let importOpen = $state(false)
+  let importUrl = $state('')
+  let importing = $state(false)
+  let importError = $state<string | null>(null)
+  let importNotice = $state(false)
+
+  function onImportClick() {
+    if (!IMPORT_ENABLED) {
+      importNotice = true
+      return
+    }
+    importError = null
+    importOpen = true
+  }
+
+  async function runImport() {
+    if (!importUrl.trim() || importing) return
+    importing = true
+    importError = null
+    try {
+      const f = toFormRecipe(await importFromUrl(importUrl))
+      title = f.title
+      defaultPortions = f.portions
+      prepTimeMin = f.minutes
+      ingredients = f.ingredients.length
+        ? f.ingredients.map((i) => {
+            const row: IngRow = { ...newIng(), qty: i.qty, unit: i.unit, name: i.name }
+            const ki = findKnown(i.name)
+            if (ki) applyKnown(row, ki)
+            return row
+          })
+        : [newIng()]
+      steps = f.steps.length ? f.steps.map((t) => ({ ...newStep(), instruction: t })) : [newStep()]
+      importOpen = false
+      toast.success('Recette importée : vérifie-la avant d’enregistrer')
+    } catch (e: any) {
+      importError = e?.message ?? 'La recette n’a pas pu être importée.'
+    } finally {
+      importing = false
     }
   }
 
@@ -764,6 +814,17 @@
       </button>
     </div>
   {:else}
+    {#if !isEdit}
+      <div class="import-row">
+        <button type="button" class="btn btn-outline import-btn" onclick={onImportClick} aria-describedby={importNotice ? 'rf-import-note' : undefined}>
+          <Icon name="link" size={18} /> Importer depuis un lien
+          {#if !IMPORT_ENABLED}<span class="soon">Bientôt</span>{/if}
+        </button>
+        {#if importNotice}
+          <p class="import-note" id="rf-import-note" role="status">L’import par lien arrive bientôt. En attendant, saisis la recette ci-dessous.</p>
+        {/if}
+      </div>
+    {/if}
     <form onsubmit={handleSubmit} novalidate>
 
       <!-- ── Photo ── -->
@@ -1019,6 +1080,15 @@
               </span>
             </span>
           </label>
+          {#if canCatalogue}
+            <label class="vis-option" class:selected={visibility === 'catalogue'}>
+              <input type="radio" class="check" name="rf-visibility" value="catalogue" bind:group={visibility} />
+              <span class="vis-text">
+                <span class="vis-name">Catalogue commun</span>
+                <span class="vis-hint">Super-admin : visible par toutes les familles de l’appli, modifiable par toi seul.</span>
+              </span>
+            </label>
+          {/if}
         </div>
       </section>
 
@@ -1291,6 +1361,28 @@
   >
     Tes modifications {isEdit ? 'de cette recette' : 'sur cette nouvelle recette'} seront perdues.
   </ConfirmDialog>
+{/if}
+
+{#if importOpen}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div class="ui-overlay center" onclick={() => { if (!importing) importOpen = false }}>
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="ui-dialog" role="dialog" aria-modal="true" aria-labelledby="rf-import-title" tabindex="-1" onclick={(e) => e.stopPropagation()}>
+      <div class="ui-head">
+        <h2 id="rf-import-title">Importer</h2>
+        <button type="button" class="btn btn-icon" onclick={() => (importOpen = false)} aria-label="Fermer" disabled={importing}><Icon name="x" size={20} /></button>
+      </div>
+      <form class="import-form" onsubmit={(e) => { e.preventDefault(); void runImport() }}>
+        <label class="label" for="rf-import-url">Adresse de la recette</label>
+        <input id="rf-import-url" class="input" type="url" inputmode="url" placeholder="https://…" bind:value={importUrl} disabled={importing} />
+        <p class="import-hint">Seuls le titre, les ingrédients et les étapes sont repris (jamais la photo). Vérifie tout avant d’enregistrer.</p>
+        {#if importError}<p class="import-error" role="alert">{importError}</p>{/if}
+        <button class="btn btn-primary" type="submit" disabled={importing || !importUrl.trim()}>{importing ? 'Lecture…' : 'Importer'}</button>
+      </form>
+    </div>
+  </div>
 {/if}
 
 <style>
@@ -2000,4 +2092,20 @@
     .save-bar { transition: opacity 0.01s; }
     .save-bar.hidden { transform: none; }
   }
+  /* ── Importer depuis un lien (v1.99.0, désactivé pour l'instant) ── */
+  .import-row { margin: 0 0 var(--sp-4); }
+  .import-btn { width: 100%; justify-content: flex-start; }
+  .soon {
+    margin-left: auto;
+    padding: 1px 6px;
+    border: var(--line-thin) solid var(--line);
+    background: var(--highlight);
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+  }
+  .import-note { margin-top: var(--sp-2); font-size: var(--fs-sm); color: var(--text-secondary); }
+  .import-form { display: flex; flex-direction: column; gap: var(--sp-2); }
+  .import-hint { font-size: 13px; color: var(--text-secondary); }
+  .import-error { font-size: var(--fs-sm); color: var(--error); font-weight: var(--fw-medium); }
 </style>

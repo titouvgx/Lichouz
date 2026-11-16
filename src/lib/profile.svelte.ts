@@ -18,12 +18,15 @@ interface ProfileState {
   profile: Profile | null
   context: FamilyContext | null
   loading: boolean
+  /** Compte désactivé par un admin (v1.99.0, migration 27) : l'appli n'affiche plus que ce message */
+  disabled: boolean
 }
 
 export const profileState: ProfileState = $state({
   profile: null,
   context: null,
   loading: true,
+  disabled: false,
 })
 
 /** L'utilisateur peut-il inviter dans sa propre famille ? */
@@ -102,6 +105,10 @@ export async function loadProfile(userId: string): Promise<void> {
       .single()
     if (error) throw error
     profileState.profile = data as Profile
+    // Erreur (base sans la migration 27, réseau) = considéré actif : les règles
+    // de la base bloquent de toute façon un compte désactivé.
+    const { data: off } = await supabase.rpc('my_account_disabled')
+    profileState.disabled = off === true
     const ctx = await loadContext(data as Profile)
     profileState.context = ctx
     writeCache(data as Profile, ctx)
@@ -131,6 +138,7 @@ export function clearProfile(forget = false): void {
   profileState.profile = null
   profileState.context = null
   profileState.loading = false
+  profileState.disabled = false
 }
 
 /** Recharge le contexte (après création d'une famille, renommage…). */

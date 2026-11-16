@@ -16,9 +16,10 @@
   import type { RecipeWithCategory, RecipeCategory } from '../lib/types'
   import FiltersDialog from '../components/FiltersDialog.svelte'
   import {
-    BUDGETS, NO_FILTERS, ORIGINES, REGIMES, THEMES, cleanKeys, countFilters, origineLabel, regimeLabel, themeLabel,
+    BUDGETS, NO_FILTERS, REGIMES, cleanKeys, countFilters, origineLabel, regimeLabel, themeLabel, tempsLabel, budgetLabel,
     type TagFilters,
   } from '../lib/etiquettes'
+  import { loadRecipeFilters, saveRecipeFilters } from '../lib/recipeFilters'
 
   // ── Données ──
   // index : TOUTES les recettes en version légère (id, titre, catégorie).
@@ -61,29 +62,12 @@
   let query = $state('') // recherche appliquée (après le délai)
   let selectedCategory = $state<string | null>(null)
 
-  // Filtres par étiquettes (v1.8.0), gardés pendant la session (retour depuis une fiche)
-  const FILTERS_KEY = 'lichouz:filtres-recettes'
-  function loadFilters(): TagFilters {
-    try {
-      const f = JSON.parse(sessionStorage.getItem(FILTERS_KEY) ?? 'null')
-      if (!f) return { ...NO_FILTERS }
-      return {
-        diets: cleanKeys(Array.isArray(f.diets) ? f.diets : [], REGIMES),
-        origins: cleanKeys(Array.isArray(f.origins) ? f.origins : [], ORIGINES),
-        themes: cleanKeys(Array.isArray(f.themes) ? f.themes : [], THEMES),
-        budgetMax: BUDGETS.some((b) => b.value === f.budgetMax) ? f.budgetMax : null,
-      }
-    } catch {
-      return { ...NO_FILTERS }
-    }
-  }
-  let tagFilters = $state<TagFilters>(loadFilters())
+  // Filtres par étiquettes (v1.8.0), gardés pendant la session (retour depuis une fiche,
+  // ou étiquette touchée sur une fiche : src/lib/recipeFilters.ts)
+  let tagFilters = $state<TagFilters>(loadRecipeFilters())
   let filtersOpen = $state(false)
   const activeFilters = $derived(countFilters(tagFilters))
-  $effect(() => {
-    const json = JSON.stringify(tagFilters)
-    try { sessionStorage.setItem(FILTERS_KEY, json) } catch { /* stockage indisponible : tant pis */ }
-  })
+  $effect(() => saveRecipeFilters($state.snapshot(tagFilters)))
   const usedOrigins = $derived(new Set(index.map((r) => r.origin).filter((o): o is string => !!o)))
 
   /** Puces des filtres actifs (un appui les retire). */
@@ -94,6 +78,7 @@
     if (f.budgetMax) out.push({ label: `Budget ≤ ${BUDGETS.find((b) => b.value === f.budgetMax)?.label}`, remove: () => (tagFilters = { ...tagFilters, budgetMax: null }) })
     for (const t of f.themes) out.push({ label: themeLabel(t), remove: () => (tagFilters = { ...tagFilters, themes: tagFilters.themes.filter((x) => x !== t) }) })
     for (const o of f.origins) out.push({ label: origineLabel(o), remove: () => (tagFilters = { ...tagFilters, origins: tagFilters.origins.filter((x) => x !== o) }) })
+    if (f.timeMax) out.push({ label: `${tempsLabel(f.timeMax)} max`, remove: () => (tagFilters = { ...tagFilters, timeMax: null }) })
     return out
   })
 
@@ -135,6 +120,13 @@
 
   // Profil chargé mais sans foyer : la base ne renvoie aucune recette
   const noFamily = $derived(!profileState.loading && !profileState.profile?.family_id)
+
+  /** Étiquettes affichées sur une carte (v1.99.0) : 2 régimes au plus + budget, pour rester sur une ligne. */
+  function cardTags(r: RecipeWithCategory): string[] {
+    const out = cleanKeys(r.diets ?? [], REGIMES).slice(0, 2).map(regimeLabel)
+    if (r.budget) out.push(budgetLabel(r.budget))
+    return out
+  }
 
   // Toute la base filtrée (instantané, côté client)
   const matches = $derived(filterRecipeIndex(index, query, selectedCategory, tagFilters))
@@ -375,6 +367,11 @@
                 <span><Icon name="clock" size={13} /> {formatTime(recipe.prep_time_min)}</span>
               {/if}
             </div>
+            {#if cardTags(recipe).length > 0}
+              <ul class="card-tags" aria-label="Étiquettes">
+                {#each cardTags(recipe) as t (t)}<li>{t}</li>{/each}
+              </ul>
+            {/if}
           </div>
         </a>
       {/each}
@@ -709,6 +706,25 @@
     display: inline-flex;
     align-items: center;
     gap: 3px;
+    white-space: nowrap;
+  }
+
+  /* Étiquettes de la carte : petites, carrées, sur une ligne */
+  .card-tags {
+    list-style: none;
+    margin: 2px 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .card-tags li {
+    padding: 0 5px;
+    border: var(--line-thin) solid var(--line);
+    background: var(--surface-sunken);
+    font-size: 11px;
+    font-weight: var(--fw-medium);
+    line-height: 18px;
     white-space: nowrap;
   }
 

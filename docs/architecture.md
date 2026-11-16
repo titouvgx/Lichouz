@@ -68,7 +68,8 @@ src/
 │   ├── CookPicker.svelte         # « Qui cuisine ? » : membres du foyer + Personne
 │   ├── StaplesDialog.svelte      # Achats habituels : ajouter à la liste / modifier
 │   ├── PantryDialog.svelte       # Mon placard : ajout (autocomplétion), retrait, suggestions
-│   ├── CookMode.svelte           # Mode « En cuisine » : une étape à la fois, balayage, écran maintenu allumé (Wake Lock)
+│   ├── CookMode.svelte           # Mode « En cuisine » : une étape à la fois, balayage, écran maintenu allumé (Wake Lock) + minuteurs (v1.99.0, lib/timers.ts)
+│   ├── WeekTools.svelte          # Semaine (v1.99.0) : recopier la semaine d'avant, semaines types
 │   ├── InviteDialog.svelte       # Créer un lien (rôle, « pour qui ») puis Copier / Partager ; jeton affiché une seule fois
 │   ├── PlanRecipeDialog.svelte   # Fenêtre centrée 2 étapes : créneau (4 semaines, créneaux pris visibles) → ingrédients aux courses (mode 'plan' ou 'cart')
 │   ├── TabBar.svelte             # Navigation bottom bar

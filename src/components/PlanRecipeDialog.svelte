@@ -8,7 +8,7 @@
   import { profileState } from '../lib/profile.svelte'
   import { toast } from '../lib/toast.svelte'
   import {
-    getMonday, toISODate, shiftWeek, fetchOrCreatePlan, setSlot, fetchSlotsForWeeks,
+    getMonday, toISODate, shiftWeek, fetchOrCreatePlan, setSlot, fetchSlotsForWeeks, courseFromCategory, courseLabel,
   } from '../lib/api/meals'
   import { addIngredientsToList, type IngredientToAdd } from '../lib/api/shopping'
   import { formatIngredient } from '../lib/quantities'
@@ -66,8 +66,11 @@
 
   // Créneaux déjà pris (chargés en arrière-plan, la liste s'affiche tout de suite)
   let taken = $state<Record<string, MealSlotWithRecipe[]>>({})
+  // Entrée, plat ou dessert d'après la catégorie (v1.99.0) : une entrée s'ajoute
+  // à côté du plat déjà prévu au lieu de le remplacer.
+  const course = courseFromCategory(untrack(() => recipe.recipe_categories?.name))
   function takenSlot(weekStart: string, dayIdx: number, meal: 'midi' | 'soir') {
-    return taken[weekStart]?.find((s) => s.day_of_week === dayIdx && s.meal_type === meal)
+    return taken[weekStart]?.find((s) => s.day_of_week === dayIdx && s.meal_type === meal && (s.course ?? 'plat') === course)
   }
 
   onMount(() => {
@@ -100,10 +103,10 @@
     try {
       const previous = takenSlot(day.weekStart, day.dayIdx, meal)
       const plan = await fetchOrCreatePlan(familyId, day.weekStart)
-      await setSlot(plan.id, day.dayIdx, meal, recipe.id, portions)
+      await setSlot(plan.id, day.dayIdx, meal, recipe.id, portions, course)
       const dateLabel = day.date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
       planned = {
-        label: `${DAY_FULL[day.dayIdx]} ${dateLabel} à ${meal === 'midi' ? 'midi' : 'soir'}`,
+        label: `${DAY_FULL[day.dayIdx]} ${dateLabel} à ${meal === 'midi' ? 'midi' : 'soir'}${course !== 'plat' ? ` (${courseLabel(course).toLowerCase()})` : ''}`,
         replaced: previous && previous.recipes.id !== recipe.id ? previous.recipes.title : null,
       }
       resetCart()

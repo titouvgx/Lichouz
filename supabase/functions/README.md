@@ -59,3 +59,25 @@ L'écran « Rejoindre » affiche le code renvoyé :
 - **404** : fonction absente ou mal nommée → la (re)déployer sous le nom `accepter-invitation` ;
 - **500 / 503** : la fonction plante → Logs. Ne jamais remettre d'import dynamique
   (`await import(variable)`) : Supabase n'emballe que les imports statiques.
+
+## `importer-recette` (v1.99.0) — PRÊTE MAIS DÉSACTIVÉE
+
+Lit la page d'une recette sur un site **autorisé** et renvoie seulement ses faits
+(titre, ingrédients, étapes, portions, temps), au format standard schema.org/Recipe.
+Jamais la photo ni les textes d'auteur. Logique testée dans `tests/unit/importer-recette.test.ts`.
+
+**Décision du 16/11/2026** : rien n'est importé tant que la question juridique (droit
+d'auteur, conditions d'utilisation des sites) n'est pas tranchée. Le bouton « Importer
+depuis un lien » du formulaire affiche seulement « Bientôt ». **Ne pas déployer avant.**
+
+Pour l'activer un jour (les trois sont nécessaires) :
+1. Déployer la fonction (`importer-recette`, **Verify JWT ACTIVÉ** : réservé aux personnes connectées).
+   Elle est en deux fichiers (`index.ts` + `lire.ts`) : avec l'éditeur du tableau de bord, créer
+   les deux fichiers ; ou `supabase functions deploy importer-recette --use-api`.
+2. Secrets de la fonction : `IMPORT_ENABLED` = `true` et `IMPORT_SITES` = domaines autorisés,
+   séparés par des virgules (ex. `marmiton.org,cuisineaz.com`). Sans eux, la fonction répond
+   « pas encore activé » et ne télécharge rien. (`ALLOWED_ORIGINS` facultatif, comme plus haut.)
+3. Dans l'appli : `IMPORT_ENABLED = true` dans `src/lib/importRecipe.ts`, puis une version.
+
+Sécurité : https seulement, domaines de la liste seulement (pas d'IP, pas de port),
+redirections suivies seulement vers ces domaines (3 au plus), 8 s et 2 Mo au plus.

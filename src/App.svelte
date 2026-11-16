@@ -121,6 +121,17 @@
 {:else if !auth.user}
   <!-- Non connecté : page de login -->
   <Login />
+{:else if profileState.disabled}
+  <!-- Compte désactivé par un admin (v1.99.0) : rien d'autre n'est accessible -->
+  <main class="disabled-screen">
+    <div class="card disabled-card" role="alert">
+      <span class="disabled-icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter"><rect x="5" y="11" width="14" height="10" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg></span>
+      <h1>Compte désactivé</h1>
+      <p>Un admin de ta famille a mis ton compte en pause. Tes recettes et ton historique sont gardés.</p>
+      <p>Pour retrouver l’accès, demande-lui de le réactiver.</p>
+      <button class="btn btn-outline" onclick={handleSignOut}>Se déconnecter</button>
+    </div>
+  </main>
 {:else}
   <!-- Connecté : app shell -->
   <AppHeader />
@@ -215,6 +226,32 @@
     min-height: 100dvh;
     /* Place pour la tab bar + safe area bottom */
     padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .disabled-screen {
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: var(--gutter);
+  }
+  .disabled-card {
+    width: min(420px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    padding: var(--sp-5) var(--sp-4);
+  }
+  .disabled-card h1 { font-size: var(--fs-2xl); }
+  .disabled-card p { color: var(--text-secondary); }
+  .disabled-icon {
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    border: var(--line-w) solid var(--line);
+    background: var(--error);
+    color: var(--on-error);
+    box-shadow: var(--shadow-sm);
   }
 
   .page-404 {

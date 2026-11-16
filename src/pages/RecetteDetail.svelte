@@ -15,6 +15,7 @@
   import { categoryColor } from '../lib/categoryColors'
   import { toast } from '../lib/toast.svelte'
   import type { RecipeDetail } from '../lib/types'
+  import { openRecipesWithTag, type TagRef } from '../lib/recipeFilters'
   import { budgetLabel, cleanKeys, origineLabel, regimeLabel, REGIMES, themeLabel, THEMES, BUDGETS } from '../lib/etiquettes'
 
   const MIN_PORTIONS = 1
@@ -88,11 +89,12 @@
   // Étiquettes (migration 25), dans l'ordre de la liste de référence
   const tagChips = $derived.by(() => {
     if (!recipe) return []
-    const out: { label: string; title?: string }[] = []
-    for (const d of cleanKeys(recipe.diets ?? [], REGIMES)) out.push({ label: regimeLabel(d) })
-    if (recipe.origin) out.push({ label: origineLabel(recipe.origin), title: 'Origine' })
-    for (const t of cleanKeys(recipe.themes ?? [], THEMES)) out.push({ label: themeLabel(t) })
-    if (recipe.budget) out.push({ label: budgetLabel(recipe.budget), title: BUDGETS.find((b) => b.value === recipe!.budget)?.long })
+    // Chaque étiquette ouvre Recettes filtré sur elle seule (v1.99.0)
+    const out: { label: string; title?: string; ref: TagRef }[] = []
+    for (const d of cleanKeys(recipe.diets ?? [], REGIMES)) out.push({ label: regimeLabel(d), ref: { kind: 'diet', key: d } })
+    if (recipe.origin) out.push({ label: origineLabel(recipe.origin), title: 'Origine', ref: { kind: 'origin', key: recipe.origin } })
+    for (const t of cleanKeys(recipe.themes ?? [], THEMES)) out.push({ label: themeLabel(t), ref: { kind: 'theme', key: t } })
+    if (recipe.budget) out.push({ label: budgetLabel(recipe.budget), title: BUDGETS.find((b) => b.value === recipe!.budget)?.long, ref: { kind: 'budget', value: recipe.budget } })
     return out
   })
   const catColor = $derived(categoryColor(recipe?.recipe_categories?.name))
@@ -199,7 +201,9 @@
         {#if tagChips.length > 0}
           <ul class="tags" aria-label="Étiquettes">
             {#each tagChips as t (t.label)}
-              <li class="tag" title={t.title}>{t.label}</li>
+              <li>
+                <button type="button" class="tag tag-btn" title={t.title} onclick={() => openRecipesWithTag(t.ref)} aria-label="Voir les recettes « {t.label} »">{t.label}</button>
+              </li>
             {/each}
           </ul>
         {/if}
@@ -476,6 +480,21 @@
     gap: 6px;
   }
   .tag { font-size: 13px; padding: 2px 8px; }
+  /* Étiquette touchable : même dessin, zone de tap agrandie à 44 px, s'enfonce */
+  .tag-btn {
+    position: relative;
+    min-height: 30px;
+    font-family: var(--font-body);
+    cursor: pointer;
+    touch-action: manipulation;
+    box-shadow: 2px 2px 0 var(--shadow-color);
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .tag-btn::after { content: ''; position: absolute; inset: -7px -2px; }
+  .tag-btn:active { transform: translate(2px, 2px); box-shadow: none; }
+  @media (hover: hover) and (pointer: fine) {
+    .tag-btn:hover { background: var(--accent); }
+  }
 
   .cook-btn {
     margin-top: var(--sp-4);

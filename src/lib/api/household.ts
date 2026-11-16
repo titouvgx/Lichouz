@@ -75,7 +75,12 @@ export async function fetchTodayMeals(familyId: string, now = new Date()): Promi
 
   return slots
     .filter((s) => s.recipes)
-    .sort((a, b) => (a.meal_type === b.meal_type ? 0 : a.meal_type === 'midi' ? -1 : 1))
+    // Midi avant soir ; dans un repas, le plat principal d'abord (v1.99.0 : entrée/plat/dessert)
+    .sort((a, b) => {
+      if (a.meal_type !== b.meal_type) return a.meal_type === 'midi' ? -1 : 1
+      const rank = (c: string | undefined) => (c === 'entree' ? 1 : c === 'dessert' ? 2 : 0)
+      return rank(a.course) - rank(b.course)
+    })
     .map((s) => ({
       slotId: s.id,
       mealType: s.meal_type,

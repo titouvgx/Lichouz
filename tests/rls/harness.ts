@@ -75,6 +75,12 @@ export const ID = {
   slotA: 'a0000000-0000-4000-8000-000000000032',
   slotA2: 'a2000000-0000-4000-8000-000000000032',
   slotB: 'b0000000-0000-4000-8000-000000000032',
+  tplA: 'a0000000-0000-4000-8000-000000000033', // semaines types (migration planning_plus)
+  tplA2: 'a2000000-0000-4000-8000-000000000033',
+  tplB: 'b0000000-0000-4000-8000-000000000033',
+  tplSlotA: 'a0000000-0000-4000-8000-000000000034',
+  tplSlotA2: 'a2000000-0000-4000-8000-000000000034',
+  tplSlotB: 'b0000000-0000-4000-8000-000000000034',
   listA: 'a0000000-0000-4000-8000-000000000041',
   listA2: 'a2000000-0000-4000-8000-000000000041',
   listB: 'b0000000-0000-4000-8000-000000000041',
@@ -252,6 +258,16 @@ INSERT INTO public.meal_slots (id, meal_plan_id, day_of_week, meal_type, recipe_
   ('${ID.slotA}',  '${ID.planA}',  0, 'midi', '${ID.recA}',  4),
   ('${ID.slotB}',  '${ID.planB}',  1, 'soir', '${ID.recB}',  4),
   ('${ID.slotA2}', '${ID.planA2}', 2, 'midi', '${ID.recA2}', 4);
+
+INSERT INTO public.week_templates (id, family_id, name) VALUES
+  ('${ID.tplA}',  '${ID.famA}',  'Semaine type A'),
+  ('${ID.tplB}',  '${ID.famB}',  'Semaine type B'),
+  ('${ID.tplA2}', '${ID.famA2}', 'Semaine type A2');
+
+INSERT INTO public.week_template_slots (id, template_id, day_of_week, meal_type, recipe_id, portions) VALUES
+  ('${ID.tplSlotA}',  '${ID.tplA}',  0, 'soir', '${ID.recA}',  4),
+  ('${ID.tplSlotB}',  '${ID.tplB}',  1, 'soir', '${ID.recB}',  4),
+  ('${ID.tplSlotA2}', '${ID.tplA2}', 2, 'soir', '${ID.recA2}', 4);
 
 INSERT INTO public.shopping_lists (id, family_id, meal_plan_id, status) VALUES
   ('${ID.listA}',  '${ID.famA}',  '${ID.planA}',  'active'),

@@ -131,6 +131,24 @@ export interface MealSlot {
   portions: number
   /** Qui cuisine (profil du foyer), null = personne */
   cook_id?: string | null
+  /** Entrée, plat ou dessert (v1.99.0, migration 26) ; absent = plat */
+  course?: Course
+  /** Restes (v1.99.0) : créneau où la recette est cuisinée ; null = repas cuisiné */
+  leftover_of?: string | null
+}
+
+/** Sorte de plat dans un repas (v1.99.0). */
+export type Course = 'entree' | 'plat' | 'dessert'
+
+/** Semaine type du foyer (v1.99.0). */
+export interface WeekTemplate {
+  id: string
+  family_id: string
+  name: string
+  created_by: string | null
+  created_at: string
+  /** Nombre de repas (rempli par l'appli) */
+  slot_count?: number
 }
 
 /** Slot enrichi avec les infos de la recette (jointure) */
@@ -199,7 +217,8 @@ export interface RecipeFormData {
   prep_time_min: number | null
   default_portions: number
   /** Qui voit la recette (absent = 'famille') */
-  visibility?: Exclude<RecipeVisibility, 'catalogue'>
+  /** 'catalogue' : super-admin seulement (v1.99.0, la base refuse sinon) */
+  visibility?: RecipeVisibility
   ingredients: RecipeIngredientInput[]
   steps: RecipeStepInput[]
   /** Étiquettes (migration 25) ; absent = inchangées */

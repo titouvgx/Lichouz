@@ -3,9 +3,13 @@
   // - Précédent / Suivant (boutons larges, flèches du clavier, balayage au doigt)
   // - Rappel des ingrédients (panneau qui se déplie, quantités à l'échelle des portions choisies)
   // - Écran gardé allumé (Screen Wake Lock) tant que le mode est ouvert, si le navigateur le permet
+  // - Minuteurs (v1.99.0) : les durées écrites dans l'étape (« cuire 25 min ») deviennent
+  //   des boutons ; à la fin : sonnerie, vibration (Android) et bandeau orange.
+  //   Les minuteurs vivent tant que le mode En cuisine est ouvert.
   import { onMount, onDestroy, untrack } from 'svelte'
   import Icon from './Icon.svelte'
   import { formatIngredient } from '../lib/quantities'
+  import { clockLabel, findDurations, type FoundDuration } from '../lib/timers'
   import type { RecipeDetail } from '../lib/types'
 
   interface Props {
@@ -36,6 +40,64 @@
     if (next < 0 || next >= steps.length) return
     dir = delta
     index = next
+  }
+
+  // ── Minuteurs ──
+  interface RunningTimer { id: number; label: string; step: number; endsAt: number; done: boolean }
+  let timers = $state<RunningTimer[]>([])
+  let now = $state(Date.now())
+  let timerSeq = 0
+  // Poignées hors rendu (pas en $state)
+  let ticker: ReturnType<typeof setInterval> | undefined
+  let audio: AudioContext | null = null
+
+  const stepDurations = $derived<FoundDuration[]>(steps.length > 0 ? findDurations(steps[index].instruction) : [])
+
+  function startTimer(d: FoundDuration) {
+    // Le son doit être « débloqué » par un geste : on prépare le lecteur ici
+    try {
+      audio ??= new (window.AudioContext || (window as any).webkitAudioContext)()
+      void audio.resume()
+    } catch { audio = null }
+    timers = [...timers, { id: ++timerSeq, label: d.label, step: index + 1, endsAt: Date.now() + d.seconds * 1000, done: false }]
+    now = Date.now()
+    ticker ??= setInterval(tick, 250)
+  }
+
+  function stopTimer(id: number) {
+    timers = timers.filter((t) => t.id !== id)
+    if (timers.length === 0 && ticker) { clearInterval(ticker); ticker = undefined }
+  }
+
+  function tick() {
+    now = Date.now()
+    let rang = false
+    timers = timers.map((t) => {
+      if (!t.done && t.endsAt <= now) { rang = true; return { ...t, done: true } }
+      return t
+    })
+    if (rang) ring()
+  }
+
+  /** Trois bips courts + vibration (Android ; Safari iPhone ignore la vibration). */
+  function ring() {
+    try { navigator.vibrate?.([300, 150, 300, 150, 600]) } catch { /* rien */ }
+    if (!audio) return
+    try {
+      const t0 = audio.currentTime
+      for (let i = 0; i < 3; i++) {
+        const osc = audio.createOscillator()
+        const gain = audio.createGain()
+        osc.type = 'square'
+        osc.frequency.value = 880
+        gain.gain.setValueAtTime(0.0001, t0 + i * 0.35)
+        gain.gain.exponentialRampToValueAtTime(0.25, t0 + i * 0.35 + 0.02)
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + i * 0.35 + 0.25)
+        osc.connect(gain).connect(audio.destination)
+        osc.start(t0 + i * 0.35)
+        osc.stop(t0 + i * 0.35 + 0.26)
+      }
+    } catch { /* son indisponible : la vibration et le bandeau suffisent */ }
   }
 
   // ── Garder l'écran allumé ──
@@ -97,6 +159,8 @@
     dialogEl?.focus()
   })
   onDestroy(() => {
+    if (ticker) clearInterval(ticker)
+    audio?.close().catch(() => {})
     closed = true
     document.body.style.overflow = ''
     document.removeEventListener('visibilitychange', onVisibility)
@@ -145,6 +209,23 @@
       {/each}
     </div>
 
+    {#if timers.length > 0}
+      <ul class="timers" aria-label="Minuteurs en cours">
+        {#each timers as t (t.id)}
+          <li class="timer" class:done={t.done} role={t.done ? 'alert' : undefined}>
+            <Icon name="clock" size={18} />
+            <span class="timer-text">
+              {#if t.done}<strong>C’est prêt !</strong>{:else}<strong class="timer-clock">{clockLabel((t.endsAt - now) / 1000)}</strong>{/if}
+              <small>Étape {t.step} · {t.label}</small>
+            </span>
+            <button class="btn btn-sm timer-stop" onclick={() => stopTimer(t.id)} aria-label={t.done ? `Arrêter le minuteur de l’étape ${t.step}` : `Annuler le minuteur de l’étape ${t.step}`}>
+              {t.done ? 'OK' : 'Annuler'}
+            </button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class="stage"
@@ -159,6 +240,16 @@
         </div>
       {/key}
     </div>
+
+    {#if stepDurations.length > 0}
+      <div class="timer-starts">
+        {#each stepDurations as d (d.seconds)}
+          <button class="btn btn-outline timer-start" onclick={() => startTimer(d)}>
+            <Icon name="clock" size={18} /> Minuteur {d.label}
+          </button>
+        {/each}
+      </div>
+    {/if}
 
     <nav class="cook-nav" aria-label="Étapes">
       <button class="btn btn-outline nav-btn prev" onclick={() => go(-1)} disabled={isFirst}>
@@ -355,6 +446,47 @@
   }
 
   /* ── Navigation ── */
+  /* ── Minuteurs ── */
+  .timers {
+    list-style: none;
+    margin: 0;
+    padding: var(--sp-2) var(--gutter) 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+  .timer {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    min-height: 52px;
+    padding: 4px 6px 4px var(--sp-3);
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+  }
+  .timer.done {
+    background: var(--accent);
+    color: var(--on-accent);
+    animation: timer-shake 0.5s var(--ease-snap) 3;
+  }
+  @keyframes timer-shake {
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+  .timer-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.15; }
+  .timer-clock { font-size: var(--fs-xl); font-variant-numeric: tabular-nums; }
+  .timer-text small { font-size: 12px; }
+  .timer-stop { flex: none; }
+
+  .timer-starts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    padding: 0 var(--gutter) var(--sp-3);
+  }
+  .timer-start { min-height: 48px; }
+
   .cook-nav {
     display: flex;
     gap: var(--sp-3);

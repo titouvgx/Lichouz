@@ -85,6 +85,14 @@ export const BUDGETS: readonly { value: 1 | 2 | 3; label: string; long: string }
 
 export const MAX_THEMES = 5
 
+/** Temps de préparation (v1.99.0) : « au plus », en minutes. */
+export const TEMPS: readonly { value: number; label: string }[] = [
+  { value: 15, label: '15 min' },
+  { value: 30, label: '30 min' },
+  { value: 45, label: '45 min' },
+  { value: 60, label: '1 h' },
+]
+
 const byKey = (list: readonly Etiquette[]) => new Map(list.map((e) => [e.key, e.label]))
 const REGIME_LABELS = byKey(REGIMES)
 const ORIGINE_LABELS = byKey(ORIGINES)
@@ -94,6 +102,21 @@ export const regimeLabel = (k: string) => REGIME_LABELS.get(k) ?? k
 export const origineLabel = (k: string) => ORIGINE_LABELS.get(k) ?? k
 export const themeLabel = (k: string) => THEME_LABELS.get(k) ?? k
 export const budgetLabel = (v: number | null | undefined) => BUDGETS.find((b) => b.value === v)?.label ?? ''
+export const tempsLabel = (v: number | null | undefined) => TEMPS.find((t) => t.value === v)?.label ?? ''
+
+/** Relit des filtres venant d'un stockage (valeurs inconnues ignorées). */
+export function sanitizeFilters(f: unknown): TagFilters {
+  if (!f || typeof f !== 'object') return { ...NO_FILTERS }
+  const o = f as Record<string, unknown>
+  const arr = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [])
+  return {
+    diets: cleanKeys(arr(o.diets), REGIMES),
+    origins: cleanKeys(arr(o.origins), ORIGINES),
+    themes: cleanKeys(arr(o.themes), THEMES),
+    budgetMax: BUDGETS.some((b) => b.value === o.budgetMax) ? (o.budgetMax as number) : null,
+    timeMax: TEMPS.some((t) => t.value === o.timeMax) ? (o.timeMax as number) : null,
+  }
+}
 
 /** Garde l'ordre de la liste de référence, sans doublon ni valeur inconnue. */
 export function cleanKeys(keys: readonly string[], list: readonly Etiquette[]): string[] {
@@ -107,6 +130,8 @@ export interface RecipeTags {
   origin: string | null
   themes: string[]
   budget: number | null
+  /** Temps de préparation en minutes (colonne d'origine, pas une étiquette) */
+  prep_time_min?: number | null
 }
 
 /** Filtres choisis sur l'écran Recettes. */
@@ -115,12 +140,13 @@ export interface TagFilters {
   origins: string[] // une de ces origines (vide = toutes)
   themes: string[] // au moins un de ces thèmes (vide = tous)
   budgetMax: number | null // budget connu et ≤ (null = tous)
+  timeMax: number | null // temps de préparation connu et ≤ (null = tous), v1.99.0
 }
 
-export const NO_FILTERS: TagFilters = { diets: [], origins: [], themes: [], budgetMax: null }
+export const NO_FILTERS: TagFilters = { diets: [], origins: [], themes: [], budgetMax: null, timeMax: null }
 
 export function countFilters(f: TagFilters): number {
-  return f.diets.length + f.origins.length + f.themes.length + (f.budgetMax ? 1 : 0)
+  return f.diets.length + f.origins.length + f.themes.length + (f.budgetMax ? 1 : 0) + (f.timeMax ? 1 : 0)
 }
 
 export function matchesTags(r: Partial<RecipeTags>, f: TagFilters): boolean {
@@ -132,6 +158,7 @@ export function matchesTags(r: Partial<RecipeTags>, f: TagFilters): boolean {
   if (f.origins.length && (!r.origin || !f.origins.includes(r.origin))) return false
   if (f.themes.length && !f.themes.some((t) => themes.includes(t))) return false
   if (f.budgetMax && (!r.budget || r.budget > f.budgetMax)) return false
+  if (f.timeMax && (!r.prep_time_min || r.prep_time_min > f.timeMax)) return false
   return true
 }
 
@@ -142,4 +169,21 @@ export function tagWords(r: Partial<RecipeTags>): string {
     r.origin ? origineLabel(r.origin) : '',
     ...(r.themes ?? []).map(themeLabel),
   ].join(' ')
+}
+
+/** Une étiquette touchée sur la fiche. */
+export type TagRef =
+  | { kind: 'diet'; key: string }
+  | { kind: 'origin'; key: string }
+  | { kind: 'theme'; key: string }
+  | { kind: 'budget'; value: number }
+
+/** Filtres qui ne gardent QUE cette étiquette (les autres filtres sont retirés). */
+export function filtersFor(tag: TagRef): TagFilters {
+  const f: TagFilters = { ...NO_FILTERS, diets: [], origins: [], themes: [] }
+  if (tag.kind === 'diet') f.diets = [tag.key]
+  else if (tag.kind === 'origin') f.origins = [tag.key]
+  else if (tag.kind === 'theme') f.themes = [tag.key]
+  else f.budgetMax = tag.value
+  return sanitizeFilters(f)
 }

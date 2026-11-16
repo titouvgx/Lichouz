@@ -175,11 +175,11 @@ export function searchKey(text: string): string {
 export async function fetchRecipeIndex(): Promise<RecipeIndexEntry[]> {
   if (!supabase) return []
 
-  const rows: ({ id: string; title: string; category_id: string | null } & RecipeTags)[] = []
+  const rows: ({ id: string; title: string; category_id: string | null; prep_time_min: number | null } & RecipeTags)[] = []
   for (let from = 0; ; from += INDEX_CHUNK) {
     const { data, error } = await supabase
       .from('recipes')
-      .select('id, title, category_id, diets, origin, themes, budget')
+      .select('id, title, category_id, prep_time_min, diets, origin, themes, budget')
       .is('archived_at', null)
       .order('title')
       .order('id')
@@ -199,6 +199,7 @@ export async function fetchRecipeIndex(): Promise<RecipeIndexEntry[]> {
       origin: r.origin ?? null,
       themes: r.themes ?? [],
       budget: r.budget ?? null,
+      prep_time_min: r.prep_time_min ?? null,
       key: searchKey(r.title),
       tagKey: searchKey(tagWords(r)),
     }))

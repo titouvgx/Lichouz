@@ -14,14 +14,19 @@
     setSlot,
     removeSlot,
     updateSlotPortions,
+    addLeftover,
+    COURSES,
+    courseLabel,
+    mealRank,
   } from '../lib/api/meals'
+  import WeekTools from '../components/WeekTools.svelte'
   import { fetchRecipes } from '../lib/api/recipes'
   import { sizedImage } from '../lib/images'
   import { categoryColor } from '../lib/categoryColors'
   import { fetchFamilyMembers, setSlotCook } from '../lib/api/household'
   import { toast } from '../lib/toast.svelte'
   import CookPicker from '../components/CookPicker.svelte'
-  import type { FamilyMember, MealSlotWithRecipe, RecipeWithCategory } from '../lib/types'
+  import type { Course, FamilyMember, MealSlotWithRecipe, RecipeWithCategory } from '../lib/types'
 
   // ── État principal ──
   let weekMonday: Date = $state(getMonday(new Date()))
@@ -34,6 +39,7 @@
   let pickerOpen = $state(false)
   let pickerDay = $state(0)
   let pickerMeal = $state<'midi' | 'soir'>('midi')
+  let pickerCourse = $state<Course>('plat')
   let pickerSearch = $state('')
   let pickerRecipes: RecipeWithCategory[] = $state([])
   let pickerLoading = $state(false)
@@ -117,8 +123,34 @@
 
   // ── Helpers ──
 
-  function getSlot(day: number, meal: 'midi' | 'soir'): MealSlotWithRecipe | undefined {
-    return slots.find((s) => s.day_of_week === day && s.meal_type === meal)
+  const COURSE_ORDER: Record<Course, number> = { entree: 0, plat: 1, dessert: 2 }
+  const courseOf = (s: MealSlotWithRecipe): Course => s.course ?? 'plat'
+
+  /** Tous les plats d'un repas (entrée, plat, dessert), dans l'ordre. */
+  function mealSlots(day: number, meal: 'midi' | 'soir'): MealSlotWithRecipe[] {
+    return slots
+      .filter((s) => s.day_of_week === day && s.meal_type === meal)
+      .sort((a, b) => COURSE_ORDER[courseOf(a)] - COURSE_ORDER[courseOf(b)])
+  }
+
+  /** Le plat mis en grand dans la tuile : le plat principal, sinon le premier. */
+  function mainSlot(list: MealSlotWithRecipe[]): MealSlotWithRecipe | undefined {
+    return list.find((s) => courseOf(s) === 'plat') ?? list[0]
+  }
+
+  const SHORT_MEAL = { midi: 'midi', soir: 'soir' } as const
+  function mealName(s: { day_of_week: number; meal_type: 'midi' | 'soir' }): string {
+    return `${DAY_NAMES[s.day_of_week]} ${SHORT_MEAL[s.meal_type]}`
+  }
+
+  /** Repas cuisiné dont ce créneau est les restes (s'il est dans la semaine affichée). */
+  function parentOf(s: MealSlotWithRecipe): MealSlotWithRecipe | undefined {
+    return s.leftover_of ? slots.find((x) => x.id === s.leftover_of) : undefined
+  }
+
+  /** Restes prévus d'un repas cuisiné (dans la semaine affichée). */
+  function leftoversOf(s: MealSlotWithRecipe): MealSlotWithRecipe[] {
+    return slots.filter((x) => x.leftover_of === s.id)
   }
 
   function weekLabel(): string {
@@ -161,9 +193,10 @@
 
   // ── Picker ──
 
-  function openPicker(day: number, meal: 'midi' | 'soir') {
+  function openPicker(day: number, meal: 'midi' | 'soir', course: Course = 'plat') {
     pickerDay = day
     pickerMeal = meal
+    pickerCourse = course
     pickerSearch = ''
     pickerOpen = true
     loadPickerRecipes()
@@ -195,7 +228,7 @@
     if (!planId || savingSlot) return
     savingSlot = true
     try {
-      await setSlot(planId, pickerDay, pickerMeal, recipeId, defaultPortions)
+      await setSlot(planId, pickerDay, pickerMeal, recipeId, defaultPortions, pickerCourse)
       slots = await fetchSlots(planId)
       closePicker()
     } catch (e: any) {
@@ -203,6 +236,34 @@
     } finally {
       savingSlot = false
     }
+  }
+
+  /** Repas cuisinés plus tôt dans la semaine : on peut en prévoir les restes. */
+  const leftoverSources = $derived(
+    slots
+      .filter((s) => !s.leftover_of && s.recipes && mealRank(s.day_of_week, s.meal_type) < mealRank(pickerDay, pickerMeal))
+      .sort((a, b) => mealRank(b.day_of_week, b.meal_type) - mealRank(a.day_of_week, a.meal_type)),
+  )
+
+  async function selectLeftover(from: MealSlotWithRecipe) {
+    if (!planId || savingSlot) return
+    savingSlot = true
+    try {
+      await addLeftover(planId, pickerDay, pickerMeal, pickerCourse, from, from.portions)
+      slots = await fetchSlots(planId)
+      closePicker()
+      toast.success(`Restes de ${mealName(from)} prévus`)
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Les restes n’ont pas pu être prévus.')
+    } finally {
+      savingSlot = false
+    }
+  }
+
+  // ── Recopier une semaine, semaines types ──
+  let toolsOpen = $state(false)
+  async function afterTools() {
+    if (planId) slots = await fetchSlots(planId)
   }
 
   // ── Supprimer un slot ──
@@ -247,8 +308,8 @@
     { key: 'soir', label: 'Soir', icon: 'moon' },
   ]
 
-  /** Nombre de repas déjà prévus sur les 14 de la semaine. */
-  const plannedCount = $derived(slots.length)
+  /** Nombre de repas déjà prévus sur les 14 de la semaine (entrée + plat + dessert = 1 repas). */
+  const plannedCount = $derived(new Set(slots.map((s) => `${s.day_of_week}-${s.meal_type}`)).size)
 
   const isCurrentWeek = $derived(toISODate(weekMonday) === toISODate(getMonday(new Date())))
 
@@ -393,6 +454,10 @@
 
     {#if !loading && !error && myId}
       <div class="filter-row">
+        <button class="filter-chip" onclick={() => (toolsOpen = true)} aria-haspopup="dialog">
+          <Icon name="copy" size={16} />
+          Recopier, semaines types
+        </button>
         <button class="filter-chip" class:active={onlyMine} aria-pressed={onlyMine} onclick={() => (onlyMine = !onlyMine)}>
           <Icon name="chef" size={16} />
           Mes repas
@@ -428,8 +493,8 @@
 
           <div class="slots">
             {#each MEALS as meal (meal.key)}
-              {@const slot = getSlot(dayIdx, meal.key)}
-              {@render slotTile(dayIdx, meal, slot)}
+              {@const list = mealSlots(dayIdx, meal.key)}
+              {@render slotTile(dayIdx, meal, mainSlot(list), list)}
             {/each}
           </div>
         </section>
@@ -439,11 +504,16 @@
 </div>
 
 <!-- Une tuile repas (remplie ou vide) -->
-{#snippet slotTile(dayIdx: number, meal: (typeof MEALS)[number], slot: MealSlotWithRecipe | undefined)}
+{#snippet slotTile(dayIdx: number, meal: (typeof MEALS)[number], slot: MealSlotWithRecipe | undefined, list: MealSlotWithRecipe[])}
   {#if slot}
     {@const cook = cookName(slot)}
-    {@const mine = !!myId && slot.cook_id === myId}
-    <div class="slot filled" class:dimmed={onlyMine && !mine} class:mine={onlyMine && mine}>
+    {@const mine = !!myId && list.some((x) => x.cook_id === myId)}
+    {@const parent = parentOf(slot)}
+    {@const kids = leftoversOf(slot)}
+    {@const extras = list.filter((x) => x.id !== slot.id)}
+    {@const missing = COURSES.filter((c) => !list.some((x) => courseOf(x) === c.key))}
+    <div class="slot filled" class:dimmed={onlyMine && !mine} class:mine={onlyMine && mine} class:leftover={!!slot.leftover_of}>
+      {#if !slot.leftover_of}
       <button
         class="cook-btn"
         onclick={() => openCookPicker(slot)}
@@ -457,16 +527,23 @@
           <span class="cook-dot cook-dot-empty" aria-hidden="true"><Icon name="chef" size={15} /></span>
         {/if}
       </button>
+      {/if}
       <a href={href('recette', slot.recipes.id)} class="slot-visual" aria-label={slot.recipes.title}>
         {#if sizedImage(slot.recipes.image_url, 260, 110)}
           <img src={sizedImage(slot.recipes.image_url, 260, 110)} alt="" loading="lazy" />
         {:else}
           <span class="slot-monogram" aria-hidden="true">{slot.recipes.title.trim().charAt(0)}</span>
         {/if}
-        <span class="meal-chip"><Icon name={meal.icon} size={12} /> {meal.label}</span>
+        <span class="meal-chip"><Icon name={meal.icon} size={12} /> {meal.label}{#if courseOf(slot) !== 'plat'} · {courseLabel(courseOf(slot))}{/if}</span>
+        {#if slot.leftover_of}<span class="leftover-chip">Restes</span>{/if}
       </a>
       <div class="slot-body">
         <a href={href('recette', slot.recipes.id)} class="slot-title">{slot.recipes.title}</a>
+        {#if slot.leftover_of}
+          <span class="leftover-note">{parent ? `Cuisiné ${mealName(parent)}` : 'Cuisiné la semaine d’avant'}</span>
+        {:else if kids.length > 0}
+          <span class="leftover-note">+ restes {kids.map(mealName).join(', ')}</span>
+        {/if}
         <div class="slot-actions">
           {#if editingSlotId === slot.id}
             <div class="portions-edit">
@@ -485,6 +562,27 @@
           {/if}
         </div>
       </div>
+      <!-- Autres plats du repas (entrée, dessert) -->
+      {#if extras.length > 0}
+        <ul class="courses" aria-label="Autres plats du repas">
+          {#each extras as x (x.id)}
+            <li class="course-row">
+              <span class="course-tag">{courseLabel(courseOf(x))}{#if x.leftover_of} · restes{/if}</span>
+              <a href={href('recette', x.recipes.id)} class="course-title">{x.recipes.title}</a>
+              <button class="course-remove" onclick={() => handleRemoveSlot(x.id)} aria-label="Retirer {x.recipes.title}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+      {#if missing.length > 0}
+        <div class="course-add">
+          {#each missing as c (c.key)}
+            <button class="course-add-btn" onclick={() => openPicker(dayIdx, meal.key, c.key)} aria-label="Ajouter {c.label.toLowerCase()} : {DAY_NAMES_FULL[dayIdx]} {meal.label}">+ {c.label}</button>
+          {/each}
+        </div>
+      {/if}
     </div>
   {:else}
     <button class="slot empty" class:dimmed={onlyMine} onclick={() => openPicker(dayIdx, meal.key)} aria-label="Ajouter un repas : {DAY_NAMES_FULL[dayIdx]} {meal.label}">
@@ -510,6 +608,37 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
       </div>
+
+      <div class="course-switch" role="radiogroup" aria-label="Sorte de plat">
+        {#each COURSES as c (c.key)}
+          <button
+            type="button"
+            role="radio"
+            class="course-opt"
+            class:on={pickerCourse === c.key}
+            aria-checked={pickerCourse === c.key}
+            onclick={() => (pickerCourse = c.key)}
+          >{c.label}</button>
+        {/each}
+      </div>
+
+      {#if leftoverSources.length > 0}
+        <details class="leftovers">
+          <summary>Utiliser des restes ({leftoverSources.length})</summary>
+          <p class="leftovers-hint">Le repas choisi sera cuisiné en plus grande quantité : les courses comptent les deux.</p>
+          <ul>
+            {#each leftoverSources as src (src.id)}
+              <li>
+                <button class="picker-item" disabled={savingSlot} onclick={() => selectLeftover(src)}>
+                  <span class="leftover-when">{mealName(src)}</span>
+                  <span class="picker-item-title">{src.recipes.title}</span>
+                  <span class="picker-item-time"><Icon name="users" size={13} /> {src.portions}</span>
+                </button>
+              </li>
+            {/each}
+          </ul>
+        </details>
+      {/if}
 
       <div class="picker-search">
         <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
@@ -558,6 +687,17 @@
       </div>
     </div>
   </div>
+{/if}
+
+{#if toolsOpen && planId && profileState.profile?.family_id}
+  <WeekTools
+    familyId={profileState.profile.family_id}
+    {planId}
+    {weekMonday}
+    weekHasMeals={slots.length > 0}
+    onchanged={afterTools}
+    onclose={() => (toolsOpen = false)}
+  />
 {/if}
 
 <!-- Fenêtre « Qui cuisine ? » -->
@@ -1086,6 +1226,146 @@
 
   /* Filtre actif : mes repas mis en avant, les autres atténués (rien n'est caché) */
   .slot.dimmed { opacity: 0.4; }
+
+  /* ── Restes (v1.99.0) ── */
+  .slot.filled.leftover { border-style: dashed; }
+  .leftover-chip {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    padding: 2px 7px;
+    border-top: var(--line-w) solid var(--line);
+    border-left: var(--line-w) solid var(--line);
+    background: var(--highlight);
+    color: var(--text);
+    font-size: 11px;
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+  }
+  .leftover-note {
+    font-size: 12px;
+    font-weight: var(--fw-medium);
+    color: var(--text-secondary);
+  }
+
+  /* ── Autres plats du repas : entrée, dessert ── */
+  .courses {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: var(--line-thin) solid var(--line);
+  }
+  .course-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding-left: 8px;
+  }
+  .course-row + .course-row { border-top: var(--line-thin) solid var(--line); }
+  .course-tag {
+    flex: none;
+    padding: 0 4px;
+    background: var(--band);
+    color: var(--text-on-band);
+    font-size: 10px;
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
+  }
+  .course-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: var(--fw-bold);
+    color: var(--text);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .course-remove {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 44px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .course-add {
+    display: flex;
+    border-top: var(--line-thin) solid var(--line);
+  }
+  .course-add-btn {
+    flex: 1;
+    min-height: 44px;
+    padding: 0 4px;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: var(--fw-bold);
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .course-add-btn + .course-add-btn { border-left: var(--line-thin) solid var(--line); }
+  .course-add-btn:active { background: var(--accent); color: var(--on-accent); }
+
+  /* ── Fenêtre de choix : sorte de plat et restes ── */
+  .course-switch {
+    display: flex;
+    margin: 0 0 var(--sp-3);
+    border: var(--line-w) solid var(--line);
+  }
+  .course-opt {
+    flex: 1;
+    min-height: 44px;
+    border: none;
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .course-opt + .course-opt { border-left: var(--line-w) solid var(--line); }
+  .course-opt.on { background: var(--accent); color: var(--on-accent); }
+
+  .leftovers {
+    margin: 0 0 var(--sp-3);
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
+  }
+  .leftovers summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 var(--sp-3);
+    background: var(--highlight);
+    font-weight: var(--fw-bold);
+    cursor: pointer;
+  }
+  .leftovers[open] summary { border-bottom: var(--line-w) solid var(--line); }
+  .leftovers-hint {
+    margin: var(--sp-2) var(--sp-3);
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .leftovers ul { list-style: none; margin: 0; padding: 0; }
+  .leftover-when {
+    flex: none;
+    min-width: 58px;
+    font-size: 12px;
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+  }
 
   .slot.filled.mine { box-shadow: var(--shadow-sm); }
 

@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   BUDGETS, MAX_THEMES, NO_FILTERS, ORIGINES, REGIMES, THEMES,
-  cleanKeys, countFilters, matchesTags, tagWords,
+  cleanKeys, countFilters, matchesTags, tagWords, sanitizeFilters, filtersFor,
 } from '../../src/lib/etiquettes'
 
 const M25 = readFileSync(join(__dirname, '../../supabase/migrations/20261116170000_etiquettes.sql'), 'utf8')
@@ -109,5 +109,31 @@ describe('recherche dans les étiquettes', async () => {
   it('les filtres s\'ajoutent à la recherche', () => {
     expect(ids('', { ...NO_FILTERS, origins: ['bretagne', 'bourgogne'] })).toEqual(['2', '3'])
     expect(ids('boeuf', { ...NO_FILTERS, origins: ['bretagne'] })).toEqual([])
+  })
+})
+
+describe('temps de préparation et filtres relus (v1.99.0)', () => {
+  it('filtre « au plus » : temps connu et inférieur ou égal', () => {
+    const f = { ...NO_FILTERS, timeMax: 30 }
+    expect(matchesTags({ prep_time_min: 20 }, f)).toBe(true)
+    expect(matchesTags({ prep_time_min: 30 }, f)).toBe(true)
+    expect(matchesTags({ prep_time_min: 45 }, f)).toBe(false)
+    expect(matchesTags({ prep_time_min: null }, f)).toBe(false)
+    expect(countFilters(f)).toBe(1)
+  })
+
+  it('sanitizeFilters ignore les valeurs inconnues', () => {
+    const f = sanitizeFilters({ diets: ['vegan', 'pirate', 3], origins: ['inde'], themes: 'x', budgetMax: 9, timeMax: 45 })
+    expect(f).toEqual({ diets: ['vegan'], origins: ['inde'], themes: [], budgetMax: null, timeMax: 45 })
+    expect(sanitizeFilters(null)).toEqual(NO_FILTERS)
+    expect(sanitizeFilters({ timeMax: 20 }).timeMax).toBeNull()
+  })
+
+  it('une étiquette touchée sur la fiche ne garde qu’elle', () => {
+    expect(filtersFor({ kind: 'diet', key: 'vegan' })).toEqual({ ...NO_FILTERS, diets: ['vegan'] })
+    expect(filtersFor({ kind: 'origin', key: 'bretagne' }).origins).toEqual(['bretagne'])
+    expect(filtersFor({ kind: 'theme', key: 'films' }).themes).toEqual(['films'])
+    expect(filtersFor({ kind: 'budget', value: 2 }).budgetMax).toBe(2)
+    expect(filtersFor({ kind: 'diet', key: 'inconnu' })).toEqual(NO_FILTERS)
   })
 })

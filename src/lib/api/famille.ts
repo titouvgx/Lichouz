@@ -17,6 +17,8 @@ function db() {
 export interface Member extends FamilyMember {
   family_id: string
   created_at: string
+  /** Compte désactivé (v1.99.0, migration 27) : visible seulement par qui peut le gérer */
+  disabled?: boolean
 }
 
 /** Membres d'une famille (sa famille, ou une famille de sa super-famille pour le fondateur). */
@@ -27,7 +29,30 @@ export async function fetchMembers(familyId: string): Promise<Member[]> {
     .eq('family_id', familyId)
     .order('created_at')
   if (error) throw error
-  return (data ?? []) as Member[]
+  const members = (data ?? []) as Member[]
+  // Comptes désactivés : liste vide si on n'a pas le droit de gérer cette famille
+  // (ou si la migration 27 n'est pas encore passée : on n'affiche simplement rien).
+  const { data: off } = await db().rpc('disabled_members', { p_family: familyId })
+  const disabled = new Set(((off ?? []) as { user_id: string }[]).map((d) => d.user_id))
+  return members.map((m) => ({ ...m, disabled: disabled.has(m.id) }))
+}
+
+/**
+ * Désactive / réactive un compte (set_account_disabled, migration 27). Un compte
+ * désactivé garde tout mais ne voit plus rien. Mêmes droits que « retirer » :
+ * admin de la famille, fondateur, super-admin ; jamais soi-même, le fondateur
+ * ni un super-admin.
+ */
+export async function setAccountDisabled(memberId: string, disabled: boolean): Promise<void> {
+  const { error } = await db().rpc('set_account_disabled', { p_user: memberId, p_disabled: disabled })
+  if (error) throw error
+}
+
+/** Le compte connecté est-il désactivé ? (faux si la fonction n'existe pas encore) */
+export async function myAccountDisabled(): Promise<boolean> {
+  const { data, error } = await db().rpc('my_account_disabled')
+  if (error) return false
+  return data === true
 }
 
 /** Change le rôle d'un membre (admin de la famille ou fondateur ; jamais soi-même). */

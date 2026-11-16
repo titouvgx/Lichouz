@@ -10,6 +10,18 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.99.0',
+    date: '2026-11-16',
+    items: [
+      'Semaine : entrée, plat et dessert sur un même repas (« + Entrée », « + Dessert »).',
+      'Restes : prévois de manger plus tard ce que tu cuisines aujourd’hui, les courses comptent les deux.',
+      'Recopie la semaine d’avant, ou enregistre et applique des semaines types.',
+      'En cuisine : bouton Minuteur quand une étape parle d’une durée.',
+      'Recettes : filtre par temps de préparation, étiquettes sur les cartes, et une étiquette touchée sur une fiche montre toutes les recettes qui l’ont.',
+      'Admins : désactiver un compte (et le réactiver) au lieu de le supprimer.',
+    ],
+  },
+  {
     version: '1.9.0',
     date: '2026-11-16',
     items: [

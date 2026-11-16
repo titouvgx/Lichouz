@@ -63,18 +63,22 @@
           {:else if s.id === 'recettes'}
             <ul>
               <li><strong>Chercher</strong> : tape quelques lettres, peu importe les accents et l’ordre des mots ; filtre par catégorie. La recherche trouve aussi les étiquettes (« vegan », « Bretagne »…).</li>
-              <li><strong>Filtres</strong> : à côté de la recherche, trie par régime (toutes les cases cochées), budget (au plus), thème (au moins un) ou origine. Touche une étiquette sous la recherche pour la retirer.</li>
+              <li><strong>Filtres</strong> : à côté de la recherche, trie par régime (toutes les cases cochées), budget (au plus), temps de préparation (au plus), thème (au moins un) ou origine. Touche une étiquette sous la recherche pour la retirer. Sur une fiche, touche une étiquette (« Vegan », « Bretagne »…) pour voir toutes les recettes qui l’ont.</li>
               <li><strong>Étiquettes</strong> : dans le formulaire d’une recette (régime, origine, budget, jusqu’à 5 thèmes). Qui peut modifier la recette peut changer ses étiquettes ; une recette partagée a les mêmes étiquettes pour toutes les familles. Les régimes sont <strong>indicatifs</strong> : en cas d’allergie, vérifie toujours les emballages.</li>
-              <li><strong>Ajouter une recette</strong> : bouton « + », avec ingrédients, étapes et photo prise depuis la galerie.</li>
+              <li><strong>Ajouter une recette</strong> : bouton « + », avec ingrédients, étapes et photo prise depuis la galerie. (« Importer depuis un lien » arrive bientôt.)</li>
               <li><strong>Qui la voit ?</strong> « Ma famille seulement » (par défaut), ou « Toutes nos familles » pour la partager avec les familles liées à la tienne. Les recettes du <strong>catalogue commun</strong> sont fournies avec l’appli : on peut les utiliser, pas les modifier.</li>
               <li><strong>Mes recettes</strong> (dans <a href={href('mes-recettes')}>Mon compte</a>) : les recettes que tu as créées, pour les modifier, les partager avec toutes vos familles ou les garder pour la tienne, et les archiver.</li>
               <li><strong>Archiver</strong> (admin de la famille) : la recette disparaît des listes et de la recherche, mais reste dans les plannings et l’historique. « Recettes archivées », en bas de la page Recettes, permet de la retrouver et de la <strong>restaurer</strong>.</li>
+              <li><strong>En cuisine</strong> : une étape à la fois, en très gros, écran gardé allumé. Quand une étape parle d’une durée (« cuire 25 min »), le bouton <strong>Minuteur</strong> lance un compte à rebours qui sonne (et vibre sur Android). Garde le mode En cuisine ouvert : le fermer arrête les minuteurs.</li>
               <li>Limites : titre de 120 caractères, 60 ingrédients, 40 étapes de 1 000 caractères chacune.</li>
               <li>Depuis une recette : <strong>Ajouter à ma semaine</strong>, ou <strong>Juste les ingrédients</strong> pour les mettre dans la liste sans la planifier. Oublié de noter un repas ? « Jours déjà passés » permet de remplir les jours précédents de la semaine en cours.</li>
             </ul>
           {:else if s.id === 'semaine'}
             <ul>
               <li>Chaque jour a un repas du midi et du soir : touche un repas pour choisir la recette.</li>
+              <li><strong>Entrée, plat, dessert</strong> : sous un repas, « + Entrée » ou « + Dessert » ajoute un autre plat au même repas. Depuis une recette, une entrée ou un dessert se range tout seul à sa place.</li>
+              <li><strong>Restes</strong> : en choisissant un repas, « Utiliser des restes » reprend un repas cuisiné plus tôt. La liste de courses compte les deux : tu achètes de quoi cuisiner une seule fois en plus grande quantité. Supprimer le repas cuisiné supprime aussi ses restes.</li>
+              <li><strong>Recopier, semaines types</strong> : recopie la semaine d’avant, enregistre une semaine qui revient souvent (20 au plus) et applique-la sur une autre. Coche « Remplacer » pour vider d’abord la semaine ; sinon seules les cases vides sont remplies.</li>
               <li><strong>Qui cuisine ?</strong> : la pastille sur un repas ; le filtre <strong>Mes repas</strong> ne montre que les tiens.</li>
               <li>Flèches en haut : semaine précédente ou suivante. Les changements apparaissent chez les autres en direct.</li>
             </ul>
@@ -100,7 +104,7 @@
             <p class="you">Ton rôle : <strong>{myRole}</strong>{ctx?.family ? ` · famille « ${ctx.family.name} »` : ''}</p>
             <ul>
               <li><strong>Membre</strong> : utilise tout (recettes, semaine, courses) et voit la liste de la famille.</li>
-              <li><strong>Admin</strong> : en plus, invite des personnes avec un lien, passe quelqu’un admin ou membre, renomme la famille et peut retirer quelqu’un.</li>
+              <li><strong>Admin</strong> : en plus, invite des personnes avec un lien, passe quelqu’un admin ou membre, renomme la famille, peut <strong>désactiver</strong> un compte (la personne ne voit plus rien mais garde tout ; on peut la réactiver) ou retirer quelqu’un (son compte est supprimé).</li>
               <li><strong>Fondateur</strong> : a créé le groupe de familles ; il peut créer jusqu’à 3 familles et gérer chacune (membres, invitations, suppression d’une famille vide).</li>
             </ul>
             <p>

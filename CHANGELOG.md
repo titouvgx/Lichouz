@@ -21,6 +21,43 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+Version prévue : **1.99.0, dernière version de la V1** (décision du 16/11/2026 : tout livré d'un coup).
+
+**Migrations 26 et 27 à exécuter AVANT la mise en ligne**, dans l'ordre :
+`supabase/migrations/20261116200000_planning_plus.sql` puis
+`supabase/migrations/20261116210000_comptes_desactives.sql`, puis les requêtes de contrôle
+`supabase/tests/controle_26_planning_plus.sql` et `controle_27_comptes_desactives.sql` (tout à `true`).
+L'ancien site reste compatible avec ces migrations (les repas existants deviennent des « plats »).
+
+### Ajouté
+- **Mieux planifier (V1-4)** : entrée + plat + dessert sur un même repas (`meal_slots.course`) ;
+  restes planifiés (`meal_slots.leftover_of` : même recette, même foyer, repas plus tard ;
+  les courses comptent les deux repas) ; recopier la semaine d'avant ; semaines types
+  (tables `week_templates`, `week_template_slots`, 20 par famille) ; fonctions en une transaction
+  `copy_week_slots`, `save_week_template`, `apply_week_template` (SECURITY INVOKER) ;
+  minuteurs dans le mode En cuisine (durées repérées dans le texte des étapes, `src/lib/timers.ts`).
+- **Restes des étiquettes (V1-2)** : filtre par temps de préparation ; étiquettes sur les cartes ;
+  une étiquette touchée sur une fiche ouvre Recettes filtré sur elle.
+- **Admin + (V1-9)** : désactiver / réactiver un compte (`set_account_disabled`, drapeau rangé dans
+  `private.disabled_accounts`, jamais exposé ; un compte désactivé ne voit plus rien et voit un écran
+  « Compte désactivé ») ; le super-admin gère le catalogue dans l'appli (choix « Catalogue commun »
+  dans le formulaire, carte dans Administration).
+- **Import par lien (V1-3), PRÊT MAIS DÉSACTIVÉ** : fonction serveur `importer-recette`
+  (schema.org/Recipe, sites autorisés seulement, sans photo) et bouton « Importer depuis un lien »
+  qui affiche « Bientôt ». Rien n'est importé tant que la question juridique n'est pas tranchée.
+
+### Corrigé
+- Modifier une recette du catalogue (super-admin) la faisait repasser en « Ma famille seulement ».
+- L'accueil montre le plat principal du jour quand un repas a aussi une entrée ou un dessert.
+
+### Sécurité
+- Banc RLS : 2 tables de plus (21) ; attaques sur les restes, la copie de semaines, les semaines
+  types, les comptes désactivés et le catalogue.
+
+### Pas fait (à décider)
+- Tests de parcours Playwright dans le dépôt (ajout de la dépendance refusé dans la session de travail).
+- Site de test en ligne branché sur `preprod`.
+
 ## [1.9.0] — 2026-11-16
 
 **Aucune migration.** Refonte graphique complète (direction artistique n° 6 « Brutal beurre ») :

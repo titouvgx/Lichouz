@@ -395,6 +395,19 @@
         {/if}
       {/if}
     </section>
+    <!-- ── Catalogue commun (v1.99.0) ── -->
+    <section class="card" aria-labelledby="catalogue-title">
+      <h2 id="catalogue-title" class="section-title">
+        <span class="section-icon"><Icon name="book" size={18} /></span> Catalogue commun
+      </h2>
+      <p class="catalogue-text">
+        Les recettes du catalogue sont lues par toutes les familles et modifiables par toi seul.
+        Pour en modifier une, ouvre sa fiche puis « Modifier ». Pour en ajouter une, crée une recette
+        et choisis « Catalogue commun » dans « Qui peut la voir ? » (une recette existante peut aussi y passer).
+      </p>
+      <a class="btn btn-outline catalogue-btn" href="#/nouvelle-recette"><Icon name="plus" size={18} /> Nouvelle recette</a>
+    </section>
+
     <!-- ── Statistiques ── -->
     <section class="card" aria-labelledby="stats-title">
       <h2 id="stats-title" class="section-title">
@@ -897,4 +910,6 @@
   @media (min-width: 900px) {
     .back-link { margin-top: calc(24px + env(safe-area-inset-top, 0px)); }
   }
+  .catalogue-text { font-size: var(--fs-sm); color: var(--text-secondary); margin-bottom: var(--sp-3); }
+  .catalogue-btn { width: 100%; }
 </style>
