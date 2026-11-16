@@ -21,7 +21,9 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
-Version prévue : **1.99.0, dernière version de la V1** (décision du 16/11/2026 : tout livré d'un coup).
+## [1.99.0] — 2026-11-16
+
+**Dernière version de la V1** (décision du 16/11/2026 : tout livré d'un coup).
 
 **Migrations 26 et 27 à exécuter AVANT la mise en ligne**, dans l'ordre :
 `supabase/migrations/20261116200000_planning_plus.sql` puis
