@@ -64,3 +64,13 @@ describe('Nouveautés : une fois par version, jamais pour une première ouvertur
     expect(shouldShowNews({ version: '1.6.1', lastSeen: '1.6.0', welcomeDone: true, notes })).toBe(false)
   })
 })
+
+describe('invitation liée à une adresse : aide à la saisie', async () => {
+  const { matchesEmailHint } = await import('../../src/lib/api/famille')
+  it('accepte la bonne adresse (majuscules, espaces), refuse les autres', () => {
+    expect(matchesEmailHint(' Marie.D@Gmail.com ', 'm•••@gmail.com')).toBe(true)
+    expect(matchesEmailHint('paul@gmail.com', 'm•••@gmail.com')).toBe(false)
+    expect(matchesEmailHint('marie@hotmail.fr', 'm•••@gmail.com')).toBe(false)
+    expect(matchesEmailHint('nimporte@quoi.fr', null)).toBe(true)
+  })
+})

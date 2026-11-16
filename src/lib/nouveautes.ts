@@ -10,6 +10,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.7.0',
+    date: '2026-11-16',
+    items: [
+      'Inviter : tu peux indiquer l’adresse e-mail de la personne. Seule cette adresse pourra utiliser le lien.',
+      'Une coche dans la liste de courses porte toujours le nom de celui ou celle qui a coché.',
+    ],
+  },
+  {
     version: '1.6.0',
     date: '2026-11-16',
     items: [

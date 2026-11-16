@@ -254,6 +254,7 @@
         <span class="status status-{s}">{STATUS_TAG[s]}</span>
         <span>{statusText(inv, s)}</span>
       </span>
+      {#if inv.email_hint}<span class="row-meta">Réservé à {inv.email_hint}</span>{/if}
       <span class="row-meta">Créé le {fmtDate(inv.created_at)}</span>
     </span>
     {#if s === 'valide'}

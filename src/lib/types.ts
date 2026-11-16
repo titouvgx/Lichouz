@@ -36,6 +36,8 @@ export interface Invitation {
   used_at: string | null
   used_by: string | null
   revoked_at: string | null
+  /** v1.7.0 : lien réservé à cette adresse (indice « m•••@gmail.com »), sinon null */
+  email_hint?: string | null
 }
 
 export interface Profile {

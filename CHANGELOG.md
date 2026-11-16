@@ -21,6 +21,29 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [1.7.0] — 2026-11-16
+
+**Migration 24 à exécuter AVANT la mise en ligne** :
+`supabase/migrations/20261116140000_invitation_email.sql`, puis la requête de contrôle
+`supabase/tests/controle_24_invitation_email.sql` (une ligne, tout à `true`).
+La fonction serveur `accepter-invitation` n'a **pas** besoin d'être redéployée. L'ancien site
+reste compatible avec la migration (création de lien à 4 arguments acceptée).
+
+### Ajouté
+- **Invitation liée à une adresse e-mail** (facultatif) : seule cette adresse peut créer le compte
+  avec le lien. La base ne garde que l'empreinte (sha256) et un indice « m•••@gmail.com » ; un refus
+  laisse le lien valable pour la bonne personne. L'indice est affiché dans Ma famille, Administration
+  et sur la page « Rejoindre » (qui prévient avant l'envoi si l'adresse ne correspond pas).
+  Les liens déjà envoyés restent valables jusqu'à leur expiration.
+
+### Sécurité
+- « Coché par » : en modification, on ne coche plus qu'à son propre nom (avant : au nom de
+  n'importe quel membre du foyer).
+- Photos « orphelines » (dossier d'une recette inexistante) : visibles et supprimables seulement
+  par leur auteur ou le super-admin (avant : par n'importe quel membre de n'importe quelle famille).
+- Banc RLS : 918 attaques bloquées, 208 contrôles, 19 de structure ; vérifié que les nouvelles
+  attaques échouent si les règles sont affaiblies.
+
 ## [1.6.0] — 2026-11-16
 
 **Migration 23 à exécuter AVANT la mise en ligne** :

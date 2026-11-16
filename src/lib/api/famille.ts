@@ -135,13 +135,15 @@ export function invitationUrl(token: string): string {
  */
 export async function createInvitation(
   kind: 'fondateur' | 'membre',
-  opts: { familyId?: string; role?: 'admin' | 'member'; label?: string } = {},
+  opts: { familyId?: string; role?: 'admin' | 'member'; label?: string; email?: string } = {},
 ): Promise<NewInvitation> {
   const { data, error } = await db().rpc('create_invitation', {
     p_kind: kind,
     p_family_id: opts.familyId ?? null,
     p_role: opts.role ?? null,
     p_label: opts.label?.trim() || null,
+    // v1.7.0 (migration 24) : lien réservé à cette adresse ; la base n'en garde que l'empreinte
+    p_email: opts.email?.trim().toLowerCase() || null,
   })
   if (error) throw error
   const row = (Array.isArray(data) ? data[0] : data) as { id: string; token: string; expires_at: string }
@@ -155,7 +157,12 @@ export async function revokeInvitation(id: string): Promise<void> {
 
 /** Liens d'une famille (membres) ou liens « fondateur » (super-admin). */
 export async function fetchInvitations(filter: { familyIds?: string[]; kind?: 'fondateur' }): Promise<Invitation[]> {
-  let q = db().from('invitations').select('*').order('created_at', { ascending: false }).limit(100)
+  // Colonnes explicites : l'empreinte de l'adresse (email_hash) ne sert pas à l'écran
+  let q = db()
+    .from('invitations')
+    .select('id, kind, family_id, role, label, created_by, created_at, expires_at, used_at, used_by, revoked_at, email_hint')
+    .order('created_at', { ascending: false })
+    .limit(100)
   if (filter.kind) q = q.eq('kind', filter.kind)
   if (filter.familyIds) q = q.in('family_id', filter.familyIds)
   const { data, error } = await q
@@ -187,13 +194,27 @@ export interface InvitationInfo {
   kind: 'fondateur' | 'membre' | null
   role: 'admin' | 'member' | null
   family_name: string | null
+  /** Indice de l'adresse à qui le lien est réservé (« m•••@gmail.com »), sinon null */
+  email_hint: string | null
+}
+
+/**
+ * L'adresse saisie correspond-elle à l'indice « m•••@gmail.com » ? (Première
+ * lettre et domaine.) Simple aide à la saisie : la vraie vérification est faite
+ * par la base à la création du compte. Calcul pur (testé).
+ */
+export function matchesEmailHint(email: string, hint: string | null): boolean {
+  if (!hint) return true
+  const [first, domain] = [hint.charAt(0).toLowerCase(), hint.split('@')[1]?.toLowerCase() ?? '']
+  const m = email.trim().toLowerCase()
+  return m.charAt(0) === first && m.split('@')[1] === domain
 }
 
 export async function invitationInfo(token: string): Promise<InvitationInfo> {
   const { data, error } = await db().rpc('invitation_info', { p_token: token })
   if (error) throw error
   const row = (Array.isArray(data) ? data[0] : data) as InvitationInfo | undefined
-  return row ?? { status: 'inconnue', kind: null, role: null, family_name: null }
+  return row ? { ...row, email_hint: row.email_hint ?? null } : { status: 'inconnue', kind: null, role: null, family_name: null, email_hint: null }
 }
 
 export interface AcceptInvitationInput {

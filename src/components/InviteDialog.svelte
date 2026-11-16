@@ -25,6 +25,10 @@
   let step = $state<'choix' | 'lien'>('choix')
   let role = $state<'member' | 'admin'>('member')
   let label = $state('')
+  // v1.7.0 : adresse facultative ; si remplie, seule elle pourra créer le compte
+  let email = $state('')
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const emailInvalid = $derived(email.trim() !== '' && (email.trim().length > 254 || !EMAIL_RE.test(email.trim())))
   let busy = $state(false)
   let error = $state<string | null>(null)
   let invitation = $state<NewInvitation | null>(null)
@@ -79,6 +83,10 @@
       error = 'Famille introuvable : ferme la fenêtre et réessaie.'
       return
     }
+    if (emailInvalid) {
+      error = 'Cette adresse e-mail ne semble pas complète (ex. prenom@exemple.fr), ou laisse le champ vide.'
+      return
+    }
     busy = true
     error = null
     try {
@@ -86,6 +94,7 @@
         familyId: kind === 'membre' ? familyId : undefined,
         role: kind === 'membre' ? role : undefined,
         label: label.trim() || undefined,
+        email: email.trim() || undefined,
       })
       step = 'lien'
       oncreated?.()
@@ -257,6 +266,31 @@
           <p id="iv-label-hint" class="hint">Juste pour toi : pour reconnaître ce lien dans la liste.</p>
         </div>
 
+        <div class="field">
+          <label class="field-label" for="iv-email">Son adresse e-mail <span class="optional">(facultatif)</span></label>
+          <input
+            id="iv-email"
+            class="input"
+            type="email"
+            inputmode="email"
+            placeholder="prenom@exemple.fr"
+            maxlength="254"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            enterkeyhint="go"
+            aria-describedby="iv-email-hint"
+            aria-invalid={emailInvalid}
+            bind:value={email}
+            disabled={busy}
+            onkeydown={(e) => { if (e.key === 'Enter') { e.preventDefault(); create() } }}
+          />
+          <p id="iv-email-hint" class="hint">
+            Si tu la remplis, seule cette adresse pourra créer le compte : un lien transféré ou volé ne servira à rien.
+            L’adresse n’est pas gardée, seulement de quoi la reconnaître.
+          </p>
+        </div>
+
         {#if error}<p class="iv-error" role="alert">{error}</p>{/if}
       {:else if invitation}
         <div class="field">
@@ -273,6 +307,9 @@
               onfocus={(e) => e.currentTarget.select()}
             />
           </div>
+          {#if email.trim()}
+            <p class="hint">Réservé à {email.trim().toLowerCase()} : envoie-le à cette adresse.</p>
+          {/if}
         </div>
 
         <div class="link-actions">

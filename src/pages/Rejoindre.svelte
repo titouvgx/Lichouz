@@ -11,6 +11,7 @@
     acceptInvitation,
     resendConfirmation,
     invitationInfo,
+    matchesEmailHint,
     INVITATION_DAYS,
     type InvitationInfo,
   } from '../lib/api/famille'
@@ -52,7 +53,7 @@
   async function load(token: string | null) {
     const seq = ++loadSeq
     if (!token) {
-      info = { status: 'inconnue', kind: null, role: null, family_name: null }
+      info = { status: 'inconnue', kind: null, role: null, family_name: null, email_hint: null }
       loadState = 'ready'
       return
     }
@@ -178,6 +179,9 @@
     const m = email.trim()
     if (!m) e.email = 'Indique ton adresse e-mail.'
     else if (!EMAIL_RE.test(m)) e.email = 'Cette adresse e-mail ne semble pas complète (ex. prenom@exemple.fr).'
+    else if (!matchesEmailHint(m, info?.email_hint ?? null)) {
+      e.email = `Ce lien est réservé à l’adresse ${info?.email_hint}. Utilise celle-là, ou demande un nouveau lien.`
+    }
 
     if (!password) e.password = 'Choisis un mot de passe.'
     else if (password.length < PW_MIN) e.password = `Le mot de passe doit faire au moins ${PW_MIN} caractères.`
@@ -235,7 +239,7 @@
 
     const token = router.token
     if (!token) {
-      info = { status: 'inconnue', kind: null, role: null, family_name: null }
+      info = { status: 'inconnue', kind: null, role: null, family_name: null, email_hint: null }
       return
     }
     if (!navigator.onLine) {
@@ -411,6 +415,10 @@
             Tu es invité {info?.role === 'admin' ? 'en tant qu’admin' : 'en tant que membre'}.
             Crée ton compte pour commencer.
           </p>
+        {/if}
+
+        {#if info?.email_hint}
+          <p class="lead reserved">Ce lien est réservé à l’adresse <strong>{info.email_hint}</strong>.</p>
         {/if}
 
         <form onsubmit={handleSubmit} novalidate>

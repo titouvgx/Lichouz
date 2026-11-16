@@ -104,6 +104,8 @@
             <p>
               <strong>Inviter</strong> : dans <a href={href('famille')}>Ma famille</a>, crée un lien et envoie-le
               (SMS, WhatsApp…). Il sert <strong>une seule fois</strong> et expire au bout de <strong>7 jours</strong>.
+              Tu peux aussi indiquer l’<strong>adresse e-mail</strong> de la personne (facultatif) : seule cette adresse
+              pourra alors créer le compte, même si le lien circule.
             </p>
             <p>
               <strong>Retirer quelqu’un</strong> supprime son compte : il ne peut plus se connecter, ses recettes
@@ -127,7 +129,10 @@
       <dt>J’ai oublié mon mot de passe.</dt>
       <dd>Sur l’écran de connexion, « Mot de passe oublié ? » : tu reçois un e-mail pour en choisir un nouveau.</dd>
       <dt>Le lien d’invitation ne marche pas.</dt>
-      <dd>Il a déjà servi, a été annulé ou a plus de 7 jours. Demande un nouveau lien à l’admin de ta famille.</dd>
+      <dd>
+        Il a déjà servi, a été annulé ou a plus de 7 jours. Ou bien il est réservé à une autre adresse e-mail : la page
+        l’indique (« réservé à m•••@… »), utilise celle-là. Sinon, demande un nouveau lien à l’admin de ta famille.
+      </dd>
       <dt>Je ne vois pas une recette qu’un proche a créée.</dt>
       <dd>Elle est sans doute réservée à sa famille. Il peut la passer en « Toutes nos familles » si vos familles sont liées.</dd>
       <dt>La liste ne bouge plus chez moi.</dt>

@@ -615,7 +615,7 @@ describe('Structure du schéma et fidélité du banc', () => {
     const can = async (role: string, fn: string) =>
       (await s.su<{ v: boolean }>(`SELECT has_function_privilege($1, $2, 'EXECUTE') AS v`, [role, fn]))[0].v
     const expected: [string, { anon: boolean; authenticated: boolean; service_role?: boolean }][] = [
-      ['public.create_invitation(text, uuid, text, text)', { anon: false, authenticated: true }],
+      ['public.create_invitation(text, uuid, text, text, text)', { anon: false, authenticated: true }],
       ['public.revoke_invitation(uuid)', { anon: false, authenticated: true }],
       ['public.create_family(text, uuid)', { anon: false, authenticated: true }],
       ['public.invitation_info(text)', { anon: true, authenticated: true }],
@@ -1800,9 +1800,13 @@ describe('Gardes : « coché par » et planning rattaché à une liste', () => {
     expectRefused(o, '42501', 'insert checked_by', /Coché par/)
     expect(await countRows(s, 'public.shopping_list_items')).toBe(before)
   })
-  controle('membre A coche un article à son nom ou au nom de l\'admin A', async (s) => {
+  controle('membre A coche un article à son nom', async (s) => {
     expectOk(await s.as('memberA', setChecker, [ID.itemA, ID.memberA]), 'soi', 1)
-    expectOk(await s.as('memberA', setChecker, [ID.itemA, ID.adminA]), 'admin A', 1)
+  })
+  // Migration 24 : en modification, on ne coche plus au nom d'un autre membre du foyer
+  attaque('membre A coche un article au nom de l\'admin A (même foyer)', async (s) => {
+    await refusedOnRow(s, 'memberA', { table: 'public.shopping_list_items', id: ID.itemA }, setChecker,
+      [ID.itemA, ID.adminA], '42501', /toi-même/)
   })
 
   const addList = `INSERT INTO public.shopping_lists (family_id, meal_plan_id, status) VALUES ($1, $2, 'active') RETURNING id`
@@ -2114,12 +2118,12 @@ describe('Invitations : create_invitation / revoke_invitation / invitation_info'
   }
   controle('invitation_info (anonyme) : lien valide → état, type, rôle et nom de la famille, rien d\'autre', async (s) => {
     const r = await info(s, TOKEN.invA)
-    expect(r).toEqual({ status: 'valide', kind: 'membre', role: 'member', family_name: 'Foyer A' })
-    expect(await info(s, TOKEN.invFondateur)).toEqual({ status: 'valide', kind: 'fondateur', role: null, family_name: null })
+    expect(r).toEqual({ status: 'valide', kind: 'membre', role: 'member', family_name: 'Foyer A', email_hint: null })
+    expect(await info(s, TOKEN.invFondateur)).toEqual({ status: 'valide', kind: 'fondateur', role: null, family_name: null, email_hint: null })
   })
   controle('invitation_info : lien inconnu, vide ou NULL → « inconnue » sans autre information', async (s) => {
     for (const t of ['nimporte-quoi', '', null]) {
-      expect(await info(s, t)).toEqual({ status: 'inconnue', kind: null, role: null, family_name: null })
+      expect(await info(s, t)).toEqual({ status: 'inconnue', kind: null, role: null, family_name: null, email_hint: null })
     }
   })
   attaque('invitation_info : l\'empreinte stockée ne sert pas de jeton', async (s) => {
@@ -2998,5 +3002,77 @@ describe('Migration 23 : journal des erreurs et retours des utilisateurs', () =>
     await s.su(`DELETE FROM auth.users WHERE id = $1`, [ID.memberB])
     expect(await countRows(s, 'public.app_errors', 'id = $1', [ID.errB])).toBe(0)
     expect(await countRows(s, 'public.feedback', 'id = $1', [ID.feedbackB])).toBe(0)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════
+describe('Migration 24 : invitation liée à une adresse e-mail, photos orphelines', () => {
+  const CREATE_INV_EMAIL = `SELECT * FROM public.create_invitation($1, $2, $3, $4, $5)`
+  const withEmail = async (s: Scenario, email: string) => {
+    const o = await s.as('adminA', CREATE_INV_EMAIL, ['membre', ID.famA, 'member', null, email])
+    expectOk(o, 'lien avec adresse', 1)
+    return o.rows[0] as { id: string; token: string }
+  }
+
+  controle('un lien lié à une adresse ne garde que son empreinte et un indice (pas l\'adresse)', async (s) => {
+    const r = await withEmail(s, '  Nouveau-1@Test.LOCAL ')
+    const row = (await s.su<{ email_hash: string; email_hint: string; label: string | null }>(
+      `SELECT email_hash, email_hint, label FROM public.invitations WHERE id = $1`, [r.id]))[0]
+    expect(row.email_hash).toMatch(/^[0-9a-f]{64}$/)
+    expect(row.email_hint).toBe('n•••@test.local')
+    const all = JSON.stringify(await s.su(`SELECT * FROM public.invitations WHERE id = $1`, [r.id]))
+    expect(all.toLowerCase()).not.toContain('nouveau-1')
+    expect((await s.as('anon', `SELECT * FROM public.invitation_info($1)`, [r.token])).rows[0])
+      .toMatchObject({ status: 'valide', email_hint: 'n•••@test.local' })
+  })
+  attaque('un lien réservé à nouveau-1 est utilisé par un compte avec une autre adresse', async (s) => {
+    const r = await withEmail(s, 'nouveau-1@test.local')
+    expectRefused(await consume(s, r.token, ID.nouveau2, 'Intrus'), '22023', 'autre adresse', /réservé à une autre adresse e-mail \(n•••@test\.local\)/)
+    expect(await profileOf(s, ID.nouveau2)).toBeNull()
+    expect(await countRows(s, 'public.invitations', 'id = $1 AND used_at IS NULL AND used_by IS NULL', [r.id])).toBe(1)
+  })
+  controle('le bon compte utilise son lien (majuscules et espaces ignorés)', async (s) => {
+    const r = await withEmail(s, ' NOUVEAU-1@test.local')
+    expectOk(await consume(s, r.token, ID.nouveau1, 'Bienvenu'), 'bonne adresse', 1)
+    expect(await profileOf(s, ID.nouveau1)).not.toBeNull()
+  })
+  controle('après un refus, la bonne personne peut encore utiliser le lien', async (s) => {
+    const r = await withEmail(s, 'nouveau-1@test.local')
+    expectRefused(await consume(s, r.token, ID.nouveau2, 'Intrus'), '22023', 'refus')
+    expectOk(await consume(s, r.token, ID.nouveau1, 'Bienvenu'), 'puis la bonne', 1)
+  })
+  structure('adresse invalide ou trop longue refusée à la création du lien', async (s) => {
+    for (const bad of ['pas-une-adresse', 'a@b', 'a b@c.fr', `${'a'.repeat(250)}@test.local`]) {
+      expectRefused(await s.as('adminA', CREATE_INV_EMAIL, ['membre', ID.famA, 'member', null, bad]), '22023', bad.slice(0, 20))
+    }
+  })
+  controle('lien sans adresse (vide ou absente) : ouvert comme avant', async (s) => {
+    const o = await s.as('adminA', CREATE_INV_EMAIL, ['membre', ID.famA, 'member', null, '  '])
+    expectOk(o, 'adresse vide', 1)
+    expect(await countRows(s, 'public.invitations', 'id = $1 AND email_hash IS NULL AND email_hint IS NULL', [o.rows[0].id])).toBe(1)
+    expectOk(await consume(s, o.rows[0].token, ID.nouveau2, 'Libre'), 'n\'importe qui', 1)
+  })
+
+  // ── Photos orphelines (dossier d'une recette qui n'existe pas) ──
+  const ORPHAN = 'c0ffee00-0000-4000-8000-000000000999/orpheline.webp'
+  const addOrphan = (s: Scenario) =>
+    s.su(`INSERT INTO storage.objects (bucket_id, name, owner) VALUES ($1, $2, $3)`, [PHOTO_BUCKET, ORPHAN, ID.memberA])
+  const readOrphan = `SELECT name FROM storage.objects WHERE name = $1`
+  attaque('une photo orpheline n\'est visible ni par un autre foyer ni par un autre membre du foyer', async (s) => {
+    await addOrphan(s)
+    expectBlocked(await s.as('memberB', readOrphan, [ORPHAN]), 'memberB')
+    expectBlocked(await s.as('adminA', readOrphan, [ORPHAN]), 'adminA (même foyer, pas l\'auteur)')
+  })
+  attaque('un autre membre ne supprime pas une photo orpheline', async (s) => {
+    await addOrphan(s)
+    const o = await s.as('memberB', `DELETE FROM storage.objects WHERE name = $1 RETURNING id`, [ORPHAN])
+    expectBlocked(o, 'memberB DELETE')
+    expect(await countRows(s, 'storage.objects', 'name = $1', [ORPHAN])).toBe(1)
+  })
+  controle('l\'auteur et le super-admin voient la photo orpheline ; l\'auteur la supprime', async (s) => {
+    await addOrphan(s)
+    expectOk(await s.as('memberA', readOrphan, [ORPHAN]), 'auteur', 1)
+    expectOk(await s.as('superAdmin', readOrphan, [ORPHAN]), 'super-admin', 1)
+    expectOk(await s.as('memberA', `DELETE FROM storage.objects WHERE name = $1 RETURNING id`, [ORPHAN]), 'suppression', 1)
   })
 })

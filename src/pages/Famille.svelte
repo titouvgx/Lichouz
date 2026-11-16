@@ -502,6 +502,7 @@
         <span class="status status-{s}">{STATUS_TAG[s]}</span>
         <span>{statusText(inv, s)}</span>
       </span>
+      {#if inv.email_hint}<span class="row-meta">Réservé à {inv.email_hint}</span>{/if}
     </span>
     {#if s === 'valide'}
       <button
