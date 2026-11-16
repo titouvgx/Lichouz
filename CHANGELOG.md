@@ -21,6 +21,16 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [1.5.0] — 2026-11-16
+
+Pas de migration, aucun réglage Supabase.
+
+### Ajouté
+- **Mes recettes** (Mon compte) : les recettes que j'ai créées, rangées en « Toutes nos familles »,
+  « Ma famille seulement » et « Archivées ». Modifier, partager / garder pour ma famille, archiver /
+  restaurer (admin de la famille). Le catalogue n'y apparaît pas.
+- Aide mise à jour.
+
 ## [1.4.0] — 2026-11-15
 
 **Migration 22 à exécuter AVANT la mise en ligne** :

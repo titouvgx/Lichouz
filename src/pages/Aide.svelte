@@ -65,6 +65,7 @@
               <li><strong>Chercher</strong> : tape quelques lettres, peu importe les accents et l’ordre des mots ; filtre par catégorie.</li>
               <li><strong>Ajouter une recette</strong> : bouton « + », avec ingrédients, étapes et photo prise depuis la galerie.</li>
               <li><strong>Qui la voit ?</strong> « Ma famille seulement » (par défaut), ou « Toutes nos familles » pour la partager avec les familles liées à la tienne. Les recettes du <strong>catalogue commun</strong> sont fournies avec l’appli : on peut les utiliser, pas les modifier.</li>
+              <li><strong>Mes recettes</strong> (dans <a href={href('mes-recettes')}>Mon compte</a>) : les recettes que tu as créées, pour les modifier, les partager avec toutes vos familles ou les garder pour la tienne, et les archiver.</li>
               <li><strong>Archiver</strong> (admin de la famille) : la recette disparaît des listes et de la recherche, mais reste dans les plannings et l’historique. « Recettes archivées », en bas de la page Recettes, permet de la retrouver et de la <strong>restaurer</strong>.</li>
               <li>Limites : titre de 120 caractères, 60 ingrédients, 40 étapes de 1 000 caractères chacune.</li>
               <li>Depuis une recette : <strong>Ajouter à ma semaine</strong>, ou <strong>Juste les ingrédients</strong> pour les mettre dans la liste sans la planifier. Oublié de noter un repas ? « Jours déjà passés » permet de remplir les jours précédents de la semaine en cours.</li>

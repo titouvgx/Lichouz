@@ -12,6 +12,7 @@ import {
   type PhotoChange,
 } from './recipeImages'
 import type {
+  Recipe,
   RecipeWithCategory,
   RecipeDetail,
   RecipeCategory,
@@ -457,6 +458,56 @@ export async function setRecipeArchived(recipeId: string, archived: boolean): Pr
   if (!data || data.length === 0) {
     throw new Error("Action refusée : seul un administrateur de la famille qui a créé la recette peut l'archiver.")
   }
+}
+
+// ────────── Mes recettes (#/mes-recettes) ──────────
+
+export type MyRecipeGroup = 'super_famille' | 'famille' | 'archivee'
+
+/**
+ * Recettes dont la personne est l'auteur, archivées comprises, hors catalogue
+ * (le catalogue se gère en JSON, pas ici). Triées par titre.
+ */
+export async function fetchMyRecipes(userId: string): Promise<RecipeWithCategory[]> {
+  if (!supabase) return []
+  const { data, error } = await supabase
+    .from('recipes')
+    .select('*, recipe_categories(*)')
+    .eq('created_by', userId)
+    .neq('visibility', 'catalogue')
+    .order('title')
+    .limit(500)
+  if (error) throw error
+  return (data ?? []) as RecipeWithCategory[]
+}
+
+/** Range « mes recettes » : partagées, famille seulement, archivées (calcul pur, testé). */
+export function groupMyRecipes<T extends Pick<Recipe, 'visibility' | 'archived_at'>>(
+  recipes: T[],
+): Record<MyRecipeGroup, T[]> {
+  const groups: Record<MyRecipeGroup, T[]> = { super_famille: [], famille: [], archivee: [] }
+  for (const r of recipes) {
+    if (r.archived_at) groups.archivee.push(r)
+    else if (r.visibility === 'super_famille') groups.super_famille.push(r)
+    else if (r.visibility === 'famille') groups.famille.push(r)
+  }
+  return groups
+}
+
+/**
+ * Change qui voit la recette : ma famille, ou toutes les familles de ma
+ * super-famille. Refusé par la base si la recette est au planning d'une autre
+ * famille et qu'on veut la remettre « famille seulement ».
+ */
+export async function setRecipeVisibility(recipeId: string, visibility: 'famille' | 'super_famille'): Promise<void> {
+  if (!supabase) throw new Error('Supabase non configuré')
+  const { data, error } = await supabase
+    .from('recipes')
+    .update({ visibility })
+    .eq('id', recipeId)
+    .select('id')
+  if (error) throw error
+  if (!data || data.length === 0) throw new Error('Action refusée : tu ne peux pas modifier cette recette.')
 }
 
 /** Recettes archivées visibles par la personne (les plus récentes d'abord). */

@@ -19,6 +19,7 @@
   import Historique from './pages/Historique.svelte'
   import MonCompte from './pages/MonCompte.svelte'
   import Famille from './pages/Famille.svelte'
+  import MesRecettes from './pages/MesRecettes.svelte'
   import Aide from './pages/Aide.svelte'
   import Bienvenue from './components/Bienvenue.svelte'
   import { welcome, welcomeSeen } from './lib/bienvenue.svelte'
@@ -121,6 +122,8 @@
       <MonCompte />
     {:else if router.current === 'famille'}
       <Famille />
+    {:else if router.current === 'mes-recettes'}
+      <MesRecettes />
     {:else if router.current === 'aide'}
       <Aide />
     {:else if router.current === 'admin'}

@@ -243,6 +243,14 @@
       </span>
       <Icon name="chevron-right" size={18} />
     </a>
+    <a class="link-row" href={href('mes-recettes')}>
+      <span class="section-icon"><Icon name="chef" size={18} /></span>
+      <span class="link-text">
+        <span class="link-title">Mes recettes</span>
+        <span class="link-sub">Partager, modifier, archiver</span>
+      </span>
+      <Icon name="chevron-right" size={18} />
+    </a>
     {#if profileState.context?.isSuperAdmin}
       <a class="link-row" href={href('admin')}>
         <span class="section-icon"><Icon name="lock" size={18} /></span>
