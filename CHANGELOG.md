@@ -21,6 +21,15 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [1.99.1] — 2026-11-16
+
+**Aucune migration.**
+
+### Corrigé
+- Changement de page ou d'onglet : l'écran précédent restait visible une fraction de seconde
+  par-dessus le nouveau (effet « glitch »). L'ancien écran disparaît maintenant d'un coup,
+  le nouveau arrive en glissant.
+
 ## [1.99.0] — 2026-11-16
 
 **Dernière version de la V1** (décision du 16/11/2026 : tout livré d'un coup).

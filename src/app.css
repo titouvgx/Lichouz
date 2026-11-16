@@ -525,10 +525,13 @@ html[data-nav='back']::view-transition-new(root) {
 /* Le cadre du groupe ne doit pas s'animer (hauteurs de pages différentes) */
 ::view-transition-group(page) { animation: none; }
 
-/* Brut : la nouvelle page arrive en glissant franchement, l'ancienne s'efface vite */
-html[data-nav='forward']::view-transition-old(page) { animation-name: vt-out-left; animation-duration: 160ms; }
+/* Brut : l'ancienne page disparaît D'UN COUP, la nouvelle arrive en glissant.
+   (v1.99.1) Avant, l'ancienne s'effaçait en fondu pendant que la nouvelle
+   apparaissait : les pages n'ont pas de fond opaque (motif derrière), donc les
+   deux se superposaient une fraction de seconde → effet « glitch ». */
+html[data-nav='forward']::view-transition-old(page),
+html[data-nav='back']::view-transition-old(page)    { display: none; }
 html[data-nav='forward']::view-transition-new(page) { animation-name: vt-in-right; }
-html[data-nav='back']::view-transition-old(page)    { animation-name: vt-out-right; animation-duration: 160ms; }
 html[data-nav='back']::view-transition-new(page)    { animation-name: vt-in-left; }
 
 /* Barre d'onglets et avatar : immobiles, au-dessus de la page qui glisse */
@@ -543,9 +546,7 @@ html[data-nav='back']::view-transition-new(page)    { animation-name: vt-in-left
   display: none;
 }
 
-@keyframes vt-out-left  { to   { opacity: 0; transform: translateX(-8%); } }
 @keyframes vt-in-right  { from { opacity: 0; transform: translateX(24%); } }
-@keyframes vt-out-right { to   { opacity: 0; transform: translateX(8%); } }
 @keyframes vt-in-left   { from { opacity: 0; transform: translateX(-24%); } }
 
 /* Entrée échelonnée pour les listes (utiliser avec style="animation-delay: …") */
