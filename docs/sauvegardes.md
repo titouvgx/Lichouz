@@ -30,8 +30,9 @@ stocké dans le dépôt ni sur GitHub. (Plus tard : Raspberry avec une copie aut
 2. Dans le terminal, depuis ton dossier de sauvegardes :
 
    ```bash
-   # Remplace la valeur par ta chaîne de connexion (garde les guillemets)
-   export DB_URL="postgresql://postgres.xxxx:MOT_DE_PASSE@aws-0-eu-west-1.pooler.supabase.com:5432/postgres"
+   # Colle ta chaîne de connexion « Session pooler » entre les guillemets
+   # (elle commence par postgresql:// et contient ton mot de passe : jamais dans un fichier)
+   export DB_URL="COLLE_ICI_LA_CHAINE_DE_CONNEXION"
    DATE=$(date +%Y-%m-%d)
    npx supabase db dump --db-url "$DB_URL" -f "$DATE-roles.sql" --role-only
    npx supabase db dump --db-url "$DB_URL" -f "$DATE-schema.sql"
