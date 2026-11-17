@@ -51,7 +51,7 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Historique. Autres : `nou
 - Service worker : chaque déploiement recharge l'appli (différé pendant le formulaire recette) ; enregistré seulement en build
 - `body` transparent (fond `AppBackdrop`) ; fenêtres `.ui-overlay` en `z-index: 200` (tab bar 100) ; aucune couleur/ombre/arrondi en dur : variables de `app.css`. Thème Noël auto du 1er décembre au 6 janvier (`src/lib/theme.svelte.ts`)
 - Icônes : `Icon.svelte` (émojis seulement pour rayons et 🥕). Animer seulement `transform`/`opacity`, `prefers-reduced-motion` respecté, taps ≥ 44 px, `:hover` souris seulement
-- Limites connues : la fenêtre d'accueil bloque l'appli, pas la base ; textes légaux sans juriste ; e-mails Supabase via Brevo ; import par lien prêt mais désactivé (`IMPORT_ENABLED = false`)
+- Limites connues : la fenêtre d'accueil bloque l'appli, pas la base ; textes légaux sans juriste ; e-mails Supabase via Brevo ; import par lien prêt mais désactivé (`IMPORT_ENABLED = false`) ; **exception d’audit** GHSA-fc5q-39xc-vjpf (picomatch, outils de build) dans `verifications.yml` depuis le 17/11/2026 : à retirer dès qu’un correctif sort
 
 ## Versions
 - SemVer, source unique `package.json`. **Dernier chiffre = correctifs ; fonctions nouvelles = chiffre du milieu.** Chaque changement notable → `CHANGELOG.md` `[Non publié]` (avec migrations)

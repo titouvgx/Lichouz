@@ -60,7 +60,18 @@ jobs:
           # Bloquant : faille moyenne ou plus dans ce qui part sur le site,
           #            faille haute ou critique dans les outils de build.
           npm audit --omit=dev --audit-level=moderate
-          npm audit --audit-level=high
+          # Exception décidée par Titouan le 17/11/2026 : GHSA-fc5q-39xc-vjpf (picomatch,
+          # ReDoS) touche seulement les outils de build, avec nos propres motifs, et
+          # aucune version corrigée n'existe. À RETIRER dès qu'un correctif sort.
+          IGNORE='["https://github.com/advisories/GHSA-fc5q-39xc-vjpf"]'
+          npm audit --json > audit.json || true
+          jq -r --argjson ignore "$IGNORE" '[.vulnerabilities[].via[] | objects
+            | select(.severity == "high" or .severity == "critical") | .url]
+            | unique | map(select(. as $u | $ignore | index($u) | not)) | .[]' audit.json > restantes.txt
+          if [ -s restantes.txt ]; then
+            echo "Failles hautes ou critiques dans les outils de build :"; cat restantes.txt; exit 1
+          fi
+          echo "Aucune faille haute ou critique hors exception."
 
       - name: Vérifier les types
         run: npm run check
