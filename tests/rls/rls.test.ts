@@ -256,6 +256,7 @@ const PUBLIC_TABLES = [
   'event_tasks',
   'event_rsvps',
   'terms_acceptances',
+  'recipe_ratings',
 ] as const
 type Table = (typeof PUBLIC_TABLES)[number]
 const PK: Partial<Record<Table, string>> = { super_admins: 'user_id' }
@@ -432,6 +433,10 @@ const INSERT_A: Record<Table, [string, unknown[]]> = {
   event_rsvps: [
     `INSERT INTO public.event_rsvps (event_id, profile_id, answer) VALUES ($1, coalesce(auth.uid(), $2), 'oui') RETURNING id`,
     [ID.evtA, ID.memberA],
+  ],
+  recipe_ratings: [
+    `INSERT INTO public.recipe_ratings (recipe_id, profile_id, stars) VALUES ($1, coalesce(auth.uid(), $2), 3) RETURNING id`,
+    [ID.recA2, ID.memberA2],
   ],
   terms_acceptances: [
     `INSERT INTO public.terms_acceptances (profile_id, version, age_group) VALUES (coalesce(auth.uid(), $1), public.current_terms_version(), 'majeur') RETURNING id`,
@@ -710,6 +715,8 @@ describe('Structure du schéma et fidélité du banc', () => {
       ['public.revoke_parental_consent(uuid)', { anon: false, authenticated: true }],
       ['public.export_my_data()', { anon: false, authenticated: true }],
       ['public.purge_expired_data()', { anon: false, authenticated: false }],
+      ['public.guard_recipe_rating()', { anon: false, authenticated: false }],
+      ['public.recipe_rating_stats(uuid[])', { anon: false, authenticated: true }],
     ]
     for (const [fn, roles] of expected) {
       for (const [role, v] of Object.entries(roles)) expect(await can(role, fn), `${role} EXECUTE ${fn}`).toBe(v)
@@ -3893,6 +3900,59 @@ describe('Migration 29 : conformité (pseudo, conditions, accord parental, mes d
     expect((await s.su(`SELECT 1 FROM public.events WHERE title = 'Récent'`)).length).toBe(1)
     expect((await s.su(`SELECT 1 FROM public.events WHERE title = 'Vieux'`)).length).toBe(0)
     expect(await countRows(s, 'public.recipes')).toBeGreaterThan(0)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════
+describe('Migration 30 : étoiles (votes privés, moyenne visible)', () => {
+  const stats = async (s: Scenario, who: Parameters<Scenario['as']>[0], ids: string[]) =>
+    (await s.as(who, `SELECT recipe_id, average::text AS a, votes FROM public.recipe_rating_stats($1::uuid[])`, [ids])).rows
+  const ratingId = async (s: Scenario, who: string, rec: string) =>
+    (await s.su<{ id: string }>(`SELECT id FROM public.recipe_ratings WHERE profile_id = $1 AND recipe_id = $2`, [who, rec]))[0].id
+
+  controle('noter une recette lisible, puis changer sa note', async (s) => {
+    expectOk(await s.as('memberB', `INSERT INTO public.recipe_ratings (recipe_id, profile_id, stars) VALUES ($1, auth.uid(), 4) RETURNING id`, [ID.recB]), 'noter', 1)
+    expectOk(await s.as('memberB', `UPDATE public.recipe_ratings SET stars = 1 WHERE recipe_id = $1 AND profile_id = auth.uid() RETURNING id`, [ID.recB]), 'changer', 1)
+    expect((await stats(s, 'memberB', [ID.recB]))[0]).toMatchObject({ a: '2.5', votes: 2 })
+  })
+  controle('la moyenne est visible par tous ceux qui lisent la recette (autre foyer de la famille)', async (s) => {
+    expect(await stats(s, 'adminA2', [ID.recAshared])).toEqual([{ recipe_id: ID.recAshared, a: '3.5', votes: 2 }])
+  })
+  attaque('le détail des votes est privé, même dans le foyer', async (s) => {
+    expectBlocked(await s.as('adminA', `SELECT stars FROM public.recipe_ratings WHERE profile_id = $1`, [ID.memberA]), 'même foyer')
+    expectBlocked(await s.as('adminA2', `SELECT stars FROM public.recipe_ratings WHERE recipe_id = $1`, [ID.recAshared]), 'autre foyer')
+  })
+  attaque('pas de moyenne pour une recette qu’on ne lit pas', async (s) => {
+    expect(await stats(s, 'adminB', [ID.recAshared, ID.recA])).toEqual([])
+    expect(await stats(s, 'adminA', [ID.recB])).toEqual([])
+  })
+  attaque('pas de note sur une recette qu’on ne lit pas', async (s) => {
+    const before = await countRows(s, 'public.recipe_ratings')
+    expectBlocked(await s.as('adminB', `INSERT INTO public.recipe_ratings (recipe_id, profile_id, stars) VALUES ($1, auth.uid(), 1) RETURNING id`, [ID.recA]), 'autre famille')
+    expect(await countRows(s, 'public.recipe_ratings')).toBe(before)
+  })
+  attaque('on ne vote pas pour quelqu’un d’autre, ni deux fois, ni hors de 1 à 5', async (s) => {
+    expectBlocked(await s.as('adminA', `INSERT INTO public.recipe_ratings (recipe_id, profile_id, stars) VALUES ($1, $2, 5) RETURNING id`, [ID.recA, ID.memberA]), 'pour un autre')
+    expectRefused(await s.as('adminA', `INSERT INTO public.recipe_ratings (recipe_id, profile_id, stars) VALUES ($1, auth.uid(), 5) RETURNING id`, [ID.recAshared]), '23505', 'deux fois')
+    for (const bad of [0, 6, -1]) {
+      expectRefused(await s.as('memberA2', `INSERT INTO public.recipe_ratings (recipe_id, profile_id, stars) VALUES ($1, auth.uid(), $2) RETURNING id`, [ID.recA2, bad]), '23514', `note ${bad}`)
+    }
+  })
+  attaque('une note ne change ni de recette ni de personne, et seul son auteur la modifie', async (s) => {
+    const id = await ratingId(s, ID.memberA, ID.recAshared)
+    await attemptOnRow(s, 'adminA', { table: 'public.recipe_ratings', id }, `UPDATE public.recipe_ratings SET stars = 5 WHERE id = $1 RETURNING id`, [id])
+    await attemptOnRow(s, 'adminA', { table: 'public.recipe_ratings', id }, `DELETE FROM public.recipe_ratings WHERE id = $1 RETURNING id`, [id])
+    await s.as('memberA', `UPDATE public.recipe_ratings SET recipe_id = $2, profile_id = $3 WHERE id = $1`, [id, ID.recA, ID.adminA])
+    const row = (await s.su<{ r: string; p: string }>(`SELECT recipe_id AS r, profile_id AS p FROM public.recipe_ratings WHERE id = $1`, [id]))[0]
+    expect(row).toEqual({ r: ID.recAshared, p: ID.memberA })
+  })
+  controle('mes données : les notes données sont dans l’export', async (s) => {
+    const d = (await s.as('memberA', `SELECT public.export_my_data() AS d`)).rows[0].d
+    expect(d.notes_donnees).toEqual([expect.objectContaining({ etoiles: 2 })])
+  })
+  controle('supprimer le compte efface ses notes', async (s) => {
+    await s.su(`DELETE FROM auth.users WHERE id = $1`, [ID.memberA])
+    expect(await stats(s, 'adminA', [ID.recAshared])).toEqual([{ recipe_id: ID.recAshared, a: '5.0', votes: 1 }])
   })
 })
 

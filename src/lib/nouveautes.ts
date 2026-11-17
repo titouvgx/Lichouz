@@ -10,6 +10,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.2.0',
+    date: '2026-11-17',
+    items: [
+      'Les étoiles arrivent : note chaque recette de 1 à 5, directement sur sa fiche.',
+      'Tout le monde voit la moyenne et le nombre de votes ; ton vote à toi reste privé.',
+      'La moyenne s’affiche aussi sur les cartes de la page Recettes.',
+    ],
+  },
+  {
     version: '2.1.0',
     date: '2026-11-17',
     items: [

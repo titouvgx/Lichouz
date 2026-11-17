@@ -21,6 +21,16 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [2.2.0] — 2026-11-17
+
+V2 « fun UX », 1er lot : les étoiles. **Migration 30 nécessaire** (`20261118200000_etoiles.sql`, contrôle `supabase/tests/controle_30_etoiles.sql`).
+
+### Ajouté
+- Table `recipe_ratings` (1 à 5 étoiles, une note par personne et par recette, modifiable, supprimée avec le compte) : votes privés (RLS : on ne lit que les siens), note seulement sur une recette lisible (`can_read_recipe`).
+- `recipe_rating_stats(uuid[])` : moyenne + nombre de votes, seulement pour les recettes lisibles (50 par appel).
+- Fiche recette : moyenne + « Ta note » ; cartes de Recettes : moyenne. Export « Mes données » : notes données.
+- Banc RLS : table `recipe_ratings` et attaques de la migration 30.
+
 ## [2.1.0] — 2026-11-17
 
 Lot P « Pratique ». **Pas de migration.** Nouvelle dépendance : `qrcode-generator` 2.0.4 (MIT, sans dépendance, version épinglée).

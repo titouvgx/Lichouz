@@ -4,6 +4,7 @@
   //   → étapes (touchables pour les marquer faites) → mode « En cuisine » plein écran.
   // Les actions principales (semaine / courses) sont dans une barre collée en bas, au pouce.
   import Icon from '../components/Icon.svelte'
+  import StarRating from '../components/StarRating.svelte'
   import ErrorState from '../components/ErrorState.svelte'
   import ConfirmDialog from '../components/ConfirmDialog.svelte'
   import PlanRecipeDialog from '../components/PlanRecipeDialog.svelte'
@@ -216,6 +217,9 @@
           </button>
         {/if}
       </div>
+
+      <!-- ── Étoiles (v2.2.0) ── -->
+      <StarRating recipeId={recipe.id} />
 
       <div class="columns">
         <!-- ── Ingrédients ── -->

@@ -298,6 +298,11 @@ INSERT INTO public.event_rsvps (id, event_id, profile_id, answer) VALUES
 UPDATE public.profiles SET pseudo = 'chef_a' WHERE id = '${ID.adminA}';
 UPDATE public.profiles SET pseudo = 'chef_b' WHERE id = '${ID.adminB}';
 UPDATE public.profiles SET pseudo = 'petit.a' WHERE id = '${ID.memberA}';
+-- Étoiles (migration 30) : adminA et memberA notent la recette partagée, adminB la sienne
+INSERT INTO public.recipe_ratings (recipe_id, profile_id, stars) VALUES
+  ('${ID.recAshared}', '${ID.adminA}', 5),
+  ('${ID.recAshared}', '${ID.memberA}', 2),
+  ('${ID.recB}', '${ID.adminB}', 4);
 INSERT INTO public.terms_acceptances (profile_id, version, age_group) VALUES
   ('${ID.adminA}',  public.current_terms_version(), 'majeur'),
   ('${ID.memberA}', public.current_terms_version(), 'moins_15'),

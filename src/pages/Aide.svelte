@@ -141,6 +141,8 @@
       <dd>Pas de publicité, pas de traceur, pas de revente ; les données sont en Europe. Tout est expliqué dans <a href={href('confidentialite')}>Confidentialité</a>. <a href={href('vie-privee')}>Vie privée</a> → « Télécharger mes données » te donne un fichier avec tout ce qui te concerne.</dd>
       <dt>Mon enfant a moins de 15 ans : que faut-il faire ?</dt>
       <dd>À sa première ouverture, il indique son âge, puis attend ton accord. Sur <strong>ton</strong> téléphone : <a href={href('vie-privee')}>Vie privée</a> → Accords parentaux → « Je donne mon accord ». Tu peux le retirer au même endroit. Il faut que tu sois dans le même foyer et que tu aies indiqué 18 ans ou plus.</dd>
+      <dt>Qui voit mes étoiles ?</dt>
+      <dd>Personne ne voit <strong>ta</strong> note : seulement toi. Tout le monde voit la <strong>moyenne</strong> et le nombre de votes des recettes qu’il peut lire (pour le catalogue, c’est toute l’appli). Touche à nouveau ta note pour la retirer.</dd>
       <dt>Comment inviter quelqu’un qui est à côté de moi ?</dt>
       <dd><a href={href('famille')}>Mon foyer</a> → Inviter → « Créer le lien », puis « Afficher en QR code » : la personne le scanne avec l’appareil photo de son téléphone. Le QR ne s’affiche qu’à ce moment-là ; réserve le lien à son adresse e-mail pour plus de sécurité.</dd>
       <dt>Foyer, famille : quelle différence ?</dt>

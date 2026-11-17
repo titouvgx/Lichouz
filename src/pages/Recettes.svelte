@@ -1,5 +1,6 @@
 <script lang="ts">
   import Icon from '../components/Icon.svelte'
+  import { fetchRatingStats, formatAverage, type RatingStats } from '../lib/api/ratings'
   import { profileState } from '../lib/profile.svelte'
   import { href } from '../lib/router.svelte'
   import { sizedImage } from '../lib/images'
@@ -28,6 +29,24 @@
   let index: RecipeIndexEntry[] = $state([])
   let categories: RecipeCategory[] = $state([])
   let shown: RecipeWithCategory[] = $state([])
+  // v2.2.0 : moyennes des étoiles des cartes affichées (chargées à part, sans bloquer la liste)
+  let ratings = $state(new Map<string, RatingStats>())
+  const asked = new Set<string>() // pas en $state : sinon la demande se relancerait en boucle
+  $effect(() => {
+    const ids = shown.map((r) => r.id).filter((id) => !asked.has(id))
+    if (ids.length === 0) return
+    for (const id of ids) asked.add(id)
+    fetchRatingStats(ids)
+      .then((m) => {
+        if (m.size === 0) return
+        const next = new Map(ratings)
+        for (const [id, s] of m) next.set(id, s)
+        ratings = next
+      })
+      .catch(() => {
+        for (const id of ids) asked.delete(id)
+      })
+  })
   let indexLoading = $state(true)
   let pageLoading = $state(false)
   let loadingMore = $state(false)
@@ -366,6 +385,10 @@
               {#if recipe.prep_time_min}
                 <span><Icon name="clock" size={13} /> {formatTime(recipe.prep_time_min)}</span>
               {/if}
+              {#if ratings.get(recipe.id)}
+                {@const r = ratings.get(recipe.id)!}
+                <span class="card-stars" aria-label="Note moyenne {formatAverage(r.average)} sur 5, {r.votes} vote{r.votes > 1 ? 's' : ''}"><Icon name="star" size={13} /> {formatAverage(r.average)}</span>
+              {/if}
             </div>
             {#if cardTags(recipe).length > 0}
               <ul class="card-tags" aria-label="Étiquettes">
@@ -694,6 +717,7 @@
     hyphens: auto;
   }
 
+  .card-stars { font-weight: var(--fw-bold); color: var(--text); }
   .card-meta {
     display: flex;
     flex-wrap: wrap;
