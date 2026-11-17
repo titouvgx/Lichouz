@@ -46,6 +46,9 @@ export interface Profile {
   display_name: string
   role: 'admin' | 'member'
   created_at: string
+  /** Pseudo unique (v2.0.0, migration 29) ; null tant qu'il n'est pas choisi. */
+  pseudo?: string | null
+  pseudo_changed_at?: string | null
 }
 
 export interface RecipeCategory {

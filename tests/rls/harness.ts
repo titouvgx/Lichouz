@@ -293,6 +293,17 @@ INSERT INTO public.event_rsvps (id, event_id, profile_id, answer) VALUES
   ('${ID.rsvpB}',  '${ID.evtB}',  '${ID.adminB}',  'oui'),
   ('${ID.rsvpA2}', '${ID.evtA2}', '${ID.adminA2}', 'oui');
 
+-- Conformité (migration 29) : pseudos et acceptations des conditions.
+-- memberA a déclaré moins de 15 ans : accord parental en attente.
+UPDATE public.profiles SET pseudo = 'chef_a' WHERE id = '${ID.adminA}';
+UPDATE public.profiles SET pseudo = 'chef_b' WHERE id = '${ID.adminB}';
+UPDATE public.profiles SET pseudo = 'petit.a' WHERE id = '${ID.memberA}';
+INSERT INTO public.terms_acceptances (profile_id, version, age_group) VALUES
+  ('${ID.adminA}',  public.current_terms_version(), 'majeur'),
+  ('${ID.memberA}', public.current_terms_version(), 'moins_15'),
+  ('${ID.adminB}',  public.current_terms_version(), 'majeur'),
+  ('${ID.adminA2}', public.current_terms_version(), 'majeur');
+
 INSERT INTO public.shopping_lists (id, family_id, meal_plan_id, status) VALUES
   ('${ID.listA}',  '${ID.famA}',  '${ID.planA}',  'active'),
   ('${ID.listB}',  '${ID.famB}',  '${ID.planB}',  'active'),

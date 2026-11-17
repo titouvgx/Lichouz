@@ -36,6 +36,10 @@
   import { isRecoveryPending, setRecoveryPending } from './lib/api/famille'
   import NouveauMotDePasse from './pages/NouveauMotDePasse.svelte'
   import ConfirmerEmail from './pages/ConfirmerEmail.svelte'
+  import Legal from './pages/Legal.svelte'
+  import ViePrivee from './pages/ViePrivee.svelte'
+  import ConsentGate from './components/ConsentGate.svelte'
+  import { consent, loadConsent, clearConsent } from './lib/consent.svelte'
 
   // Pages plein écran, accessibles sans être connecté (invitation, mot de passe).
   // Elles restent affichées même quand une session s'ouvre pendant qu'on y est
@@ -53,8 +57,10 @@
     if (auth.loading) return
     if (auth.user) {
       loadProfile(auth.user.id)
+      void loadConsent(auth.user.id)
     } else {
       clearProfile()
+      clearConsent()
     }
   })
 
@@ -79,8 +85,12 @@
 
   // Bienvenue plein écran : à chaque ouverture, une fois connecté (profil chargé),
   // jusqu'à « Ne plus afficher ». Jamais sur les pages publiques ni sur l'aide.
+  // Conditions (v2.0.0) : tant qu'elles ne sont pas acceptées (et, avant 15 ans,
+  // l'accord parental donné), seule la fenêtre d'accueil est visible.
+  const consentOk = $derived(consent.status === 'ok' && consent.userId === auth.user?.id)
+
   const showWelcome = $derived(
-    !!auth.user && !!profileState.profile?.id && !isPublicPage && router.current !== 'aide'
+    consentOk && !!auth.user && !!profileState.profile?.id && !isPublicPage && router.current !== 'aide'
       && !welcome.closedThisLaunch && !welcomeSeen(profileState.profile.id),
   )
 
@@ -90,7 +100,7 @@
   let newsClosed = $state(false)
   const newsUserId = $derived(auth.user && profileState.profile?.id && !isPublicPage ? profileState.profile.id : null)
   const showNews = $derived(
-    !!newsUserId && !showWelcome && !newsClosed && router.current !== 'nouveautes'
+    consentOk && !!newsUserId && !showWelcome && !newsClosed && router.current !== 'nouveautes'
       && shouldShowNews({ version: APP_VERSION, lastSeen: lastSeenNews(newsUserId), welcomeDone: welcomeSeen(newsUserId) }),
   )
   $effect(() => {
@@ -121,6 +131,8 @@
     <MotDePasseOublie />
   {:else if router.current === 'confirmer-email'}
     <ConfirmerEmail />
+  {:else if router.current === 'cgu' || router.current === 'confidentialite' || router.current === 'stockage'}
+    <Legal doc={router.current} />
   {:else}
     <NouveauMotDePasse />
   {/if}
@@ -142,6 +154,13 @@
       <button class="btn btn-outline" onclick={handleSignOut}>Se déconnecter</button>
     </div>
   </main>
+{:else if !consentOk && consent.status === 'chargement'}
+  <div class="loading">
+    <div class="spinner"></div>
+  </div>
+{:else if !consentOk}
+  <!-- Conditions à accepter, ou accord parental en attente (v2.0.0) -->
+  <ConsentGate onsignout={handleSignOut} />
 {:else}
   <!-- Connecté : app shell -->
   <AppHeader />
@@ -180,6 +199,8 @@
       <Nouveautes />
     {:else if router.current === 'aide'}
       <Aide />
+    {:else if router.current === 'vie-privee'}
+      <ViePrivee />
     {:else if router.current === 'admin'}
       <Admin />
     {:else}

@@ -28,6 +28,10 @@ export type Route =
   | 'mot-de-passe-oublie'  // public : demande d'e-mail de réinitialisation
   | 'nouveau-mot-de-passe' // public : arrivée depuis l'e-mail (?token_hash=…&type=recovery)
   | 'confirmer-email'      // public : lien « Confirme ton adresse » (?token_hash=…&type=signup)
+  | 'cgu'                  // public : conditions d'utilisation (v2.0.0)
+  | 'confidentialite'      // public : politique de confidentialité (v2.0.0)
+  | 'stockage'             // public : stockage sur le téléphone, pas de traceur (v2.0.0)
+  | 'vie-privee'           // pseudo, mes données, accords parentaux, documents (v2.0.0)
   | 'introuvable'
 
 /** Les 5 onglets de la tab bar. */
@@ -37,10 +41,11 @@ export type TabRoute = (typeof TAB_ROUTES)[number]
 const STATIC_ROUTES: string[] = [
   'login', 'accueil', 'frigo', 'recettes', 'nouvelle-recette', 'semaine', 'courses', 'historique', 'compte',
   'famille', 'mes-recettes', 'avis', 'nouveautes', 'admin', 'aide', 'evenements', 'mot-de-passe-oublie', 'nouveau-mot-de-passe', 'confirmer-email',
+  'cgu', 'confidentialite', 'stockage', 'vie-privee',
 ]
 
 /** Pages accessibles sans être connecté (en plus de « login »). */
-export const PUBLIC_ROUTES: Route[] = ['rejoindre', 'mot-de-passe-oublie', 'nouveau-mot-de-passe', 'confirmer-email']
+export const PUBLIC_ROUTES: Route[] = ['rejoindre', 'mot-de-passe-oublie', 'nouveau-mot-de-passe', 'confirmer-email', 'cgu', 'confidentialite', 'stockage']
 const DEFAULT_ROUTE: Route = 'accueil'
 
 interface RouterState {
@@ -107,7 +112,8 @@ const ORDER: Record<Route, number> = {
   semaine: 20,
   courses: 30,
   historique: 40,
-  compte: 50, famille: 51, 'mes-recettes': 51, avis: 51, nouveautes: 51, admin: 52, aide: 53,
+  compte: 50, famille: 51, 'mes-recettes': 51, avis: 51, nouveautes: 51, admin: 52, aide: 53, 'vie-privee': 51,
+  cgu: 54, confidentialite: 54, stockage: 54,
   rejoindre: -10, 'mot-de-passe-oublie': -9, 'nouveau-mot-de-passe': -9, 'confirmer-email': -9,
   introuvable: 60,
 }

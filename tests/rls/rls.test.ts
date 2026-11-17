@@ -255,6 +255,7 @@ const PUBLIC_TABLES = [
   'events',
   'event_tasks',
   'event_rsvps',
+  'terms_acceptances',
 ] as const
 type Table = (typeof PUBLIC_TABLES)[number]
 const PK: Partial<Record<Table, string>> = { super_admins: 'user_id' }
@@ -431,6 +432,10 @@ const INSERT_A: Record<Table, [string, unknown[]]> = {
   event_rsvps: [
     `INSERT INTO public.event_rsvps (event_id, profile_id, answer) VALUES ($1, coalesce(auth.uid(), $2), 'oui') RETURNING id`,
     [ID.evtA, ID.memberA],
+  ],
+  terms_acceptances: [
+    `INSERT INTO public.terms_acceptances (profile_id, version, age_group) VALUES (coalesce(auth.uid(), $1), public.current_terms_version(), 'majeur') RETURNING id`,
+    [ID.memberB],
   ],
   ...(Object.fromEntries(SCOPED.map((t) => [t.table, t.insert('A')])) as Partial<Record<Table, [string, unknown[]]>>),
 } as Record<Table, [string, unknown[]]>
@@ -694,6 +699,17 @@ describe('Structure du schéma et fidélité du banc', () => {
       ['public.guard_event_task()', { anon: false, authenticated: false }],
       ['public.guard_event_rsvp()', { anon: false, authenticated: false }],
       ['public.forget_event_volunteer()', { anon: false, authenticated: false }],
+      ['public.pseudo_is_valid(text)', { anon: true, authenticated: true }],
+      ['public.pseudo_available(text)', { anon: false, authenticated: true }],
+      ['public.guard_profile_pseudo()', { anon: false, authenticated: false }],
+      ['public.guard_terms_acceptance()', { anon: false, authenticated: false }],
+      ['public.accept_terms(text, text, text)', { anon: false, authenticated: true }],
+      ['public.is_adult_of_family()', { anon: false, authenticated: true }],
+      ['public.parental_consents()', { anon: false, authenticated: true }],
+      ['public.confirm_parental_consent(uuid)', { anon: false, authenticated: true }],
+      ['public.revoke_parental_consent(uuid)', { anon: false, authenticated: true }],
+      ['public.export_my_data()', { anon: false, authenticated: true }],
+      ['public.purge_expired_data()', { anon: false, authenticated: false }],
     ]
     for (const [fn, roles] of expected) {
       for (const [role, v] of Object.entries(roles)) expect(await can(role, fn), `${role} EXECUTE ${fn}`).toBe(v)
@@ -3718,6 +3734,165 @@ describe('Migration 28 : événements (visibilité foyer / famille, qui fait quo
   controle('réponse : on change et on retire sa propre réponse', async (s) => {
     expectOk(await s.as('adminA', `UPDATE public.event_rsvps SET answer = 'peut_etre' WHERE id = $1 RETURNING id`, [ID.rsvpA]), 'changement', 1)
     expectOk(await s.as('adminA', `DELETE FROM public.event_rsvps WHERE id = $1 RETURNING id`, [ID.rsvpA]), 'retrait', 1)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════
+describe('Migration 29 : conformité (pseudo, conditions, accord parental, mes données, conservation)', () => {
+  const V = '2026-11-17'
+  const pseudoOf = async (s: Scenario, id: string) =>
+    (await s.su<{ p: string | null; d: string | null }>(`SELECT pseudo AS p, pseudo_changed_at::text AS d FROM public.profiles WHERE id = $1`, [id]))[0]
+  const terms = (id: string) => ({ table: 'public.terms_acceptances', id })
+  const termsId = async (s: Scenario, who: string) =>
+    (await s.su<{ id: string }>(`SELECT id FROM public.terms_acceptances WHERE profile_id = $1`, [who]))[0].id
+
+  // ── Pseudo ──
+  controle('fenêtre d\'accueil : pseudo + acceptation en une seule fois (accept_terms)', async (s) => {
+    const o = await s.as('memberA2', `SELECT public.accept_terms($1, 'majeur', 'Margot.92') AS r`, [V])
+    expect(o.error).toBeUndefined()
+    expect(o.rows[0].r).toBe('ok')
+    expect((await pseudoOf(s, ID.memberA2)).p).toBe('Margot.92')
+    expectOk(await s.as('memberA2', `SELECT id FROM public.terms_acceptances WHERE profile_id = auth.uid()`), 'preuve', 1)
+  })
+  attaque('pseudo : unique sans tenir compte des majuscules', async (s) => {
+    const before = await pseudoOf(s, ID.memberB)
+    expectRefused(await s.as('memberB', `UPDATE public.profiles SET pseudo = 'CHEF_A' WHERE id = auth.uid() RETURNING id`), '23505', 'doublon')
+    expect(await pseudoOf(s, ID.memberB)).toEqual(before)
+  })
+  attaque('pseudo : format et noms réservés refusés', async (s) => {
+    for (const bad of ['ab', 'admin', 'Admin_du_site', 'lichouz.team', 'support', 'é_lodie', 'a b c', '.point', 'deux..points', 'x'.repeat(21)]) {
+      const o = await s.as('memberB', `UPDATE public.profiles SET pseudo = $1 WHERE id = auth.uid() RETURNING id`, [bad])
+      expect(o.error?.code, bad).toBe('23514')
+    }
+    expect((await pseudoOf(s, ID.memberB)).p).toBeNull()
+  })
+  attaque('pseudo : l\'admin du foyer ne change pas celui d\'un membre', async (s) => {
+    await refusedOnRow(s, 'adminA', { table: 'public.profiles', id: ID.memberA },
+      `UPDATE public.profiles SET pseudo = 'renomme' WHERE id = $1 RETURNING id`, [ID.memberA], '42501', /autre membre/)
+  })
+  attaque('pseudo : pas d\'effacement, pas de 2e changement avant 30 jours', async (s) => {
+    await refusedOnRow(s, 'adminA', { table: 'public.profiles', id: ID.adminA },
+      `UPDATE public.profiles SET pseudo = NULL WHERE id = auth.uid() RETURNING id`, [], '42501', /effacé/)
+    await refusedOnRow(s, 'adminA', { table: 'public.profiles', id: ID.adminA },
+      `UPDATE public.profiles SET pseudo = 'nouveau_nom' WHERE id = auth.uid() RETURNING id`, [], '42501', /30 jours/)
+  })
+  controle('pseudo : changer seulement les majuscules reste permis', async (s) => {
+    expectOk(await s.as('adminA', `UPDATE public.profiles SET pseudo = 'Chef_A' WHERE id = auth.uid() RETURNING id`), 'majuscules', 1)
+    expect((await pseudoOf(s, ID.adminA)).p).toBe('Chef_A')
+  })
+  attaque('pseudo : la date du dernier changement ne s\'écrit pas à la main', async (s) => {
+    const before = await pseudoOf(s, ID.adminA)
+    await s.as('adminA', `UPDATE public.profiles SET pseudo_changed_at = '2000-01-01' WHERE id = auth.uid() RETURNING id`)
+    expect(await pseudoOf(s, ID.adminA)).toEqual(before)
+  })
+  attaque('pseudo : un compte désactivé ne choisit pas de pseudo', async (s) => {
+    await s.su(`INSERT INTO private.disabled_accounts (user_id) VALUES ($1)`, [ID.memberB])
+    const o = await s.as('memberB', `UPDATE public.profiles SET pseudo = 'fantome' WHERE id = auth.uid() RETURNING id`)
+    expect(o.error?.code ?? 'ok').toBe('42501')
+    expect((await pseudoOf(s, ID.memberB)).p).toBeNull()
+  })
+  controle('pseudo_available : libre, pris, invalide', async (s) => {
+    const v = async (p: string) => (await s.as('memberB', `SELECT public.pseudo_available($1) AS v`, [p])).rows[0].v
+    expect(await v('libre_42')).toBe(true)
+    expect(await v('chef_a')).toBe(false)
+    expect(await v('admin')).toBe(false)
+  })
+
+  // ── Acceptation des conditions ──
+  attaque('conditions : on n\'accepte pas au nom de quelqu\'un d\'autre', async (s) => {
+    const before = await countRows(s, 'public.terms_acceptances')
+    const o = await s.as('adminA', `INSERT INTO public.terms_acceptances (profile_id, version, age_group) VALUES ($1, $2, 'majeur') RETURNING id`, [ID.memberB, V])
+    expectBlocked(o, 'pour un autre')
+    expect(await countRows(s, 'public.terms_acceptances')).toBe(before)
+  })
+  attaque('conditions : une ancienne version est refusée', async (s) => {
+    expectRefused(await s.as('memberB', `INSERT INTO public.terms_acceptances (profile_id, version, age_group) VALUES (auth.uid(), '2020-01-01', 'majeur') RETURNING id`),
+      '22023', 'ancienne version', /plus en vigueur/)
+  })
+  attaque('conditions : la preuve ne se modifie pas et ne se supprime pas', async (s) => {
+    const id = await termsId(s, ID.memberA)
+    await attemptOnRow(s, 'memberA', terms(id), `UPDATE public.terms_acceptances SET age_group = 'majeur' WHERE id = $1 RETURNING id`, [id])
+    await attemptOnRow(s, 'memberA', terms(id), `DELETE FROM public.terms_acceptances WHERE id = $1 RETURNING id`, [id])
+    await attemptOnRow(s, 'adminA', terms(id), `UPDATE public.terms_acceptances SET parent_id = auth.uid(), parent_confirmed_at = now() WHERE id = $1 RETURNING id`, [id])
+  })
+  attaque('conditions : un mineur ne se redéclare pas majeur par accept_terms', async (s) => {
+    const o = await s.as('memberA', `SELECT public.accept_terms($1, 'majeur', NULL) AS r`, [V])
+    expect(o.error).toBeUndefined()
+    expect(o.rows[0].r).toBe('attente_parent')
+    expect((await s.su<{ a: string }>(`SELECT age_group AS a FROM public.terms_acceptances WHERE profile_id = $1`, [ID.memberA]))[0].a).toBe('moins_15')
+  })
+  attaque('conditions : on ne lit pas celles des autres (même foyer, autre foyer)', async (s) => {
+    expectBlocked(await s.as('memberA', `SELECT id FROM public.terms_acceptances WHERE profile_id = $1`, [ID.adminA]), 'même foyer')
+    expectBlocked(await s.as('memberB', `SELECT id FROM public.terms_acceptances WHERE profile_id <> auth.uid()`), 'autre foyer')
+  })
+  attaque('conditions : pas d\'acceptation sans pseudo', async (s) => {
+    expectRefused(await s.as('memberB', `SELECT public.accept_terms($1, 'majeur', NULL) AS r`, [V]), '22023', 'sans pseudo', /pseudo/)
+  })
+
+  // ── Accord parental (moins de 15 ans) ──
+  controle('accord parental : un adulte du foyer voit la demande, accepte, puis peut la retirer', async (s) => {
+    const list = await s.as('adminA', `SELECT profile_id FROM public.parental_consents()`)
+    expect(list.rows.map((r) => r.profile_id)).toEqual([ID.memberA])
+    expectOk(await s.as('adminA', `SELECT public.confirm_parental_consent($1) AS v`, [ID.memberA]), 'accord', 1)
+    expectOk(await s.as('adminA', `SELECT id FROM public.terms_acceptances WHERE profile_id = $1`, [ID.memberA]), 'le parent relit', 1)
+    expect((await s.as('memberA', `SELECT public.accept_terms($1, 'moins_15', NULL) AS r`, [V])).rows[0].r).toBe('ok')
+    expectOk(await s.as('adminA', `SELECT public.revoke_parental_consent($1) AS v`, [ID.memberA]), 'retrait', 1)
+    expect((await s.as('memberA', `SELECT public.accept_terms($1, 'moins_15', NULL) AS r`, [V])).rows[0].r).toBe('attente_parent')
+  })
+  attaque('accord parental : ni un adulte d\'un autre foyer, ni l\'enfant lui-même, ni un non-adulte', async (s) => {
+    const id = await termsId(s, ID.memberA)
+    const unchanged = async () =>
+      expect((await s.su<{ c: string | null }>(`SELECT parent_confirmed_at::text AS c FROM public.terms_acceptances WHERE id = $1`, [id]))[0].c).toBeNull()
+    expectRefused(await s.as('adminA2', `SELECT public.confirm_parental_consent($1)`, [ID.memberA]), '42501', 'autre foyer de la famille')
+    expectRefused(await s.as('adminB', `SELECT public.confirm_parental_consent($1)`, [ID.memberA]), '42501', 'autre famille')
+    expectRefused(await s.as('memberA', `SELECT public.confirm_parental_consent($1)`, [ID.memberA]), '42501', 'soi-même')
+    expectRefused(await s.as('memberB', `SELECT public.confirm_parental_consent($1)`, [ID.memberA]), '42501', 'non-adulte')
+    expectBlocked(await s.as('adminA2', `SELECT * FROM public.parental_consents()`), 'liste A2')
+    expectBlocked(await s.as('adminB', `SELECT * FROM public.parental_consents()`), 'liste B')
+    await unchanged()
+  })
+  attaque('accord parental : seul le parent qui l\'a donné le retire', async (s) => {
+    await s.as('adminA', `SELECT public.confirm_parental_consent($1)`, [ID.memberA])
+    expectRefused(await s.as('adminB', `SELECT public.revoke_parental_consent($1)`, [ID.memberA]), '42501', 'autre famille')
+    expectRefused(await s.as('memberA', `SELECT public.revoke_parental_consent($1)`, [ID.memberA]), '42501', 'enfant')
+    expect((await s.su<{ c: string | null }>(`SELECT parent_id::text AS c FROM public.terms_acceptances WHERE profile_id = $1`, [ID.memberA]))[0].c).toBe(ID.adminA)
+  })
+
+  // ── Mes données ──
+  controle('mes données : l\'export contient mes données et seulement les miennes', async (s) => {
+    const o = await s.as('memberA', `SELECT public.export_my_data() AS d`)
+    expect(o.error).toBeUndefined()
+    const d = o.rows[0].d
+    const txt = JSON.stringify(d)
+    expect(d.compte.email).toBe('membre-a@test.local')
+    expect(d.profil.pseudo).toBe('petit.a')
+    expect(d.conditions_acceptees).toHaveLength(1)
+    expect(d.recettes_ecrites.map((r: any) => r.titre)).toEqual(['Recette de A partagée dans SA'])
+    for (const other of ['admin-a@test.local', 'admin-b@test.local', 'membre-b@test.local', 'Recette du foyer A\"', 'chef_a']) {
+      expect(txt.includes(other), other).toBe(false)
+    }
+  })
+  attaque('mes données : un compte sans profil ou anonyme n\'exporte rien', async (s) => {
+    expectRefused(await s.as('sansProfil', `SELECT public.export_my_data()`), '42501', 'sans profil')
+    expectBlocked(await s.as('anon', `SELECT public.export_my_data()`), 'anonyme')
+  })
+
+  // ── Conservation ──
+  attaque('purge : personne ne la lance depuis l\'appli', async (s) => {
+    expectBlocked(await s.as('superAdmin', `SELECT public.purge_expired_data()`), 'super-admin')
+    expectBlocked(await s.as('memberA', `SELECT public.purge_expired_data()`), 'membre')
+  })
+  controle('purge : efface ce qui est trop vieux, garde le reste', async (s) => {
+    await s.su(`INSERT INTO public.app_errors (user_id, message, created_at) VALUES ($1, 'vieille', now() - interval '91 days'), ($1, 'récente', now())`, [ID.memberA])
+    await s.su(`INSERT INTO public.events (family_id, title, starts_on) VALUES ($1, 'Vieux', current_date - 400), ($1, 'Récent', current_date - 30)`, [ID.famA])
+    const res = (await s.su<{ r: any }>(`SELECT public.purge_expired_data() AS r`))[0].r
+    expect(res.erreurs).toBeGreaterThanOrEqual(1)
+    expect(res.evenements).toBe(1)
+    expect((await s.su(`SELECT 1 FROM public.app_errors WHERE message = 'vieille'`)).length).toBe(0)
+    expect((await s.su(`SELECT 1 FROM public.app_errors WHERE message = 'récente'`)).length).toBe(1)
+    expect((await s.su(`SELECT 1 FROM public.events WHERE title = 'Récent'`)).length).toBe(1)
+    expect((await s.su(`SELECT 1 FROM public.events WHERE title = 'Vieux'`)).length).toBe(0)
+    expect(await countRows(s, 'public.recipes')).toBeGreaterThan(0)
   })
 })
 

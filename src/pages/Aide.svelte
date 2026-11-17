@@ -134,6 +134,12 @@
     <dl>
       <dt>J’ai oublié mon mot de passe.</dt>
       <dd>Sur l’écran de connexion, « Mot de passe oublié ? » : tu reçois un e-mail pour en choisir un nouveau. Une fois enregistré, tu es déconnecté de tous tes appareils : reconnecte-toi avec le nouveau mot de passe.</dd>
+      <dt>À quoi sert le pseudo ? Comment le changer ?</dt>
+      <dd>C’est ton nom unique dans toute l’appli (il servira au quiz et aux classements). Tu le choisis à la première ouverture ; ensuite <a href={href('vie-privee')}>Vie privée</a> → Mon pseudo, une fois tous les 30 jours (les majuscules, quand tu veux).</dd>
+      <dt>Que fait Lichouz de mes données ? Comment les récupérer ?</dt>
+      <dd>Pas de publicité, pas de traceur, pas de revente ; les données sont en Europe. Tout est expliqué dans <a href={href('confidentialite')}>Confidentialité</a>. <a href={href('vie-privee')}>Vie privée</a> → « Télécharger mes données » te donne un fichier avec tout ce qui te concerne.</dd>
+      <dt>Mon enfant a moins de 15 ans : que faut-il faire ?</dt>
+      <dd>À sa première ouverture, il indique son âge, puis attend ton accord. Sur <strong>ton</strong> téléphone : <a href={href('vie-privee')}>Vie privée</a> → Accords parentaux → « Je donne mon accord ». Tu peux le retirer au même endroit. Il faut que tu sois dans le même foyer et que tu aies indiqué 18 ans ou plus.</dd>
       <dt>Comment organiser Noël ou un anniversaire ?</dt>
       <dd><a href={href('evenements')}>Événements</a> (depuis l’Accueil ou Mon compte) → « Créer un événement » : choisis un modèle, la date, chez qui, et si toute la famille le voit ou seulement ton foyer. Chacun répond s’il vient et s’inscrit dans « Qui fait quoi ». Seuls l’auteur et les admins du foyer modifient ou suppriment l’événement.</dd>
       <dt>Comment changer les couleurs (thème de Noël) ?</dt>

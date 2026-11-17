@@ -607,6 +607,12 @@
         </form>
 
         <p class="hint">
+          À ta première connexion, on te demandera de choisir un pseudo et d’accepter les
+          <a class="inline-link" href={href('cgu')}>conditions</a> et la
+          <a class="inline-link" href={href('confidentialite')}>politique de confidentialité</a>.
+          Avant 15 ans, un parent devra aussi donner son accord.
+        </p>
+        <p class="hint">
           Déjà un compte ? <a class="inline-link" href={href('login')}>Connecte-toi</a>
         </p>
       {/if}

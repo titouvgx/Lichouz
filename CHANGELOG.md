@@ -21,6 +21,20 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [2.0.0] — 2026-11-17
+
+Lot C « Conformité ». **Migration 29 nécessaire** (`20261118100000_conformite.sql`, contrôle `supabase/tests/controle_29_conformite.sql`) ; elle installe l'extension `pg_cron` et la tâche de nuit `lichouz-purge`.
+
+### Ajouté
+- Conditions d'utilisation, politique de confidentialité et page « Stockage » (pages publiques `#/cgu`, `#/confidentialite`, `#/stockage`, liens sur la connexion et l'invitation).
+- Fenêtre d'accueil obligatoire : pseudo + tranche d'âge + acceptation, en une fois (`accept_terms`) ; preuve gardée par version dans `terms_acceptances` (non modifiable).
+- Pseudo unique (sans tenir compte des majuscules), 3-20 caractères, noms réservés, changement au plus tous les 30 jours, seulement par soi-même (trigger `guard_profile_pseudo`).
+- Moins de 15 ans : accord d'un parent adulte du même foyer (`confirm_parental_consent`, `revoke_parental_consent`, `parental_consents`), sinon l'appli reste bloquée.
+- Mon compte → Vie privée : pseudo, téléchargement de toutes mes données en JSON (`export_my_data`), accords parentaux, documents.
+- Durées de conservation et purge automatique chaque nuit (`purge_expired_data`, pg_cron) : erreurs 90 jours, invitations terminées 90 jours, événements 1 an, listes terminées et plannings 2 ans, retours 2 ans.
+- Banc RLS : table `terms_acceptances` et attaques de la migration 29.
+
+
 ## [1.999.0] — 2026-11-17
 
 **Migration 28 à exécuter AVANT la mise en ligne** : `supabase/migrations/20261117120000_evenements.sql`,

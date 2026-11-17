@@ -10,6 +10,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.0.0',
+    date: '2026-11-17',
+    items: [
+      'Lichouz a maintenant ses règles écrites : conditions d’utilisation et confidentialité, à accepter une fois.',
+      'Chacun choisit son pseudo, unique dans toute l’appli (il servira au quiz et aux classements).',
+      'Mon compte → Vie privée : change ton pseudo, télécharge toutes tes données, relis les règles.',
+      'Moins de 15 ans : un parent du foyer donne son accord depuis son téléphone (Vie privée).',
+      'Le ménage des vieilles données se fait tout seul (durées écrites dans Confidentialité).',
+    ],
+  },
+  {
     version: '1.999.0',
     date: '2026-11-17',
     items: [

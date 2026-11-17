@@ -227,6 +227,7 @@
     </div>
     <div class="profile-info">
       <span class="profile-name">{savedName || 'Sans nom'}</span>
+      {#if profileState.profile?.pseudo}<span class="profile-pseudo">@{profileState.profile.pseudo}</span>{/if}
       {#if userEmail}<span class="profile-email">{userEmail}</span>{/if}
       {#if profileState.profile}<span class="profile-role-badge">{role}</span>{/if}
     </div>
@@ -286,6 +287,14 @@
         <Icon name="chevron-right" size={18} />
       </a>
     {/if}
+    <a class="link-row row" href={href('vie-privee')}>
+      <span class="section-icon"><Icon name="shield" size={18} /></span>
+      <span class="link-text">
+        <span class="link-title">Vie privée</span>
+        <span class="link-sub">Pseudo, mes données, conditions</span>
+      </span>
+      <Icon name="chevron-right" size={18} />
+    </a>
     <a class="link-row row" href={href('aide')}>
       <span class="section-icon"><Icon name="book" size={18} /></span>
       <span class="link-text">
@@ -613,6 +622,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .profile-pseudo { font-size: var(--fs-sm); font-weight: var(--fw-bold); color: var(--text-secondary); }
 
   .profile-email {
     font-size: 14px;

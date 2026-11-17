@@ -226,6 +226,9 @@
       </p>
     </section>
 
+    <p class="legal-links">
+      <a href={href('cgu')}>Conditions</a> · <a href={href('confidentialite')}>Confidentialité</a> · <a href={href('stockage')}>Stockage</a>
+    </p>
     <p class="app-version">{VERSION_LABEL}</p>
   </div>
 </main>
@@ -418,6 +421,8 @@
     font-size: var(--fs-sm);
   }
 
+  .legal-links { text-align: center; font-size: var(--fs-sm); }
+  .legal-links a { display: inline-block; padding: 12px 4px; color: var(--text); font-weight: var(--fw-bold); text-decoration-thickness: 2px; text-underline-offset: 3px; }
   .forgot {
     margin-top: var(--sp-2);
     display: flex;
