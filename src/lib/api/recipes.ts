@@ -475,7 +475,7 @@ export async function setRecipeArchived(recipeId: string, archived: boolean): Pr
   if (error) throw error
   // RLS filtre silencieusement une modification non autorisée : 0 ligne.
   if (!data || data.length === 0) {
-    throw new Error("Action refusée : seul un administrateur de la famille qui a créé la recette peut l'archiver.")
+    throw new Error("Action refusée : seul un administrateur du foyer qui a créé la recette peut l'archiver.")
   }
 }
 

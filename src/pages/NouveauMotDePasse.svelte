@@ -4,6 +4,7 @@
   // le jeton (ce qui ouvre une session), puis on le retire aussitôt de l'adresse
   // pour qu'il ne reste ni dans l'historique ni dans un partage.
   import { onDestroy, onMount, tick } from 'svelte'
+  import CatLogo from '../components/CatLogo.svelte'
   import Icon from '../components/Icon.svelte'
   import { auth, signOut } from '../lib/auth.svelte'
   import { navigate, href } from '../lib/router.svelte'
@@ -153,10 +154,7 @@
   <div class="auth-inner">
     <header class="brand">
       <div class="logo-box" aria-hidden="true">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="square" stroke-linejoin="miter">
-          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-        </svg>
+        <CatLogo size={46} />
       </div>
       <h1>Lichouz</h1>
     </header>
@@ -360,7 +358,7 @@
     height: 76px;
     display: grid;
     place-items: center;
-    background: var(--accent);
+    background: var(--butter);
     color: var(--on-accent);
     border: var(--line-w) solid var(--line);
     box-shadow: var(--shadow-md);
@@ -401,7 +399,7 @@
   @media (max-height: 640px) {
     .auth-inner { gap: var(--sp-3); }
     .logo-box { width: 56px; height: 56px; }
-    .logo-box svg { width: 30px; height: 30px; }
+    .logo-box :global(svg) { width: 34px; height: 34px; }
     h1 { font-size: 40px; }
   }
 

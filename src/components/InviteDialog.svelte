@@ -8,6 +8,7 @@
   import Icon from './Icon.svelte'
   import { toast } from '../lib/toast.svelte'
   import { createInvitation, INVITATION_DAYS, type NewInvitation } from '../lib/api/famille'
+  import { qrDrawing } from '../lib/qr'
 
   interface Props {
     kind: 'fondateur' | 'membre'
@@ -36,6 +37,9 @@
   let sent = $state(false)
   let copied = $state(false)
   let copiedTimer: ReturnType<typeof setTimeout> | undefined
+  // v2.1.0 : le même lien en QR code, pour une personne à côté de soi
+  let showQr = $state(false)
+  const qr = $derived(showQr && invitation ? qrDrawing(invitation.url) : null)
 
   let dialogEl: HTMLDivElement | undefined = $state()
   let linkEl: HTMLInputElement | undefined = $state()
@@ -80,7 +84,7 @@
   async function create() {
     if (busy) return
     if (kind === 'membre' && !familyId) {
-      error = 'Famille introuvable : ferme la fenêtre et réessaie.'
+      error = 'Foyer introuvable : ferme la fenêtre et réessaie.'
       return
     }
     if (emailInvalid) {
@@ -203,7 +207,7 @@
           {#if step === 'lien'}
             Envoie-le maintenant, par message ou par e-mail.
           {:else if kind === 'fondateur'}
-            Un lien pour lancer une nouvelle famille.
+            Un lien pour lancer une nouvelle famille et son premier foyer.
           {:else}
             Un lien à envoyer, valable {INVITATION_DAYS} jours.
           {/if}
@@ -233,7 +237,7 @@
               <span class="role-icon" aria-hidden="true"><Icon name="shield" size={20} /></span>
               <span class="role-text">
                 <span class="role-name">Admin</span>
-                <span class="role-desc">Peut en plus inviter et gérer les membres de la famille.</span>
+                <span class="role-desc">Peut en plus inviter et gérer les membres du foyer.</span>
               </span>
               <span class="role-dot" aria-hidden="true"></span>
             </label>
@@ -243,7 +247,7 @@
             <span class="explain-icon" aria-hidden="true"><Icon name="star" size={22} /></span>
             <p>
               La personne crée son compte, puis sa famille. Elle en sera la <strong>fondatrice</strong> :
-              elle pourra créer jusqu’à 3 familles et y inviter qui elle veut.
+              elle pourra y créer jusqu’à 3 foyers et y inviter qui elle veut.
             </p>
           </div>
         {/if}
@@ -321,6 +325,32 @@
             <Icon name="share" size={18} /> Partager
           </button>
         </div>
+
+        {#if !showQr}
+          <button class="btn act act-qr" onclick={() => { showQr = true; sent = true }}>
+            <Icon name="qr" size={18} /> Afficher en QR code
+          </button>
+        {:else if qr}
+          <div class="qr-box">
+            <svg
+              class="qr"
+              viewBox="-4 -4 {qr.size + 8} {qr.size + 8}"
+              role="img"
+              aria-label="QR code du lien d’invitation"
+              shape-rendering="crispEdges"
+            >
+              <rect x="-4" y="-4" width={qr.size + 8} height={qr.size + 8} fill="#fff" />
+              <path d={qr.path} fill="#000" />
+            </svg>
+            <p class="qr-caption">
+              À scanner avec l’appareil photo du téléphone de la personne invitée.
+              {#if !email.trim()}
+                <strong>Montre-le seulement à elle</strong> : sans adresse réservée, quiconque le prend en photo peut s’en servir.
+              {/if}
+            </p>
+            <button class="btn btn-outline act" onclick={() => (showQr = false)}>Masquer le QR code</button>
+          </div>
+        {/if}
 
         <div class="notice" role="note">
           <Icon name="clock" size={18} />
@@ -546,6 +576,19 @@
   .act-copy { background: var(--surface); color: var(--text); }
   .act-copy.done { background: var(--success-bg); color: var(--success); }
   .act-share { background: var(--accent); color: var(--on-accent); }
+  .act-qr { width: 100%; background: var(--surface); color: var(--text); gap: var(--sp-2); }
+
+  /* QR : toujours noir sur blanc (même en mode sombre), avec sa marge blanche, sinon illisible */
+  .qr-box { margin: 0; display: grid; gap: var(--sp-3); justify-items: center; }
+  .qr {
+    width: min(100%, 280px);
+    aspect-ratio: 1;
+    border: var(--line-w) solid var(--line);
+    box-shadow: var(--shadow-sm);
+  }
+  .qr-caption { font-size: var(--fs-sm); line-height: 1.45; color: var(--text-secondary); text-align: center; }
+  .qr-caption strong { color: var(--text); }
+  .qr-box .btn { width: 100%; }
 
   .notice {
     display: flex;

@@ -321,10 +321,10 @@
       <span class="state-icon"><Icon name="book" size={44} strokeWidth={1.5} /></span>
       {#if noFamily}
         <p class="state-title">Profil introuvable</p>
-        <p class="state-text">Vérifie que ton compte est bien lié à une famille.</p>
+        <p class="state-text">Vérifie que ton compte est bien lié à un foyer.</p>
       {:else}
         <p class="state-title">Aucune recette pour le moment</p>
-        <p class="state-text">Ajoute ta première recette, elle sera partagée avec toute la famille.</p>
+        <p class="state-text">Ajoute ta première recette, elle sera partagée avec tout ton foyer.</p>
         <a href="#/nouvelle-recette" class="btn btn-primary state-cta">Ajouter une recette</a>
       {/if}
     </div>

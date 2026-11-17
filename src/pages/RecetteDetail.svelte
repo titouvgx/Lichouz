@@ -4,6 +4,7 @@
   //   → étapes (touchables pour les marquer faites) → mode « En cuisine » plein écran.
   // Les actions principales (semaine / courses) sont dans une barre collée en bas, au pouce.
   import Icon from '../components/Icon.svelte'
+  import ErrorState from '../components/ErrorState.svelte'
   import ConfirmDialog from '../components/ConfirmDialog.svelte'
   import PlanRecipeDialog from '../components/PlanRecipeDialog.svelte'
   import CookMode from '../components/CookMode.svelte'
@@ -80,8 +81,8 @@
   const canDelete = $derived(isSuperAdmin || (ownRecipe && isAdmin && !isCatalogue))
   const visibilityLabel = $derived(
     recipe?.visibility === 'catalogue' ? 'Catalogue commun'
-      : recipe?.visibility === 'super_famille' ? 'Toutes nos familles'
-      : 'Ma famille',
+      : recipe?.visibility === 'super_famille' ? 'Toute la famille'
+      : 'Mon foyer',
   )
 
   const defaultPortions = $derived(recipe?.default_portions || 4)
@@ -155,7 +156,7 @@
     <div class="center-msg"><div class="spinner"></div></div>
   {:else if error}
     <a href={href('recettes')} class="back-link"><Icon name="arrow-left" size={18} /> Recettes</a>
-    <div class="center-msg error-msg">{error}</div>
+    <ErrorState {error} message={error} />
   {:else if recipe}
     <!-- ── Photo (ou grande initiale) ── -->
     <header class="hero" class:no-photo={!heroSrc} style:--cat={catColor}>
@@ -803,10 +804,6 @@
     padding: 48px var(--sp-4);
   }
 
-  .error-msg {
-    color: var(--error);
-    font-size: var(--fs-sm);
-  }
 
   /* Chargement : carré qui tourne par quarts (sec, pas de cercle) */
   .spinner {

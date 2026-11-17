@@ -3,6 +3,7 @@
   // des conditions, en une seule fois. Rien d'autre n'est accessible avant.
   // Moins de 15 ans : écran d'attente jusqu'à l'accord d'un parent du foyer.
   import Icon from './Icon.svelte'
+  import ErrorState from './ErrorState.svelte'
   import { href } from '../lib/router.svelte'
   import { profileState } from '../lib/profile.svelte'
   import { consent, loadConsent, setConsentStatus } from '../lib/consent.svelte'
@@ -96,15 +97,14 @@
         <button class="link" onclick={onsignout}>Se déconnecter</button>
       </div>
     {:else if consent.status === 'erreur'}
-      <div class="logo" aria-hidden="true"><Icon name="alert-circle" size={36} /></div>
-      <h1 id="gate-title">Connexion impossible</h1>
-      <p class="lead">L’appli n’arrive pas à vérifier ton compte. Vérifie ton réseau puis réessaie.</p>
-      <div class="actions">
-        <button class="btn btn-primary" onclick={recheck} aria-busy={checking}>
-          <Icon name="refresh" size={18} /> {checking ? 'Vérification…' : 'Réessayer'}
-        </button>
-        <button class="link" onclick={onsignout}>Se déconnecter</button>
-      </div>
+      <h1 id="gate-title" class="sr-only">Connexion impossible</h1>
+      <ErrorState
+        title="Connexion impossible"
+        message="L’appli n’arrive pas à vérifier ton compte. Vérifie ton réseau puis réessaie."
+        onretry={recheck}
+        busy={checking}
+      />
+      <button class="link" onclick={onsignout}>Se déconnecter</button>
     {:else}
       <div class="logo" aria-hidden="true"><Icon name="shield" size={36} /></div>
       <h1 id="gate-title">Avant de continuer</h1>
@@ -292,6 +292,8 @@
     text-underline-offset: 3px;
     cursor: pointer;
   }
+
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   @media (hover: hover) and (pointer: fine) {
     .choice:hover, .accept:hover, .link:hover { background: var(--highlight); }

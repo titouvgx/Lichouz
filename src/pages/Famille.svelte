@@ -9,6 +9,7 @@
   //   - « Retirer » un membre (son compte est supprimé) : jamais soi-même ni le fondateur.
   // Les droits sont vérifiés par la base : l'écran ne fait que montrer les bons boutons.
   import { untrack, tick } from 'svelte'
+  import ErrorState from '../components/ErrorState.svelte'
   import Icon from '../components/Icon.svelte'
   import ConfirmDialog from '../components/ConfirmDialog.svelte'
   import InviteDialog from '../components/InviteDialog.svelte'
@@ -96,7 +97,7 @@
       families = list
       counts = n
     } catch (e) {
-      if (seq === loadSeq) familiesError = messageOf(e, 'Les familles n’ont pas pu être chargées.')
+      if (seq === loadSeq) familiesError = messageOf(e, 'Les foyers n’ont pas pu être chargés.')
     } finally {
       if (seq === loadSeq) familiesLoading = false
     }
@@ -223,7 +224,7 @@
       await refreshContext()
       families = families.map((f) => (f.id === family?.id ? { ...f, name } : f))
       editingName = false
-      toast.success('Famille renommée')
+      toast.success('Foyer renommé')
     } catch (e) {
       nameError = messageOf(e, 'Le nom n’a pas pu être changé.')
     } finally {
@@ -350,11 +351,11 @@
       families = families.filter((x) => x.id !== f.id)
       invites = invites.filter((i) => i.family_id !== f.id)
       delete otherMembers[f.id]
-      toast.success(`Famille « ${f.name} » supprimée`)
+      toast.success(`Foyer « ${f.name} » supprimé`)
       deleteTarget = null
       await refreshContext()
     } catch (e) {
-      toast.error(messageOf(e, 'La famille n’a pas pu être supprimée.'))
+      toast.error(messageOf(e, 'Le foyer n’a pas pu être supprimé.'))
     } finally {
       deletingFamily = false
     }
@@ -408,7 +409,7 @@
     if (!superFamilyId || savingFamily) return
     const name = newFamilyName.trim()
     if (!name) {
-      createError = 'Donne un nom à la famille.'
+      createError = 'Donne un nom au foyer.'
       return
     }
     savingFamily = true
@@ -419,9 +420,9 @@
       await loadFamilies(superFamilyId)
       creating = false
       newFamilyName = ''
-      toast.success(`Famille « ${name} » créée. Invite quelqu’un pour en être l’admin.`)
+      toast.success(`Foyer « ${name} » créé. Invite quelqu’un pour en être l’admin.`)
     } catch (e) {
-      createError = messageOf(e, 'La famille n’a pas pu être créée.')
+      createError = messageOf(e, 'Le foyer n’a pas pu être créé.')
     } finally {
       savingFamily = false
     }
@@ -472,7 +473,7 @@
       >
         <Icon name={m.disabled ? 'key' : 'lock'} size={18} />
       </button>
-      <button class="icon-btn icon-danger" onclick={() => (removeTarget = m)} aria-label={`Retirer ${m.display_name} de la famille`}>
+      <button class="icon-btn icon-danger" onclick={() => (removeTarget = m)} aria-label={`Retirer ${m.display_name} du foyer`}>
         <Icon name="trash" size={18} />
       </button>
       </span>
@@ -481,10 +482,7 @@
 {/snippet}
 
 {#snippet errorBox(message: string)}
-  <div class="state-error" role="alert">
-    <p>{message}</p>
-    <button class="btn btn-outline btn-small" onclick={retryAll}><Icon name="refresh" size={16} /> Réessayer</button>
-  </div>
+  <ErrorState error={message} {message} onretry={retryAll} compact />
 {/snippet}
 
 {#snippet inviteList(list: Invitation[], key: string, emptyText: string)}
@@ -551,7 +549,7 @@
   <a href={href('compte')} class="back-link"><Icon name="arrow-left" size={18} /> Mon compte</a>
 
   <header class="head">
-    <h1>Ma famille</h1>
+    <h1>Mon foyer</h1>
     <p class="head-sub">Les personnes avec qui tu partages le planning et les courses.</p>
   </header>
 
@@ -564,7 +562,7 @@
     {:else}
       <div class="card state">
         <span class="state-icon"><Icon name="home" size={28} /></span>
-        <p class="state-title">Ta famille n’a pas pu être chargée</p>
+        <p class="state-title">Ton foyer n’a pas pu être chargé</p>
         <p class="state-text">Vérifie ta connexion puis réessaie.</p>
         <button class="btn btn-outline btn-small" onclick={() => { void refreshContext() }}>
           <Icon name="refresh" size={16} /> Réessayer
@@ -577,7 +575,7 @@
       <div class="family-avatar" aria-hidden="true"><Icon name="home" size={28} /></div>
       <div class="family-info">
         {#if editingName}
-          <label class="sr-only" for="fam-name">Nom de la famille</label>
+          <label class="sr-only" for="fam-name">Nom du foyer</label>
           <input
             id="fam-name"
             class="input name-input"
@@ -607,7 +605,7 @@
           <div class="family-name-row">
             <h2 class="family-name">{family.name}</h2>
             {#if canManage}
-              <button class="icon-btn" onclick={startRename} aria-label="Renommer la famille">
+              <button class="icon-btn" onclick={startRename} aria-label="Renommer le foyer">
                 <Icon name="pencil" size={18} />
               </button>
             {/if}
@@ -671,15 +669,15 @@
       <section class="card" aria-labelledby="families-title">
         <h2 id="families-title" class="section-title">
           <span class="section-icon"><Icon name="star" size={18} /></span>
-          Mes familles
+          Les foyers de ma famille
           {#if !familiesLoading && !familiesError}
             <span class="count">{isSuperAdmin ? families.length : `${families.length}/${FAMILY_LIMIT}`}</span>
           {/if}
         </h2>
         <p class="card-text">
           {isSuperAdmin
-            ? 'Les familles de ton groupe. Tu peux inviter dans chacune.'
-            : `Tu peux créer jusqu’à ${FAMILY_LIMIT} familles et inviter dans chacune.`}
+            ? 'Tous les foyers de ta famille. Tu peux inviter dans chacun.'
+            : `Tu peux créer jusqu’à ${FAMILY_LIMIT} foyers et inviter dans chacun.`}
         </p>
 
         {#if familiesLoading && families.length === 0}
@@ -699,7 +697,7 @@
                   <span class="row-main">
                     <span class="row-name">
                       {f.name}
-                      {#if isOwn}<span class="badge badge-own">Ta famille</span>{/if}
+                      {#if isOwn}<span class="badge badge-own">Ton foyer</span>{/if}
                     </span>
                     <span class="row-meta">
                       {n === 0 ? 'Aucun membre' : plural(n, 'membre', 'membres')}
@@ -714,7 +712,7 @@
                 </div>
                 {#if !isOwn}
                   {#if n === 0 && pendingCount === 0}
-                    <p class="fam-hint">Invite son premier admin : il pourra ensuite inviter sa famille.</p>
+                    <p class="fam-hint">Invite son premier admin : il pourra ensuite inviter les siens.</p>
                   {/if}
                   {#if n > 0}
                     <button
@@ -763,13 +761,13 @@
                       {:else if invitesError}
                         {@render errorBox(invitesError)}
                       {:else}
-                        {@render inviteList(links, f.id, 'Aucun lien pour cette famille.')}
+                        {@render inviteList(links, f.id, 'Aucun lien pour ce foyer.')}
                       {/if}
                     </div>
                   {/if}
                   {#if n === 0 && pendingCount === 0}
-                    <button class="link-btn link-danger" onclick={() => (deleteTarget = f)} aria-label={`Supprimer la famille ${f.name}`}>
-                      <Icon name="trash" size={16} /> Supprimer cette famille
+                    <button class="link-btn link-danger" onclick={() => (deleteTarget = f)} aria-label={`Supprimer le foyer ${f.name}`}>
+                      <Icon name="trash" size={16} /> Supprimer ce foyer
                     </button>
                   {/if}
                 {/if}
@@ -814,11 +812,11 @@
               disabled={limitReached}
               aria-describedby={limitReached ? 'limit-hint' : undefined}
             >
-              <Icon name="plus" size={18} /> Créer une famille
+              <Icon name="plus" size={18} /> Créer un foyer
             </button>
             {#if limitReached}
               <p id="limit-hint" class="limit-hint">
-                Tu as déjà {FAMILY_LIMIT} familles, le maximum. Pour en ajouter une autre, demande à l’administrateur de l’appli.
+                Tu as déjà {FAMILY_LIMIT} foyers, le maximum. Pour en ajouter une autre, demande à l’administrateur de l’appli.
               </p>
             {/if}
           {/if}
@@ -885,7 +883,7 @@
     oncancel={() => (removeTarget = null)}
   >
     Son compte sera supprimé : elle ne pourra plus se connecter ni voir {familyNameOf(removeTarget.family_id)}.
-    Ses recettes restent dans la famille{removeTarget.role === 'admin' ? ', et les liens qu’elle avait créés ne marcheront plus' : ''}.
+    Ses recettes restent dans le foyer{removeTarget.role === 'admin' ? ', et les liens qu’elle avait créés ne marcheront plus' : ''}.
     Tu pourras l’inviter à nouveau avec un nouveau lien.
   </ConfirmDialog>
 {/if}
@@ -900,7 +898,7 @@
     onconfirm={confirmDeleteFamily}
     oncancel={() => (deleteTarget = null)}
   >
-    La famille disparaît avec son planning, ses listes, son placard et ses recettes.
+    Le foyer disparaît avec son planning, ses listes, son placard et ses recettes.
     C’est définitif.
   </ConfirmDialog>
 {/if}

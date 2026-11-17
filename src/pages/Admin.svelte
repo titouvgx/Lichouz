@@ -5,6 +5,7 @@
   //   - statistiques (admin_stats, migration 20) : uniquement des nombres, aucun contenu.
   // La base refuse tout à qui n'est pas super-admin : l'écran ne fait que le dire.
   import { untrack } from 'svelte'
+  import ErrorState from '../components/ErrorState.svelte'
   import Icon from '../components/Icon.svelte'
   import ConfirmDialog from '../components/ConfirmDialog.svelte'
   import InviteDialog from '../components/InviteDialog.svelte'
@@ -238,10 +239,7 @@
 {/snippet}
 
 {#snippet errorBox(message: string, retry: () => void)}
-  <div class="state-error" role="alert">
-    <p>{message}</p>
-    <button class="btn btn-outline btn-small" onclick={retry}><Icon name="refresh" size={16} /> Réessayer</button>
-  </div>
+  <ErrorState error={message} {message} onretry={retry} compact />
 {/snippet}
 
 {#snippet inviteRow(inv: Invitation)}
@@ -272,7 +270,7 @@
 
   <header class="head">
     <h1>Administration</h1>
-    <p class="head-sub">Les fondateurs et toutes les familles de l’appli.</p>
+    <p class="head-sub">Les fondateurs et tous les foyers de l’appli.</p>
   </header>
 
   {#if checking}
@@ -296,7 +294,7 @@
         <span class="section-icon"><Icon name="star" size={18} /></span> Fondateurs
       </h2>
       <p class="card-text">
-        Un fondateur crée son compte, puis sa famille. Il pourra créer jusqu’à 3 familles et y inviter qui il veut.
+        Un fondateur crée son compte, puis sa famille. Il pourra y créer jusqu’à 3 foyers et y inviter qui il veut.
       </p>
       <button class="btn btn-primary btn-invite" onclick={() => (inviting = true)}>
         <Icon name="user-plus" size={20} /> Inviter un fondateur
@@ -352,7 +350,7 @@
           </div>
           <div class="total">
             <span class="total-n">{totalFamilies}</span>
-            <span class="total-l">{totalFamilies > 1 ? 'familles' : 'famille'}</span>
+            <span class="total-l">{totalFamilies > 1 ? 'foyers' : 'foyer'}</span>
           </div>
           <div class="total">
             <span class="total-n">{totalPeople}</span>
@@ -361,7 +359,7 @@
         </div>
 
         {#if overview.length === 0}
-          <p class="empty">Aucune famille pour l’instant.</p>
+          <p class="empty">Aucun foyer pour l’instant.</p>
         {:else}
           <ul class="sf-list">
             {#each overview as sf, si (sf.id)}
@@ -401,7 +399,7 @@
         <span class="section-icon"><Icon name="book" size={18} /></span> Catalogue commun
       </h2>
       <p class="catalogue-text">
-        Les recettes du catalogue sont lues par toutes les familles et modifiables par toi seul.
+        Les recettes du catalogue sont lues par tous les foyers et modifiables par toi seul.
         Pour en modifier une, ouvre sa fiche puis « Modifier ». Pour en ajouter une, crée une recette
         et choisis « Catalogue commun » dans « Qui peut la voir ? » (une recette existante peut aussi y passer).
       </p>
@@ -446,7 +444,7 @@
         <h3 class="stats-sub">Activité</h3>
         <ul class="stats-list">
           <li><span>Repas prévus cette semaine</span><strong>{stats.planning.repas_semaine}</strong></li>
-          <li><span>Familles qui planifient cette semaine</span><strong>{stats.planning.familles_actives}</strong></li>
+          <li><span>Foyers qui planifient cette semaine</span><strong>{stats.planning.familles_actives}</strong></li>
           <li><span>Listes de courses en cours</span><strong>{stats.courses.listes_en_cours}</strong></li>
           <li><span>Courses terminées (30 jours)</span><strong>{stats.courses.terminees_30j}</strong></li>
         </ul>

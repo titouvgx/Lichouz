@@ -2,6 +2,7 @@
   // #/rejoindre/<jeton> : création de compte par lien d'invitation (sans être connecté).
   // Le jeton (router.token) n'est jamais affiché ni journalisé.
   import { onDestroy, tick, untrack } from 'svelte'
+  import CatLogo from '../components/CatLogo.svelte'
   import Icon from '../components/Icon.svelte'
   import { auth } from '../lib/auth.svelte'
   import { router, navigate, href } from '../lib/router.svelte'
@@ -127,6 +128,14 @@
   let redirectTimer: ReturnType<typeof setTimeout> | undefined
 
   let titleEl: HTMLHeadingElement | undefined = $state()
+  // v2.1.0 : présentation de Lichouz AVANT le formulaire (savoir où on met les pieds)
+  let introSeen = $state(false)
+  async function startSignup() {
+    introSeen = true
+    await tick()
+    titleEl?.focus()
+    window.scrollTo(0, 0)
+  }
   let nameInput: HTMLInputElement | undefined = $state()
   let emailInput: HTMLInputElement | undefined = $state()
   let passwordInput: HTMLInputElement | undefined = $state()
@@ -298,10 +307,7 @@
   <div class="auth-inner">
     <header class="brand">
       <div class="logo-box" aria-hidden="true">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="square" stroke-linejoin="miter">
-          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-        </svg>
+        <CatLogo size={46} />
       </div>
       <h1>Lichouz</h1>
     </header>
@@ -347,7 +353,7 @@
           <span class="status-icon" data-tone="info"><Icon name="user" size={28} /></span>
           <h2 id="join-title">Tu es déjà connecté</h2>
           <p class="status-text">
-            Un compte est déjà ouvert sur ce téléphone, et une personne n’a qu’une famille.
+            Un compte est déjà ouvert sur ce téléphone, et une personne n’a qu’un foyer.
             Ce lien sert à créer le compte de quelqu’un d’autre : transmets-le à la personne
             invitée pour qu’elle l’ouvre sur son propre téléphone.
           </p>
@@ -385,6 +391,34 @@
             <a class="btn btn-primary btn-main" href={href('login')}>Aller à la connexion</a>
           </div>
         </div>
+      {:else if !introSeen}
+        <!-- Présentation : ce qu'est Lichouz, avant de créer un compte -->
+        <h2 id="join-title">Bienvenue sur Lichouz</h2>
+        <p class="lead">
+          {#if isFounder}
+            On t’invite à créer ta famille sur Lichouz.
+          {:else}
+            On t’invite à rejoindre {info?.family_name ? `le foyer « ${info.family_name} »` : 'ton foyer'} sur Lichouz.
+          {/if}
+          Avant de créer ton compte, voici où tu mets les pieds.
+        </p>
+        <ul class="intro-list">
+          <li><span class="intro-icon" aria-hidden="true"><Icon name="users" size={20} /></span><span><strong>Une appli de famille</strong> : les recettes, les repas de la semaine et la liste de courses, partagés en direct avec les tiens.</span></li>
+          <li><span class="intro-icon" aria-hidden="true"><Icon name="lock" size={20} /></span><span><strong>Privée</strong> : on y entre seulement sur invitation, et chaque foyer ne voit que ce qui le concerne.</span></li>
+          <li><span class="intro-icon" aria-hidden="true"><Icon name="heart" size={20} /></span><span><strong>Gratuite, sans publicité ni traceur</strong> : faite sur son temps libre par Titouan ; tes données ne sont ni vendues ni utilisées pour du marketing.</span></li>
+          <li><span class="intro-icon" aria-hidden="true"><Icon name="shield" size={20} /></span><span><strong>Tes données restent à toi</strong> : stockées en Europe, téléchargeables et effaçables depuis l’appli.</span></li>
+        </ul>
+        <p class="intro-small">
+          À lire si tu veux le détail : <a class="inline-link" href={href('cgu')}>conditions d’utilisation</a> et
+          <a class="inline-link" href={href('confidentialite')}>confidentialité</a>.
+          Si tu ne connais pas la personne qui t’a envoyé ce lien, ne crée pas de compte.
+        </p>
+        <button class="btn btn-primary btn-main" onclick={startSignup}>
+          Créer mon compte <Icon name="arrow-right" size={18} />
+        </button>
+        <p class="hint">
+          Déjà un compte ? <a class="inline-link" href={href('login')}>Connecte-toi</a>
+        </p>
       {:else}
         {#if isFounder}
           <h2 id="join-title" tabindex="-1" bind:this={titleEl}>
@@ -409,7 +443,7 @@
           </ol>
         {:else}
           <h2 id="join-title" tabindex="-1" bind:this={titleEl}>
-            {info?.family_name ? `Rejoins « ${info.family_name} »` : 'Rejoins ta famille'}
+            {info?.family_name ? `Rejoins « ${info.family_name} »` : 'Rejoins ton foyer'}
           </h2>
           <p class="lead">
             Tu es invité {info?.role === 'admin' ? 'en tant qu’admin' : 'en tant que membre'}.
@@ -577,7 +611,7 @@
               </div>
               <p id="join-family-help" class="explain">
                 Tu en seras le fondateur : tu pourras inviter des gens à la rejoindre,
-                et créer jusqu’à 3 familles.
+                et créer jusqu’à 3 foyers.
               </p>
             </div>
           {/if}
@@ -661,7 +695,7 @@
     height: 76px;
     display: grid;
     place-items: center;
-    background: var(--accent);
+    background: var(--butter);
     color: var(--on-accent);
     border: var(--line-w) solid var(--line);
     box-shadow: var(--shadow-md);
@@ -702,10 +736,19 @@
   @media (max-height: 640px) {
     .auth-inner { gap: var(--sp-3); }
     .logo-box { width: 56px; height: 56px; }
-    .logo-box svg { width: 30px; height: 30px; }
+    .logo-box :global(svg) { width: 34px; height: 34px; }
     h1 { font-size: 40px; }
   }
 
+  .intro-list { list-style: none; margin: 0 0 var(--sp-4); padding: 0; display: grid; gap: var(--sp-3); }
+  .intro-list li { display: flex; gap: var(--sp-3); align-items: flex-start; line-height: 1.45; }
+  .intro-icon {
+    width: 36px; height: 36px; flex: none;
+    display: grid; place-items: center;
+    background: var(--accent); color: var(--on-accent);
+    border: var(--line-w) solid var(--line);
+  }
+  .intro-small { font-size: var(--fs-sm); line-height: 1.45; color: var(--text-secondary); margin-bottom: var(--sp-4); }
   .lead {
     margin: calc(var(--sp-2) * -1) 0 var(--sp-4);
     font-size: var(--fs-base);

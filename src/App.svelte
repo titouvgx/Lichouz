@@ -39,6 +39,7 @@
   import Legal from './pages/Legal.svelte'
   import ViePrivee from './pages/ViePrivee.svelte'
   import ConsentGate from './components/ConsentGate.svelte'
+  import ErrorState from './components/ErrorState.svelte'
   import { consent, loadConsent, clearConsent } from './lib/consent.svelte'
 
   // Pages plein écran, accessibles sans être connecté (invitation, mot de passe).
@@ -149,7 +150,7 @@
     <div class="card disabled-card" role="alert">
       <span class="disabled-icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter"><rect x="5" y="11" width="14" height="10" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg></span>
       <h1>Compte désactivé</h1>
-      <p>Un admin de ta famille a mis ton compte en pause. Tes recettes et ton historique sont gardés.</p>
+      <p>Un admin de ton foyer a mis ton compte en pause. Tes recettes et ton historique sont gardés.</p>
       <p>Pour retrouver l’accès, demande-lui de le réactiver.</p>
       <button class="btn btn-outline" onclick={handleSignOut}>Se déconnecter</button>
     </div>
@@ -205,8 +206,7 @@
       <Admin />
     {:else}
       <div class="page-404">
-        <h1>Page introuvable</h1>
-        <p>Cette adresse n'existe pas.</p>
+        <ErrorState mood="introuvable" title="Page introuvable" message="Cette adresse n’existe pas dans Lichouz." />
         <a href="#/accueil" class="btn btn-outline">Retour à l'accueil</a>
       </div>
     {/if}
@@ -295,8 +295,4 @@
     text-align: center;
   }
 
-  .page-404 p {
-    color: var(--text-secondary);
-    margin: 8px 0 24px;
-  }
 </style>

@@ -2,6 +2,7 @@
   // « Événements » (#/evenements), v1.999.0 : fêtes à venir (Noël, anniversaires…)
   // de mon foyer et de la famille élargie, et création d'un nouvel événement.
   import { onMount } from 'svelte'
+  import ErrorState from '../components/ErrorState.svelte'
   import Icon from '../components/Icon.svelte'
   import EventForm from '../components/EventForm.svelte'
   import { href, navigate } from '../lib/router.svelte'
@@ -84,7 +85,7 @@
   {#if loading}
     <p class="state" aria-busy="true">Chargement…</p>
   {:else if error}
-    <p class="state error" role="alert">{error}</p>
+    <ErrorState {error} message={error} />
   {:else}
     {#if upcoming.length === 0 && !creating}
       <div class="card empty">
@@ -179,5 +180,4 @@
   .empty { padding: var(--sp-5) var(--sp-4); text-align: center; display: flex; flex-direction: column; gap: 6px; }
   .hint { font-size: var(--fs-sm); color: var(--text-secondary); }
   .state { color: var(--text-secondary); }
-  .state.error { color: var(--error); }
 </style>

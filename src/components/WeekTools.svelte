@@ -233,7 +233,7 @@
     onconfirm={confirmDelete}
     oncancel={() => (toDelete = null)}
   >
-    La semaine type est supprimée pour toute la famille. Les semaines déjà remplies ne changent pas.
+    La semaine type est supprimée pour tout le foyer. Les semaines déjà remplies ne changent pas.
   </ConfirmDialog>
 {/if}
 

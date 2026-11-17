@@ -23,7 +23,7 @@
     { id: 'courses', icon: 'cart', title: 'Courses' },
     { id: 'historique', icon: 'archive', title: 'Historique' },
     { id: 'frigo', icon: 'chef', title: 'Qu’est-ce qu’on mange ?' },
-    { id: 'famille', icon: 'users', title: 'Ma famille et les rôles' },
+    { id: 'famille', icon: 'users', title: 'Mon foyer, ma famille et les rôles' },
     { id: 'telephone', icon: 'settings', title: 'Sur ton téléphone' },
   ]
 </script>
@@ -37,8 +37,9 @@
   <section class="card intro" aria-labelledby="intro-title">
     <h2 id="intro-title" class="section-title">Lichouz, c’est quoi ?</h2>
     <p>
-      L’appli des repas et des courses de la famille. Tout ce que tu fais est visible
-      tout de suite par les autres membres de ta famille, et seulement par eux.
+      L’appli des repas et des courses de la maison. Tout ce que tu fais est visible
+      tout de suite par les autres membres de ton <strong>foyer</strong> (les personnes qui vivent avec toi), et seulement par eux.
+      Les foyers d’une même <strong>famille</strong> (ex. famille Martin) peuvent en plus partager des recettes et des événements.
     </p>
     <ol class="cycle">
       <li><strong>Recettes</strong> : on garde nos recettes et on pioche dans le catalogue.</li>
@@ -66,9 +67,9 @@
               <li><strong>Filtres</strong> : à côté de la recherche, trie par régime (toutes les cases cochées), budget (au plus), temps de préparation (au plus), thème (au moins un) ou origine. Touche une étiquette sous la recherche pour la retirer. Sur une fiche, touche une étiquette (« Vegan », « Bretagne »…) pour voir toutes les recettes qui l’ont.</li>
               <li><strong>Étiquettes</strong> : dans le formulaire d’une recette (régime, origine, budget, jusqu’à 5 thèmes). Qui peut modifier la recette peut changer ses étiquettes ; une recette partagée a les mêmes étiquettes pour toutes les familles. Les régimes sont <strong>indicatifs</strong> : en cas d’allergie, vérifie toujours les emballages.</li>
               <li><strong>Ajouter une recette</strong> : bouton « + », avec ingrédients, étapes et photo prise depuis la galerie. (« Importer depuis un lien » arrive bientôt.)</li>
-              <li><strong>Qui la voit ?</strong> « Ma famille seulement » (par défaut), ou « Toutes nos familles » pour la partager avec les familles liées à la tienne. Les recettes du <strong>catalogue commun</strong> sont fournies avec l’appli : on peut les utiliser, pas les modifier.</li>
-              <li><strong>Mes recettes</strong> (dans <a href={href('mes-recettes')}>Mon compte</a>) : les recettes que tu as créées, pour les modifier, les partager avec toutes vos familles ou les garder pour la tienne, et les archiver.</li>
-              <li><strong>Archiver</strong> (admin de la famille) : la recette disparaît des listes et de la recherche, mais reste dans les plannings et l’historique. « Recettes archivées », en bas de la page Recettes, permet de la retrouver et de la <strong>restaurer</strong>.</li>
+              <li><strong>Qui la voit ?</strong> « Mon foyer seulement » (par défaut), ou « Toute la famille » pour la partager avec les autres foyers de ta famille. Les recettes du <strong>catalogue commun</strong> sont fournies avec l’appli : on peut les utiliser, pas les modifier.</li>
+              <li><strong>Mes recettes</strong> (dans <a href={href('mes-recettes')}>Mon compte</a>) : les recettes que tu as créées, pour les modifier, les partager avec toute la famille ou les garder pour ton foyer, et les archiver.</li>
+              <li><strong>Archiver</strong> (admin du foyer) : la recette disparaît des listes et de la recherche, mais reste dans les plannings et l’historique. « Recettes archivées », en bas de la page Recettes, permet de la retrouver et de la <strong>restaurer</strong>.</li>
               <li><strong>En cuisine</strong> : une étape à la fois, en très gros, écran gardé allumé. Quand une étape parle d’une durée (« cuire 25 min »), le bouton <strong>Minuteur</strong> lance un compte à rebours qui sonne (et vibre sur Android). Garde le mode En cuisine ouvert : le fermer arrête les minuteurs.</li>
               <li>Limites : titre de 120 caractères, 60 ingrédients, 40 étapes de 1 000 caractères chacune.</li>
               <li>Depuis une recette : <strong>Ajouter à ma semaine</strong>, ou <strong>Juste les ingrédients</strong> pour les mettre dans la liste sans la planifier. Oublié de noter un repas ? « Jours déjà passés » permet de remplir les jours précédents de la semaine en cours.</li>
@@ -101,21 +102,21 @@
               l’utilisent le mieux (le placard est compté comme disponible). Le calcul se fait dans ton téléphone.
             </p>
           {:else if s.id === 'famille'}
-            <p class="you">Ton rôle : <strong>{myRole}</strong>{ctx?.family ? ` · famille « ${ctx.family.name} »` : ''}</p>
+            <p class="you">Ton rôle : <strong>{myRole}</strong>{ctx?.family ? ` · foyer « ${ctx.family.name} »` : ''}</p>
             <ul>
-              <li><strong>Membre</strong> : utilise tout (recettes, semaine, courses) et voit la liste de la famille.</li>
-              <li><strong>Admin</strong> : en plus, invite des personnes avec un lien, passe quelqu’un admin ou membre, renomme la famille, peut <strong>désactiver</strong> un compte (la personne ne voit plus rien mais garde tout ; on peut la réactiver) ou retirer quelqu’un (son compte est supprimé).</li>
-              <li><strong>Fondateur</strong> : a créé le groupe de familles ; il peut créer jusqu’à 3 familles et gérer chacune (membres, invitations, suppression d’une famille vide).</li>
+              <li><strong>Membre</strong> : utilise tout (recettes, semaine, courses) et voit la liste du foyer.</li>
+              <li><strong>Admin</strong> : en plus, invite des personnes avec un lien, passe quelqu’un admin ou membre, renomme le foyer, peut <strong>désactiver</strong> un compte (la personne ne voit plus rien mais garde tout ; on peut la réactiver) ou retirer quelqu’un (son compte est supprimé).</li>
+              <li><strong>Fondateur</strong> : a créé la famille ; il peut y créer jusqu’à 3 foyers et gérer chacun (membres, invitations, suppression d’un foyer vide).</li>
             </ul>
             <p>
-              <strong>Inviter</strong> : dans <a href={href('famille')}>Ma famille</a>, crée un lien et envoie-le
+              <strong>Inviter</strong> : dans <a href={href('famille')}>Mon foyer</a>, crée un lien et envoie-le
               (SMS, WhatsApp…). Il sert <strong>une seule fois</strong> et expire au bout de <strong>7 jours</strong>.
               Tu peux aussi indiquer l’<strong>adresse e-mail</strong> de la personne (facultatif) : seule cette adresse
               pourra alors créer le compte, même si le lien circule.
             </p>
             <p>
               <strong>Retirer quelqu’un</strong> supprime son compte : il ne peut plus se connecter, ses recettes
-              restent dans la famille. On peut le réinviter plus tard avec un nouveau lien.
+              restent dans le foyer. On peut le réinviter plus tard avec un nouveau lien.
             </p>
           {:else if s.id === 'telephone'}
             <ul>
@@ -140,6 +141,10 @@
       <dd>Pas de publicité, pas de traceur, pas de revente ; les données sont en Europe. Tout est expliqué dans <a href={href('confidentialite')}>Confidentialité</a>. <a href={href('vie-privee')}>Vie privée</a> → « Télécharger mes données » te donne un fichier avec tout ce qui te concerne.</dd>
       <dt>Mon enfant a moins de 15 ans : que faut-il faire ?</dt>
       <dd>À sa première ouverture, il indique son âge, puis attend ton accord. Sur <strong>ton</strong> téléphone : <a href={href('vie-privee')}>Vie privée</a> → Accords parentaux → « Je donne mon accord ». Tu peux le retirer au même endroit. Il faut que tu sois dans le même foyer et que tu aies indiqué 18 ans ou plus.</dd>
+      <dt>Comment inviter quelqu’un qui est à côté de moi ?</dt>
+      <dd><a href={href('famille')}>Mon foyer</a> → Inviter → « Créer le lien », puis « Afficher en QR code » : la personne le scanne avec l’appareil photo de son téléphone. Le QR ne s’affiche qu’à ce moment-là ; réserve le lien à son adresse e-mail pour plus de sécurité.</dd>
+      <dt>Foyer, famille : quelle différence ?</dt>
+      <dd>Ton <strong>foyer</strong>, ce sont les personnes qui vivent avec toi : vous partagez le planning, la liste de courses et le placard. Ta <strong>famille</strong>, ce sont plusieurs foyers réunis (ex. famille Martin) : ils peuvent partager des recettes et des événements.</dd>
       <dt>Comment organiser Noël ou un anniversaire ?</dt>
       <dd><a href={href('evenements')}>Événements</a> (depuis l’Accueil ou Mon compte) → « Créer un événement » : choisis un modèle, la date, chez qui, et si toute la famille le voit ou seulement ton foyer. Chacun répond s’il vient et s’inscrit dans « Qui fait quoi ». Seuls l’auteur et les admins du foyer modifient ou suppriment l’événement.</dd>
       <dt>Comment changer les couleurs (thème de Noël) ?</dt>
@@ -147,10 +152,10 @@
       <dt>Le lien d’invitation ne marche pas.</dt>
       <dd>
         Il a déjà servi, a été annulé ou a plus de 7 jours. Ou bien il est réservé à une autre adresse e-mail : la page
-        l’indique (« réservé à m•••@… »), utilise celle-là. Sinon, demande un nouveau lien à l’admin de ta famille.
+        l’indique (« réservé à m•••@… »), utilise celle-là. Sinon, demande un nouveau lien à l’admin de ton foyer.
       </dd>
       <dt>Je ne vois pas une recette qu’un proche a créée.</dt>
-      <dd>Elle est sans doute réservée à sa famille. Il peut la passer en « Toutes nos familles » si vos familles sont liées.</dd>
+      <dd>Elle est sans doute réservée à son foyer. Il peut la passer en « Toute la famille » si vos foyers sont dans la même famille.</dd>
       <dt>La liste ne bouge plus chez moi.</dt>
       <dd>Vérifie le réseau, puis ferme et rouvre l’appli : tout se resynchronise.</dd>
       <dt>Je n’arrive pas à me connecter juste après avoir créé mon compte.</dt>
@@ -162,8 +167,8 @@
       <dt>Je veux supprimer mon compte.</dt>
       <dd>
         Tout en bas de <a href={href('compte')}>Mon compte</a> : « Supprimer mon compte », puis tape SUPPRIMER
-        et ton mot de passe. C’est définitif. Tes recettes restent dans ta famille, sans ton nom. Si tu es le
-        dernier admin d’une famille qui a d’autres membres, nomme d’abord un autre admin ; un fondateur doit d’abord
+        et ton mot de passe. C’est définitif. Tes recettes restent dans ton foyer, sans ton nom. Si tu es le
+        dernier admin d’un foyer qui a d’autres membres, nomme d’abord un autre admin ; un fondateur doit d’abord
         demander au super-admin de transmettre son rôle.
       </dd>
       <dt>J’ai une idée, ou j’ai trouvé un bug.</dt>
@@ -173,7 +178,7 @@
       </dd>
       <dt>Qui voit mes données ?</dt>
       <dd>
-        Seulement les membres de ta famille (et les familles liées pour les recettes partagées). Ton e-mail n’est montré
+        Seulement les membres de ton foyer (et les autres foyers de ta famille pour ce que tu partages). Ton e-mail n’est montré
         à personne. Si l’appli plante, l’erreur est envoyée à Titouan avec ton prénom, la page, la version de l’appli et le type de
         navigateur, mais sans e-mail ni contenu de tes recettes ; elle est effacée après 90 jours. Tes idées et retours, eux, ne sont
         lus que par Titouan. Supprimer ton compte efface aussi tes retours et ces erreurs.

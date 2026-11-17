@@ -43,7 +43,7 @@
 
       <section class="card">
         <h2>1. Qui peut l’utiliser</h2>
-        <p>Les personnes invitées par un membre de leur famille. À partir de 15 ans, tu peux accepter ces conditions toi-même. <strong>Avant 15 ans</strong>, il faut en plus l’accord d’un parent : il le donne depuis son propre compte, dans le même foyer (Mon compte → Vie privée). Il peut le retirer à tout moment.</p>
+        <p>Les personnes invitées par un membre de leur famille ou de leur foyer. À partir de 15 ans, tu peux accepter ces conditions toi-même. <strong>Avant 15 ans</strong>, il faut en plus l’accord d’un parent : il le donne depuis son propre compte, dans le même foyer (Mon compte → Vie privée). Il peut le retirer à tout moment.</p>
       </section>
 
       <section class="card">
@@ -51,7 +51,7 @@
         <ul>
           <li>Ton mot de passe est personnel : ne le donne à personne.</li>
           <li>Ton <strong>pseudo</strong> est unique. Il doit rester correct : pas d’insulte, pas de nom qui fait croire que tu es quelqu’un d’autre (ou l’équipe de l’appli). Tu peux le changer une fois tous les 30 jours.</li>
-          <li>Ton prénom est visible par ta famille dans l’appli.</li>
+          <li>Ton prénom est visible par ton foyer (et par ta famille sur ce que tu partages).</li>
         </ul>
       </section>
 
@@ -105,7 +105,7 @@
           <dt>Ton compte</dt>
           <dd>Adresse e-mail et mot de passe (gardé chiffré, personne ne peut le lire) : pour te connecter et te prévenir (confirmation d’adresse, mot de passe oublié).</dd>
           <dt>Ton profil</dt>
-          <dd>Prénom, pseudo, foyer, rôle (admin ou membre) : pour que ta famille te reconnaisse.</dd>
+          <dd>Prénom, pseudo, foyer, rôle (admin ou membre) : pour que les tiens te reconnaissent.</dd>
           <dt>Ton âge (tranche seulement)</dt>
           <dd>18 ans ou plus, 15 à 17 ans, ou moins de 15 ans, avec la date d’acceptation des conditions et, avant 15 ans, l’accord du parent : c’est la preuve demandée par la loi.</dd>
           <dt>La vie du foyer</dt>
@@ -122,7 +122,7 @@
         <h2>Qui voit quoi</h2>
         <ul>
           <li><strong>Ton foyer</strong> voit ton prénom, ton pseudo, et la vie du foyer.</li>
-          <li><strong>Ta famille élargie</strong> voit seulement ce que tu partages avec elle (recettes partagées, événements « famille »).</li>
+          <li><strong>Ta famille</strong> (les autres foyers) voit seulement ce que tu partages avec elle (recettes partagées, événements « famille »).</li>
           <li><strong>{CONTROLLER.name}</strong>, qui administre l’appli, peut techniquement accéder à la base. Il ne s’en sert que pour faire marcher et réparer l’appli (statistiques en nombres, journal des erreurs, retours).</li>
           <li>Personne d’autre, sauf les prestataires ci-dessous, pour l’hébergement.</li>
         </ul>

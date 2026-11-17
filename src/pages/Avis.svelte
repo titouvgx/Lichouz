@@ -78,7 +78,7 @@
       <button class="btn btn-primary" type="submit" disabled={!canSend}>
         {sending ? 'Envoi…' : 'Envoyer'}
       </button>
-      <p class="hint">Ton prénom et ta famille sont joints au message.</p>
+      <p class="hint">Ton prénom et ton foyer sont joints au message.</p>
     </form>
   {/if}
 </div>

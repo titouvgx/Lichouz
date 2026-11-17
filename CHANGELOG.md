@@ -21,6 +21,19 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [2.1.0] — 2026-11-17
+
+Lot P « Pratique ». **Pas de migration.** Nouvelle dépendance : `qrcode-generator` 2.0.4 (MIT, sans dépendance, version épinglée).
+
+### Ajouté
+- QR code d'invitation : « Afficher en QR code » après la création du lien (dessiné sur le téléphone, aucun service extérieur ; conseil d'adresse réservée).
+- Page de présentation de Lichouz avant le formulaire d'un lien d'invitation.
+- Chat de Lichouz (personnage original) : erreurs illustrées (hors connexion, serveur, interdit, introuvable, autre) avec `ErrorState` + `errorMood` ; page introuvable, fenêtre d'accueil, fiches recette et événement, Mon foyer, Administration, Mes recettes.
+- Nouvelle icône et favicon (tête du chat, Brutal beurre) ; logo des écrans de connexion et de bienvenue.
+
+### Changé
+- Vocabulaire : « famille » → **foyer**, « super-famille » → **famille** dans l'appli et l'Aide (modèle de données inchangé).
+
 ## [2.0.0] — 2026-11-17
 
 Lot C « Conformité ». **Migration 29 nécessaire** (`20261118100000_conformite.sql`, contrôle `supabase/tests/controle_29_conformite.sql`) ; elle installe l'extension `pg_cron` et la tâche de nuit `lichouz-purge`.

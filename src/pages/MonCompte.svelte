@@ -160,7 +160,7 @@
     profileState.context?.isSuperAdmin
       ? 'Tu es super-admin : ton compte ne peut pas être supprimé depuis l’appli (il faut d’abord transmettre ce rôle, dans Supabase).'
       : profileState.context?.isFounder
-        ? 'Tu es fondateur de ta super-famille : ton compte ne peut pas être supprimé depuis l’appli. Demande d’abord au super-admin de transmettre ton rôle.'
+        ? 'Tu es fondateur de ta famille : ton compte ne peut pas être supprimé depuis l’appli. Demande d’abord au super-admin de transmettre ton rôle.'
         : null,
   )
   const deleteReady = $derived(deleteWord.trim().toUpperCase() === CONFIRM_WORD && deletePassword.length > 0)
@@ -234,11 +234,11 @@
   </section>
 
   <!-- Famille et administration -->
-  <nav class="links card" aria-label="Famille">
+  <nav class="links card" aria-label="Foyer et famille">
     <a class="link-row row" href={href('famille')}>
       <span class="section-icon"><Icon name="users" size={18} /></span>
       <span class="link-text">
-        <span class="link-title">Ma famille</span>
+        <span class="link-title">Mon foyer</span>
         <span class="link-sub">
           {profileState.context?.family?.name ?? 'Membres'}{canInviteInOwnFamily() ? ' · inviter des personnes' : ''}
         </span>
@@ -458,7 +458,7 @@
     {:else}
       <p class="delete-text">
         Ton compte et ton accès disparaissent pour de bon. Les recettes que tu as écrites
-        restent dans ta famille, sans ton nom.
+        restent dans ton foyer, sans ton nom.
       </p>
       <button class="btn btn-danger btn-delete" onclick={askDelete}>
         <Icon name="trash" size={18} /> Supprimer mon compte
@@ -494,7 +494,7 @@
   >
     <ul class="delete-list">
       <li><strong>Supprimé :</strong> ton compte, ton nom, tes liens d’invitation en attente.</li>
-      <li><strong>Gardé :</strong> tes recettes (sans ton nom), le planning et les listes de ta famille.</li>
+      <li><strong>Gardé :</strong> tes recettes (sans ton nom), le planning et les listes de ton foyer.</li>
       <li>Impossible d’annuler. Pour revenir, il faudra une nouvelle invitation.</li>
     </ul>
     <div class="delete-form">

@@ -48,7 +48,7 @@
       loading = true
       const t = setTimeout(() => {
         loading = false
-        error = 'Profil introuvable. Vérifie que ton compte est bien lié à une famille.'
+        error = 'Profil introuvable. Vérifie que ton compte est bien lié à un foyer.'
       }, 1500)
       return () => clearTimeout(t)
     }

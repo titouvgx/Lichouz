@@ -3,6 +3,7 @@
   // « qui fait quoi », playlist. Page « éphémère » : l'événement reste dans
   // « À venir » jusqu'à 3 jours après, puis passe dans « Passés ».
   import Icon from '../components/Icon.svelte'
+  import ErrorState from '../components/ErrorState.svelte'
   import EventForm from '../components/EventForm.svelte'
   import { href, navigate, router } from '../lib/router.svelte'
   import { toast } from '../lib/toast.svelte'
@@ -139,7 +140,7 @@
   {#if loading && !detail}
     <p class="state" aria-busy="true">Chargement…</p>
   {:else if error || !ev || !detail}
-    <p class="state error" role="alert">{error ?? 'Événement introuvable.'}</p>
+    <ErrorState error={error} message={error ?? 'Événement introuvable.'} mood={!error ? 'introuvable' : undefined} />
   {:else if editing}
     <section class="card pad" aria-label="Modifier l’événement">
       <h2 class="band-title">Modifier</h2>
@@ -343,5 +344,4 @@
   .owner { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
   .owner .btn { gap: 6px; min-height: 48px; }
   .state { color: var(--text-secondary); }
-  .state.error { color: var(--error); }
 </style>

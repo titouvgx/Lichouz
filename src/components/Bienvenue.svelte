@@ -4,6 +4,7 @@
   //   « Fermer »            → fermé pour cette fois, revient à la prochaine ouverture
   //   « Ne plus afficher »  → définitif sur ce téléphone
   import Icon from './Icon.svelte'
+  import CatLogo from './CatLogo.svelte'
   import { navigate } from '../lib/router.svelte'
   import { profileState } from '../lib/profile.svelte'
   import { welcome, markWelcomeSeen } from '../lib/bienvenue.svelte'
@@ -46,7 +47,7 @@
 
 <div class="screen" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
   <div class="content">
-    <div class="logo" aria-hidden="true"><Icon name="cart" size={40} /></div>
+    <div class="logo" aria-hidden="true"><CatLogo size={48} /></div>
     <h1 id="welcome-title">Bienvenue sur Lichouz</h1>
     <p class="lead">Les repas et les courses de la maison, au même endroit et à jour pour tout le monde.</p>
 
@@ -95,7 +96,7 @@
     display: grid;
     place-items: center;
     justify-self: center;
-    background: var(--accent);
+    background: var(--butter);
     color: var(--on-accent);
     border: var(--line-w) solid var(--line);
     box-shadow: var(--shadow-md);

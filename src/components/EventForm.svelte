@@ -123,7 +123,7 @@
     </div>
     <p class="hint">
       {scope === 'famille'
-        ? 'Tous les foyers de ta famille élargie le voient, répondent et s’inscrivent.'
+        ? 'Tous les foyers de ta famille le voient, répondent et s’inscrivent.'
         : 'Seulement les personnes de ton foyer.'}
     </p>
   </fieldset>

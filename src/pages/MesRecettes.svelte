@@ -5,6 +5,7 @@
   // restaurer (admin de la famille). Le catalogue n'apparaît pas ici.
   // Les droits sont vérifiés par la base : l'écran ne fait que montrer les bons boutons.
   import Icon from '../components/Icon.svelte'
+  import ErrorState from '../components/ErrorState.svelte'
   import { sizedImage } from '../lib/images'
   import { categoryColor } from '../lib/categoryColors'
   import { auth } from '../lib/auth.svelte'
@@ -48,7 +49,7 @@
     try {
       await setRecipeVisibility(r.id, next)
       patch(r.id, { visibility: next })
-      toast.success(next === 'super_famille' ? 'Partagée avec toutes vos familles' : 'Gardée pour ta famille')
+      toast.success(next === 'super_famille' ? 'Partagée avec toute la famille' : 'Gardée pour ton foyer')
     } catch (e: any) {
       toast.error(e?.message ?? 'Action impossible')
     } finally {
@@ -72,8 +73,8 @@
   }
 
   const sections = $derived([
-    { key: 'super_famille', title: 'Toutes nos familles', sub: 'Visibles par les familles de ta super-famille.', items: groups.super_famille },
-    { key: 'famille', title: 'Ma famille seulement', sub: 'Visibles par ta famille uniquement.', items: groups.famille },
+    { key: 'super_famille', title: 'Toute la famille', sub: 'Visibles par tous les foyers de ta famille.', items: groups.super_famille },
+    { key: 'famille', title: 'Mon foyer seulement', sub: 'Visibles par ton foyer uniquement.', items: groups.famille },
     { key: 'archivee', title: 'Archivées', sub: 'Plus dans les listes ni la recherche ; toujours dans les plannings.', items: groups.archivee },
   ] as const)
 </script>
@@ -89,7 +90,7 @@
   {#if loading}
     <p class="muted" aria-busy="true">Chargement…</p>
   {:else if loadError}
-    <p class="error" role="alert">{loadError}</p>
+    <ErrorState error={loadError} message={loadError} />
   {:else if recipes.length === 0}
     <div class="empty">
       <p>Tu n’as pas encore créé de recette.</p>
@@ -118,7 +119,7 @@
                   {#if !r.archived_at}
                     <a class="act" href={href('editer-recette', r.id)}>Modifier</a>
                     <button class="act" onclick={() => toggleShare(r)} disabled={busyId === r.id}>
-                      {r.visibility === 'super_famille' ? 'Garder pour ma famille' : 'Partager'}
+                      {r.visibility === 'super_famille' ? 'Garder pour mon foyer' : 'Partager'}
                     </button>
                   {/if}
                   {#if isAdmin}
@@ -134,7 +135,7 @@
       {/if}
     {/each}
     {#if !isAdmin}
-      <p class="muted small">Seul un administrateur de ta famille peut archiver une recette.</p>
+      <p class="muted small">Seul un administrateur de ton foyer peut archiver une recette.</p>
     {/if}
   {/if}
 </div>
@@ -238,5 +239,4 @@
   .empty { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-3); }
   .muted { color: var(--text-secondary); }
   .small { font-size: 13px; }
-  .error { color: var(--error); font-weight: var(--fw-medium); }
 </style>

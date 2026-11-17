@@ -10,6 +10,17 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.1.0',
+    date: '2026-11-17',
+    items: [
+      'Nouveaux mots : ton « foyer », ce sont les personnes qui vivent avec toi ; ta « famille », ce sont tous vos foyers réunis (ex. famille Martin).',
+      'Inviter quelqu’un à côté de toi : après avoir créé le lien, « Afficher en QR code » et il le scanne avec son téléphone.',
+      'Un lien d’invitation présente d’abord Lichouz, avant de créer le compte.',
+      'Nouvelle icône : le chat de Lichouz, sur l’écran d’accueil du téléphone et dans l’appli.',
+      'Quand quelque chose ne marche pas, un chat dessiné te dit quoi faire.',
+    ],
+  },
+  {
     version: '2.0.0',
     date: '2026-11-17',
     items: [

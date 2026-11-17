@@ -1,5 +1,6 @@
 <script lang="ts">
   import { IMPORT_ENABLED, importFromUrl, toFormRecipe } from '../lib/importRecipe'
+  import ErrorState from '../components/ErrorState.svelte'
   import {
     RECIPE_TITLE_MAX, INGREDIENT_NAME_MAX, INGREDIENT_UNIT_MAX, STEP_TEXT_MAX, INGREDIENTS_MAX, STEPS_MAX,
   } from '../lib/limits'
@@ -807,11 +808,8 @@
   {#if loading}
     <div class="center-msg"><div class="spinner"></div></div>
   {:else if loadError}
-    <div class="card load-error" role="alert">
-      <p>{loadError}</p>
-      <button type="button" class="btn btn-outline" onclick={() => reloadKey++}>
-        <Icon name="refresh" /> Réessayer
-      </button>
+    <div class="card load-error">
+      <ErrorState error={loadError} message={loadError} onretry={() => reloadKey++} />
     </div>
   {:else}
     {#if !isEdit}
@@ -886,7 +884,7 @@
             {/if}
           </button>
         {/if}
-        <p class="photo-hint">Visible par toute la famille. Évite les visages et les documents.</p>
+        <p class="photo-hint">Visible par tout le foyer (et la famille si tu partages). Évite les visages et les documents.</p>
       </section>
 
       <!-- ── Infos principales ── -->
@@ -1067,16 +1065,16 @@
           <label class="vis-option" class:selected={visibility === 'famille'}>
             <input type="radio" class="check" name="rf-visibility" value="famille" bind:group={visibility} />
             <span class="vis-text">
-              <span class="vis-name">Ma famille seulement</span>
-              <span class="vis-hint">Visible par les membres de ta famille.</span>
+              <span class="vis-name">Mon foyer seulement</span>
+              <span class="vis-hint">Visible par les membres de ton foyer.</span>
             </span>
           </label>
           <label class="vis-option" class:selected={visibility === 'super_famille'}>
             <input type="radio" class="check" name="rf-visibility" value="super_famille" bind:group={visibility} />
             <span class="vis-text">
-              <span class="vis-name">Toutes nos familles</span>
+              <span class="vis-name">Toute la famille</span>
               <span class="vis-hint">
-                {superFamilyName ? `Partagée avec toutes les familles de « ${superFamilyName} ».` : 'Partagée avec les autres familles de ton groupe.'}
+                {superFamilyName ? `Partagée avec tous les foyers de « ${superFamilyName} ».` : 'Partagée avec les autres foyers de ta famille.'}
               </span>
             </span>
           </label>
@@ -1085,7 +1083,7 @@
               <input type="radio" class="check" name="rf-visibility" value="catalogue" bind:group={visibility} />
               <span class="vis-text">
                 <span class="vis-name">Catalogue commun</span>
-                <span class="vis-hint">Super-admin : visible par toutes les familles de l’appli, modifiable par toi seul.</span>
+                <span class="vis-hint">Super-admin : visible par tous les foyers de l’appli, modifiable par toi seul.</span>
               </span>
             </label>
           {/if}
@@ -1942,7 +1940,6 @@
   }
 
   .load-error { align-items: flex-start; }
-  .load-error p { color: var(--text); }
 
   /* ── Photo ── */
   .visually-hidden {
