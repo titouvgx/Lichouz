@@ -59,7 +59,7 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Historique. Autres : `nou
 - Réglages Supabase (invitations, mot de passe oublié, SMTP Brevo) : `supabase/functions/README.md`, `supabase/prod/README.md`
 
 ## État et suite (17/11/2026)
-- **En ligne : v2.2.0** (étoiles). **v2.3.0 Tendances** prête (branche `v2-3-tendances`, sans migration) : onglet Tendances à la place d’Historique, devenu « Listes passées » dans Courses
+- **En ligne : v2.3.0** (17/11/2026, sans migration) : onglet Tendances à la place d’Historique, devenu « Listes passées » dans Courses
 - À faire dans l’ordre : **Booster du jour** (accueil, 1 ouverture/jour ; toucher une carte = ouvrir ou planifier ? à demander) → **Commentaires** (modération à cadrer avec Titouan) → **Lot Succès** (trophées évolutifs + secrets, raretés, niveau, stats, calculés en base, nouvelle `TERMS_VERSION`). Détail : doc claude.ai `courses-famille/prompt-reprise-2026-11-17.md`
 - En attente : export de sauvegarde de la prod ; relecture des textes légaux avec Titouan ; contacter Marmiton (Titouan) ; page Genèse reportée ; tests sur téléphone (QR, icône, étoiles, accord parental, fenêtre d'accueil)
 
