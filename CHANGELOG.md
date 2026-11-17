@@ -21,7 +21,7 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
-## [1.999.0] - 2026-11-17 — 2026-11-17
+## [1.999.0] — 2026-11-17
 
 **Migration 28 à exécuter AVANT la mise en ligne** : `supabase/migrations/20261117120000_evenements.sql`,
 puis la requête de contrôle `supabase/tests/controle_28_evenements.sql` (tout à `true`).
