@@ -343,6 +343,23 @@ export async function requestPasswordReset(email: string): Promise<void> {
 export async function verifyRecoveryLink(tokenHash: string): Promise<void> {
   const { error } = await db().auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' })
   if (error) throw new Error('Ce lien a expiré ou a déjà servi. Demande un nouvel e-mail.')
+  setRecoveryPending(true)
+}
+
+/**
+ * Le lien « mot de passe oublié » ouvre une session (Supabase). Tant que le nouveau
+ * mot de passe n'est pas enregistré, cette session ne doit servir qu'à ça : on la
+ * marque, et l'appli la ferme si on quitte la page (v1.99.3).
+ */
+const RECOVERY_KEY = 'lichouz:recuperation-en-cours'
+export function setRecoveryPending(on: boolean): void {
+  try {
+    if (on) localStorage.setItem(RECOVERY_KEY, '1')
+    else localStorage.removeItem(RECOVERY_KEY)
+  } catch { /* stockage indisponible */ }
+}
+export function isRecoveryPending(): boolean {
+  try { return localStorage.getItem(RECOVERY_KEY) === '1' } catch { return false }
 }
 
 export async function setNewPassword(password: string): Promise<void> {

@@ -9,6 +9,8 @@
   import { fetchDailyRecipes, todayKey, DAILY_RECIPES_COUNT } from '../lib/api/recipes'
   import { computeFloatLayout, MIN_ZONE_HEIGHT } from '../lib/floatLayout'
   import FloatingRecipeCard from '../components/FloatingRecipeCard.svelte'
+  import Cheminee from '../components/Cheminee.svelte'
+  import { theme } from '../lib/theme.svelte'
   import PlanRecipeDialog from '../components/PlanRecipeDialog.svelte'
   import { fetchRecipe } from '../lib/api/recipes'
   import { fetchTodayMeals, type TodayMeal } from '../lib/api/household'
@@ -155,6 +157,7 @@
 <div class="page accueil">
 
   <header class="hero">
+    {#if theme.name === 'noel'}<span class="hero-deco"><Cheminee /></span>{/if}
     <span class="date-chip">{dateLabel}</span>
     <h1>
       {greeting}{firstName ? ` ${firstName}` : ''}
@@ -248,7 +251,15 @@
 
   /* ── En-tête ────────────────────────────────── */
   .hero {
+    position: relative;
     padding-right: 56px; /* place pour l'avatar en haut à droite */
+  }
+
+  /* Thème Noël : cheminée sous l'avatar, dans la colonne déjà réservée */
+  .hero-deco {
+    position: absolute;
+    top: 60px;
+    right: 0;
   }
 
   /* Date : petite étiquette noire, comme un bandeau de rayon */

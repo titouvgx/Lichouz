@@ -21,6 +21,23 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [1.99.3] — 2026-11-17
+
+**Aucune migration.**
+
+### Ajouté
+- **Thème « Noël »** (lot N) : même direction artistique, palette crème / vert sapin / rouge / or,
+  clair et sombre (contrastes AA vérifiés, détail dans `app.css`) ; pluie de flocons, sapins,
+  cadeaux… à la place des aliments ; cheminée animée sur l'Accueil (flammes en transform/opacity,
+  fixes si « mouvement réduit », pause hors écran). Activé par `<html data-theme="noel">`.
+- **Mon compte → Affichage** : Automatique (Noël du 1er décembre au 6 janvier) · Classique · Noël ;
+  choix gardé sur le téléphone (`lichouz:theme`), barre du navigateur assortie (`src/lib/theme.svelte.ts`).
+
+### Corrigé
+- **Mot de passe oublié** : après le nouveau mot de passe, déconnexion de tous les appareils et
+  retour à la connexion (avant : l'utilisateur restait connecté). La session ouverte par le lien
+  est fermée si on quitte la page sans enregistrer de mot de passe (`lichouz:recuperation-en-cours`).
+
 ## [1.99.2] — 2026-11-17
 
 **Aucune migration.**

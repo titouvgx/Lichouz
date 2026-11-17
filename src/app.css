@@ -166,6 +166,45 @@
   }
 }
 
+/* ── Thème « Noël » (v1.99.3) ─────────────────────────────────
+   Même direction artistique, autres couleurs : crème neige, vert sapin,
+   rouge, or. Activé par <html data-theme="noel"> (src/lib/theme.svelte.ts).
+   On change la palette de base (--butter, --orange) : tout ce qui s'en sert suit.
+   Contrastes vérifiés (WCAG) : noir/crème 15,4:1 · gris/crème 7,8:1 ·
+   noir/rouge 5,0:1 · crème/sapin 9,2:1 · noir/or 10,4:1 ;
+   sombre : crème/nuit 14,2:1 · crème/sapin foncé 11,8:1 · gris/sapin 6,5:1 ·
+   noir/rouge clair 6,2:1. */
+:root[data-theme="noel"] {
+  --butter: #FBEFE3;              /* crème neige */
+  --orange: #EA5A44;              /* rouge de Noël (texte noir dessus) */
+  --surface-hover: #FDF4EA;
+  --surface-sunken: #F6E3D0;
+  --band: #17492A;                /* vert sapin */
+  --text-on-band: #FBEFE3;
+  --highlight: #F2C14E;           /* or */
+  --shadow-color: #17492A;
+  --motif-color: #17492A;
+  --motif-opacity: 0.2;
+  --motif-accent-opacity: 0.55;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="noel"] {
+    --page: #0E2318;              /* nuit de sapin */
+    --surface: #163323;
+    --surface-hover: #1C3D2A;
+    --surface-sunken: #0B1C13;
+    --bg: #163323;
+    --bg-raised: #163323;
+    --band: #F2C14E;              /* or, texte noir */
+    --text-on-band: var(--ink);
+    --accent: #FF6B5B;
+    --highlight: #5C2A16;
+    --shadow-color: #C9A227;
+    --motif-color: #F2EDE4;
+    --motif-opacity: 0.16;
+  }
+}
+
 /* ── Reset ─────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100dvh; }

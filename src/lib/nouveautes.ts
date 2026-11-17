@@ -10,6 +10,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.99.3',
+    date: '2026-11-17',
+    items: [
+      'Thème de Noël 🎄 : crème, sapin, rouge et or, flocons qui tombent et cheminée sur l’accueil. Il s’active tout seul du 1er décembre au 6 janvier.',
+      'Mon compte → Affichage : choisis Automatique, Classique ou Noël quand tu veux.',
+      'Liste de courses plus légère : les recettes d’origine sont en simple texte gris.',
+      'Mot de passe oublié : après en avoir choisi un nouveau, reconnecte-toi avec (tu es déconnecté de tous tes appareils).',
+    ],
+  },
+  {
     version: '1.99.0',
     date: '2026-11-16',
     items: [

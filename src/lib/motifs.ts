@@ -31,6 +31,26 @@ export const FOOD_MOTIFS: readonly string[] = [
   '<path d="M12 4c0 3-7 6-7 11a7 6 0 0 0 14 0c0-5-7-8-7-11z"/><path d="M12 21v-3"/>',
 ]
 
+/** Thème « Noël » (v1.99.3) : mêmes règles de dessin (24 × 24, trait carré). */
+export const NOEL_MOTIFS: readonly string[] = [
+  // flocon
+  '<path d="M12 2v20M3.3 7l17.4 10M3.3 17 20.7 7"/><path d="M9 4l3 2 3-2M9 20l3-2 3 2"/>',
+  // sapin
+  '<path d="M12 2 6 10h3l-5 7h16l-5-7h3z"/><path d="M12 17v5"/>',
+  // étoile
+  '<path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7.1L12 17.3 5.8 21l1.6-7.1L2 9.2l7.1-.6z"/>',
+  // boule de Noël
+  '<circle cx="12" cy="14" r="7"/><path d="M10 5h4v3h-4zM12 5V2M6 13c2 1 4 1 6 0s4-1 6 0"/>',
+  // cadeau
+  '<path d="M3 9h18v4H3zM5 13h14v8H5zM12 9v12"/><path d="M12 9c-2-4-6-4-6-1s6 1 6 1 6 0 6-1-4-3-6 1"/>',
+  // sucre d'orge
+  '<path d="M9 22V9a4 4 0 0 1 8 0"/><path d="M9 13l3-2M9 17l3-2M9 21l3-2"/>',
+  // bonnet
+  '<path d="M4 18h16v3H4zM6 18c0-7 4-12 10-12 2 0 3 2 2 4"/><circle cx="19" cy="11" r="1.5"/>',
+  // houx
+  '<path d="M12 12c-3-4-8-3-9 0 2 0 2 2 4 2-1 2 0 3 2 3 0-2 2-3 3-5zM12 12c3-4 8-3 9 0-2 0-2 2-4 2 1 2 0 3-2 3 0-2-2-3-3-5z"/><circle cx="12" cy="10" r="1.5"/>',
+]
+
 export interface FallingItem {
   motif: string
   /** position horizontale, en % de la largeur */
@@ -51,15 +71,19 @@ export interface FallingItem {
  * Tire une pluie d'aliments : un aliment par « couloir » vertical, pour qu'ils
  * restent espacés et ne se chevauchent jamais. `random` est injectable (tests).
  */
-export function makeRain(count: number, random: () => number = Math.random): FallingItem[] {
+export function makeRain(
+  count: number,
+  random: () => number = Math.random,
+  motifs: readonly string[] = FOOD_MOTIFS,
+): FallingItem[] {
   const items: FallingItem[] = []
   const lane = 100 / count
   // Ordre des motifs mélangé, pour ne pas avoir deux fois le même côte à côte
-  const order = FOOD_MOTIFS.map((_, i) => i).sort(() => random() - 0.5)
+  const order = motifs.map((_, i) => i).sort(() => random() - 0.5)
   for (let i = 0; i < count; i++) {
     const duration = 18 + random() * 14
     items.push({
-      motif: FOOD_MOTIFS[order[i % order.length]],
+      motif: motifs[order[i % order.length]],
       x: i * lane + random() * (lane * 0.55),
       y: 6 + ((i * 37) % 88) + random() * 4,
       size: Math.round(30 + random() * 16),

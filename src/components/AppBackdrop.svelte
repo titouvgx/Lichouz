@@ -8,10 +8,12 @@
   //   - pause quand l'appli n'est pas à l'écran (batterie) ;
   //   - « réduire les animations » : aliments posés, immobiles.
   import { onMount } from 'svelte'
-  import { makeRain } from '../lib/motifs'
+  import { makeRain, NOEL_MOTIFS } from '../lib/motifs'
+  import { theme } from '../lib/theme.svelte'
 
-  // Un tirage par ouverture de l'appli : le fond change un peu à chaque fois
-  const items = makeRain(12)
+  // Un tirage par ouverture de l'appli (et par changement de thème) :
+  // aliments en Classique, flocons, sapins, cadeaux… en Noël.
+  const items = $derived(theme.name === 'noel' ? makeRain(12, Math.random, NOEL_MOTIFS) : makeRain(12))
 
   let paused = $state(false)
 

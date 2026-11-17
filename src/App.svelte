@@ -31,6 +31,7 @@
   import Admin from './pages/Admin.svelte'
   import Rejoindre from './pages/Rejoindre.svelte'
   import MotDePasseOublie from './pages/MotDePasseOublie.svelte'
+  import { isRecoveryPending, setRecoveryPending } from './lib/api/famille'
   import NouveauMotDePasse from './pages/NouveauMotDePasse.svelte'
   import ConfirmerEmail from './pages/ConfirmerEmail.svelte'
 
@@ -59,6 +60,13 @@
   $effect(() => {
     if (auth.loading) return
 
+    // Session ouverte par un lien « mot de passe oublié » sans nouveau mot de passe
+    // enregistré : on la ferme dès qu'on quitte la page (pas d'accès à l'appli).
+    if (auth.user && isRecoveryPending() && router.current !== 'nouveau-mot-de-passe') {
+      setRecoveryPending(false)
+      void signOut('local').then(() => navigate('login'))
+      return
+    }
     if (isPublicPage) return
     if (!auth.user && router.current !== 'login') {
       navigate('login')

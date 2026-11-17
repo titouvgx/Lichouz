@@ -133,7 +133,9 @@
     <h2 id="faq-title" class="section-title">Questions fréquentes</h2>
     <dl>
       <dt>J’ai oublié mon mot de passe.</dt>
-      <dd>Sur l’écran de connexion, « Mot de passe oublié ? » : tu reçois un e-mail pour en choisir un nouveau.</dd>
+      <dd>Sur l’écran de connexion, « Mot de passe oublié ? » : tu reçois un e-mail pour en choisir un nouveau. Une fois enregistré, tu es déconnecté de tous tes appareils : reconnecte-toi avec le nouveau mot de passe.</dd>
+      <dt>Comment changer les couleurs (thème de Noël) ?</dt>
+      <dd><a href={href('compte')}>Mon compte</a> → Affichage : Automatique (Noël du 1er décembre au 6 janvier), Classique ou Noël. Le mode clair ou sombre suit ton téléphone ; le choix est gardé sur ce téléphone.</dd>
       <dt>Le lien d’invitation ne marche pas.</dt>
       <dd>
         Il a déjà servi, a été annulé ou a plus de 7 jours. Ou bien il est réservé à une autre adresse e-mail : la page

@@ -10,6 +10,7 @@
   import { VERSION_LABEL } from '../lib/version'
   import { deleteMyAccount } from '../lib/api/famille'
   import { forgetWelcome } from '../lib/bienvenue.svelte'
+  import { THEME_CHOICES, setTheme, theme } from '../lib/theme.svelte'
 
   let displayName = $state('')
   let newPassword = $state('')
@@ -313,6 +314,28 @@
     <button class="btn btn-primary btn-save" onclick={handleSaveName} aria-busy={saving}>
       {saving ? 'Enregistrement…' : 'Enregistrer le nom'}
     </button>
+  </section>
+
+  <!-- Affichage : thème (v1.99.3) -->
+  <section class="card" aria-labelledby="display-title">
+    <h2 id="display-title" class="section-title">
+      <span class="section-icon"><Icon name="settings" size={18} /></span> Affichage
+    </h2>
+    <div class="theme-choices" role="radiogroup" aria-labelledby="display-title">
+      {#each THEME_CHOICES as c (c.value)}
+        <button
+          type="button"
+          class="theme-choice"
+          role="radio"
+          aria-checked={theme.choice === c.value}
+          onclick={() => setTheme(c.value)}
+        >
+          <span class="theme-label">{c.label}</span>
+          <span class="theme-hint">{c.hint}</span>
+        </button>
+      {/each}
+    </div>
+    <p class="theme-note">Le mode clair ou sombre suit toujours ton téléphone. Réglage gardé sur ce téléphone.</p>
   </section>
 
   <!-- Changer le mot de passe -->
@@ -632,6 +655,33 @@
   }
 
   /* Titre de rubrique = bandeau noir en tête de carte (même rôle que les rayons des Courses) */
+  .theme-choices { display: flex; flex-direction: column; gap: var(--sp-2); }
+  .theme-choice {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    min-height: var(--tap);
+    padding: 10px 12px;
+    border: var(--line-w) solid var(--line);
+    background: var(--surface);
+    color: var(--text);
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .theme-choice:active { transform: translate(2px, 2px); }
+  .theme-choice[aria-checked='true'] {
+    background: var(--accent);
+    color: var(--on-accent);
+    box-shadow: var(--shadow-sm);
+  }
+  .theme-label { font-weight: var(--fw-bold); }
+  .theme-hint { font-size: var(--fs-sm); opacity: 0.85; }
+  .theme-note { margin-top: var(--sp-3); font-size: var(--fs-sm); color: var(--text-secondary); }
+
   .section-title {
     display: flex;
     align-items: center;

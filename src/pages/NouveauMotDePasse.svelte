@@ -5,10 +5,10 @@
   // pour qu'il ne reste ni dans l'historique ni dans un partage.
   import { onDestroy, onMount, tick } from 'svelte'
   import Icon from '../components/Icon.svelte'
-  import { auth } from '../lib/auth.svelte'
+  import { auth, signOut } from '../lib/auth.svelte'
   import { navigate, href } from '../lib/router.svelte'
   import { VERSION_LABEL } from '../lib/version'
-  import { setNewPassword, verifyRecoveryLink } from '../lib/api/famille'
+  import { setNewPassword, setRecoveryPending, verifyRecoveryLink } from '../lib/api/famille'
 
   const PW_MIN = 10
   const PW_MAX_BYTES = 72 // limite de Supabase Auth (bcrypt)
@@ -130,10 +130,14 @@
     saving = true
     try {
       await setNewPassword(password)
+      // Mot de passe changé : on ferme la session ouverte par le lien, sur tous les
+      // appareils, et on demande de se reconnecter avec le nouveau mot de passe.
+      setRecoveryPending(false)
       done = true
       password = ''
       confirm = ''
-      redirectTimer = setTimeout(() => navigate('accueil'), 1800)
+      await signOut('global')
+      redirectTimer = setTimeout(() => navigate('login'), 2500)
     } catch (err) {
       apiError = err instanceof Error && err.message
         ? err.message
@@ -162,9 +166,9 @@
         <div class="status" role="status">
           <span class="status-icon" data-tone="success"><Icon name="check-circle" size={28} /></span>
           <h2 id="newpw-title">Mot de passe changé !</h2>
-          <p class="status-text">Tu es connecté. On t’emmène à l’accueil…</p>
+          <p class="status-text">Reconnecte-toi avec ton nouveau mot de passe. Par sécurité, tu as été déconnecté de tous tes appareils.</p>
           <div class="actions">
-            <a class="text-link" href={href('accueil')}>Aller à l’accueil maintenant</a>
+            <a class="text-link" href={href('login')}>Se connecter maintenant</a>
           </div>
         </div>
       {:else if view === 'loading'}

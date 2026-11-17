@@ -7,9 +7,13 @@ import '@fontsource-variable/bricolage-grotesque/opsz.css'
 import './app.css'
 import App from './App.svelte'
 import { installErrorReporting } from './lib/errorReport'
+import { initTheme } from './lib/theme.svelte'
 
 // Journal des erreurs (v1.6.0) : avant le montage, pour voir aussi les erreurs de démarrage
 installErrorReporting()
+
+// Thème (Classique / Noël) appliqué avant le premier affichage
+initTheme()
 
 const app = mount(App, {
   target: document.getElementById('app')!,
