@@ -21,6 +21,14 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [1.99.2] — 2026-11-17
+
+**Aucune migration.**
+
+### Modifié
+- Liste de courses plus légère : les recettes d'origine (« pour … ») sont en simple texte gris,
+  sans cadre jaune ; l'étiquette « ajouté » n'est plus remplie de jaune.
+
 ## [1.99.1] — 2026-11-16
 
 **Aucune migration.**

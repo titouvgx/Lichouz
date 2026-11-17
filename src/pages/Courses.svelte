@@ -532,9 +532,9 @@
                 <span class="box" aria-hidden="true"></span>
                 <span class="row-text">
                   <span class="row-name">{item.name}</span>
-                  {#if from.length > 0}<span class="tag row-from">pour {from.join(' · ')}</span>{/if}
+                  {#if from.length > 0}<span class="row-from">pour {from.join(' · ')}</span>{/if}
                 </span>
-                {#if item.is_extra}<span class="tag">ajouté</span>{/if}
+                {#if item.is_extra}<span class="tag tag-light">ajouté</span>{/if}
                 {#if item.quantity}<span class="row-qty">{item.quantity}</span>{/if}
               </button>
               <button class="row-remove" onclick={() => remove(item)} aria-label="Retirer {item.name} de la liste">
@@ -892,7 +892,14 @@
   }
 
   /* Note « pour … » : petite étiquette beurre */
+  /* Recettes d'origine : simple texte gris, sans cadre ni fond (v1.99.2 : le jaune
+     encadré sur chaque ligne alourdissait la liste) */
   .row-from {
+    margin-top: 2px;
+    color: var(--text-secondary);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-regular);
+    line-height: 1.35;
     max-width: 100%;
     white-space: normal;
     display: -webkit-box;
@@ -901,6 +908,8 @@
     line-clamp: 2;
     overflow: hidden;
   }
+
+  .tag-light { background: transparent; color: var(--text-secondary); border-color: var(--text-secondary); }
 
   .frozen-hint {
     margin: 2px 4px 0;
