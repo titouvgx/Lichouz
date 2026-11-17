@@ -37,3 +37,27 @@ export function pickSeeded<T>(items: readonly T[], count: number, seed: string):
   }
   return arr.slice(0, n)
 }
+
+/**
+ * Tire `count` éléments distincts, les plus « lourds » ayant plus de chances
+ * (méthode d'Efraimidis-Spirakis : clé = hasard^(1/poids), on garde les plus
+ * grandes clés). Reproductible avec la même graine. Poids ≤ 0 → jamais tiré.
+ */
+export function pickWeightedSeeded<T>(
+  items: readonly T[],
+  weight: (item: T) => number,
+  count: number,
+  seed: string,
+): T[] {
+  const rand = seededRandom(seed)
+  return items
+    .map((item) => {
+      const w = weight(item)
+      const r = rand()
+      return { item, key: w > 0 ? Math.pow(r, 1 / w) : -1 }
+    })
+    .filter((x) => x.key >= 0)
+    .sort((a, b) => b.key - a.key)
+    .slice(0, Math.max(count, 0))
+    .map((x) => x.item)
+}

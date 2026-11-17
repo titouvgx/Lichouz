@@ -1,7 +1,8 @@
 <script lang="ts">
   import Icon from '../components/Icon.svelte'
-  // Page d'accueil : 5 recettes tirées au hasard chaque jour, qui flottent à l'écran.
-  // - Le tirage dépend de la date → même sélection pour toute la famille, change à minuit.
+  // Page d'accueil : 5 recettes tirées chaque jour, qui flottent à l'écran.
+  // - Le tirage dépend du foyer et de la date (lib/booster.ts), change à minuit.
+  // - v2.4.0 : elles sortent d'un « booster » à ouvrir une fois par jour (BoosterPack).
   // - Le placement est calculé (lib/floatLayout.ts) pour tenir dans l'écran sans chevauchement.
   import { onDestroy } from 'svelte'
   import { profileState } from '../lib/profile.svelte'
@@ -9,6 +10,9 @@
   import { fetchDailyRecipes, todayKey, DAILY_RECIPES_COUNT } from '../lib/api/recipes'
   import { computeFloatLayout, MIN_ZONE_HEIGHT } from '../lib/floatLayout'
   import FloatingRecipeCard from '../components/FloatingRecipeCard.svelte'
+  import BoosterPack from '../components/BoosterPack.svelte'
+  import { boosterOpenedToday, markBoosterOpened } from '../lib/booster'
+  import { auth } from '../lib/auth.svelte'
   import Cheminee from '../components/Cheminee.svelte'
   import { theme } from '../lib/theme.svelte'
   import { fetchEvents, type FamilyEvent } from '../lib/api/events'
@@ -35,9 +39,10 @@
     const key = dateKey
     let cancelled = false // évite qu'une vieille requête écrase une plus récente
 
+    const familyId = profileState.profile?.family_id ?? null
     loading = true
     error = null
-    fetchDailyRecipes(key)
+    fetchDailyRecipes(familyId, key)
       .then((r) => { if (!cancelled) recipes = r })
       .catch((e) => { if (!cancelled) error = e?.message ?? 'Erreur de chargement' })
       .finally(() => { if (!cancelled) loading = false })
@@ -120,6 +125,30 @@
 
   const cardCount = $derived(loading ? DAILY_RECIPES_COUNT : recipes.length)
   const layout = $derived(computeFloatLayout(zoneW, zoneH, cardCount, `layout:${dateKey}`))
+
+  // ────────── Booster du jour ──────────
+  // 'ferme' : le paquet attend ; 'ouvert' : les cartes jaillissent du paquet ;
+  // 'direct' : déjà ouvert aujourd'hui, « Passer » ou mouvement réduit.
+  type BoosterState = 'ferme' | 'ouvert' | 'direct'
+  const userId = $derived(auth.user?.id ?? null)
+  let booster = $state<BoosterState>('direct')
+
+  $effect(() => {
+    const key = dateKey // nouveau booster à minuit
+    booster = reduceMotion || boosterOpenedToday(userId, key) ? 'direct' : 'ferme'
+  })
+
+  function openBooster() {
+    markBoosterOpened(userId, dateKey)
+    booster = 'ouvert'
+  }
+
+  function skipBooster() {
+    markBoosterOpened(userId, dateKey)
+    booster = 'direct'
+  }
+
+  const burstFrom = $derived(booster === 'ouvert' ? { x: zoneW / 2, y: zoneH / 2 } : null)
 
   // ────────── Planifier directement depuis une carte ──────────
   // La fenêtre a besoin des ingrédients : on charge la recette complète au clic.
@@ -235,15 +264,20 @@
       onpointermove={onPointerMove}
       onpointerleave={resetParallax}
     >
-      {#each layout.slots as slot, i (i)}
-        <FloatingRecipeCard
-          {slot}
-          index={i}
-          recipe={loading ? null : (recipes[i] ?? null)}
-          featured={i === 0}
-          onplan={openPlan}
-        />
-      {/each}
+      {#if booster === 'ferme'}
+        <BoosterPack ready={!loading && recipes.length > 0} onopen={openBooster} onskip={skipBooster} />
+      {:else}
+        {#each layout.slots as slot, i (i)}
+          <FloatingRecipeCard
+            {slot}
+            index={i}
+            recipe={loading ? null : (recipes[i] ?? null)}
+            featured={i === 0}
+            onplan={openPlan}
+            {burstFrom}
+          />
+        {/each}
+      {/if}
     </section>
 
     <!-- Hors de la zone flottante : la zone (flex: 1) rétrécit d'autant et

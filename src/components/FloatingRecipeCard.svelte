@@ -22,9 +22,15 @@
     featured?: boolean
     /** Bouton « planifier » sur la carte (ouvre la fenêtre semaine + courses) */
     onplan?: (recipeId: string) => void
+    /** Booster ouvert (v2.4.0) : centre du paquet, relatif à la zone → la carte en sort */
+    burstFrom?: { x: number; y: number } | null
   }
 
-  let { slot, index, recipe, featured = false, onplan }: Props = $props()
+  let { slot, index, recipe, featured = false, onplan, burstFrom = null }: Props = $props()
+
+  /** Décalage du centre du paquet par rapport au centre de cette carte */
+  const burstX = $derived(burstFrom ? burstFrom.x - (slot.x + slot.w / 2) : 0)
+  const burstY = $derived(burstFrom ? burstFrom.y - (slot.y + slot.h / 2) : 0)
 
   const imgSrc = $derived(
     recipe?.image_url ? sizedImage(recipe.image_url, slot.w, slot.h) : null,
@@ -46,6 +52,9 @@
   style:width="{slot.w}px"
   style:height="{slot.h}px"
   style:--depth={slot.depth}
+  class:burst={!!burstFrom}
+  style:--bx="{burstX}px"
+  style:--by="{burstY}px"
 >
   <div class="drift-x" style:--dx="{slot.dx}px" style:--dur="{slot.durX}s" style:--delay="{slot.delayX}s">
   <div class="drift-y" style:--dy="{slot.dy}px" style:--dur="{slot.durY}s" style:--delay="{slot.delayY}s">
@@ -233,6 +242,19 @@
   .card:focus-visible {
     outline: 3px solid var(--accent);
     outline-offset: 3px;
+  }
+
+  /* Booster ouvert : les cartes jaillissent du paquet vers leur place */
+  .burst .card,
+  .burst .plan-btn {
+    animation: burst-out 0.6s var(--ease-snap) calc(var(--i) * 110ms) backwards;
+  }
+  .burst .plan-btn { animation-delay: calc(var(--i) * 110ms + 450ms); }
+
+  @keyframes burst-out {
+    from { opacity: 0; transform: translate3d(var(--bx), var(--by), 0) scale(0.25) rotate(-14deg); }
+    40%  { opacity: 1; }
+    to   { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotate(0); }
   }
 
   /* Les cartes tombent à leur place, l'une après l'autre */

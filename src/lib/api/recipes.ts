@@ -3,7 +3,7 @@
 
 import { supabase } from '../supabase'
 import { matchesTags, NO_FILTERS, tagWords, type RecipeTags, type TagFilters } from '../etiquettes'
-import { pickSeeded } from '../random'
+import { drawBoosterIds } from '../booster'
 import { normalizeText } from '../quantities'
 import {
   uploadRecipeImage,
@@ -555,12 +555,13 @@ export function todayKey(d = new Date()): string {
 }
 
 /**
- * Les 5 recettes du jour.
- * Le tirage dépend uniquement de la date : toute la famille voit les mêmes
- * recettes toute la journée, et la sélection change à minuit.
- * Deux requêtes légères : la liste des id, puis les 5 recettes choisies.
+ * Les 5 recettes du jour (le « booster », v2.4.0).
+ * Tirage reproductible par foyer et par date (tout le foyer voit les mêmes,
+ * change à minuit) ; écarte les recettes récentes, favorise les mieux notées
+ * (voir lib/booster.ts).
  */
 export async function fetchDailyRecipes(
+  familyId: string | null,
   dateKey = todayKey(),
   count = DAILY_RECIPES_COUNT,
 ): Promise<RecipeWithCategory[]> {
@@ -576,7 +577,7 @@ export async function fetchDailyRecipes(
   const ids = (idRows ?? []).map((r: { id: string }) => r.id)
   if (ids.length === 0) return []
 
-  const picked = pickSeeded(ids, count, `courses-famille:${dateKey}`)
+  const picked = await drawBoosterIds(ids, familyId, dateKey, count)
 
   const { data, error } = await supabase
     .from('recipes')

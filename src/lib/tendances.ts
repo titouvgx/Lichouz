@@ -38,11 +38,8 @@ export interface CookedCount {
   count: number
 }
 
-/** Date réelle d'un créneau (lundi de la semaine + jour 0 à 6). */
-export function slotDate(weekStart: string, day: number): string {
-  const [y, m, d] = weekStart.split('-').map(Number)
-  return toISODate(new Date(y, m - 1, d + day))
-}
+export { slotDate } from './api/meals'
+import { slotDate } from './api/meals'
 
 /**
  * Plus cuisinées : créneaux du mois en cours jusqu'à aujourd'hui compris

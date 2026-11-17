@@ -60,7 +60,8 @@
         </summary>
         <div class="fold-body">
           {#if s.id === 'accueil'}
-            <p>Chaque jour, 5 idées de recettes. Touche une carte pour voir la recette.</p>
+            <p>Chaque jour, un <strong>booster</strong> de 5 recettes à ouvrir (une fois par jour) : touche le paquet, les cartes en sortent. « Passer » les montre directement. Touche une carte pour voir la recette, ou son calendrier pour la mettre dans ta semaine.</p>
+            <p>Le tirage est le même pour tout ton foyer ; il évite ce que vous avez cuisiné ces 2 dernières semaines ou déjà prévu, et favorise les recettes les mieux notées.</p>
             <p>Si un repas est prévu aujourd’hui, l’accueil l’affiche (« Ce soir : … ») avec la personne qui cuisine.</p>
           {:else if s.id === 'recettes'}
             <ul>

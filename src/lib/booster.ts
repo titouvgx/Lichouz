@@ -1,0 +1,110 @@
+// Booster du jour (v2.4.0) : les 5 recettes de l'accueil sortent d'un paquet,
+// une ouverture par jour (par personne et par téléphone).
+// Tirage : toutes les recettes que je peux lire (foyer, famille, catalogue),
+// sans celles cuisinées ces 14 derniers jours ni déjà prévues cette semaine
+// et la suivante, les mieux notées ayant plus de chances.
+// Même graine pour tout le foyer → tout le foyer a le même booster.
+import { supabase } from './supabase'
+import { pickWeightedSeeded } from './random'
+import { fetchRatingStats, type RatingStats } from './api/ratings'
+import { getMonday, toISODate, slotDate } from './api/meals'
+
+export const BOOSTER_SIZE = 5
+/** Jours en arrière : une recette cuisinée depuis moins longtemps est mise de côté. */
+export const RECENT_DAYS = 14
+/** Jours en avant : une recette déjà prévue n'est pas reproposée. */
+export const AHEAD_DAYS = 7
+
+/**
+ * Chance d'être tirée : une recette sans vote compte comme « 3 étoiles » (1,5) ;
+ * une 5 étoiles a 5 fois plus de chances qu'une 1 étoile (2,5 contre 0,5).
+ */
+export function boosterWeight(stats: RatingStats | undefined): number {
+  return stats && stats.votes > 0 ? stats.average / 2 : 1.5
+}
+
+/**
+ * Les `count` recettes du booster. S'il ne reste pas assez de recettes après
+ * avoir écarté les récentes, on complète avec elles (jamais de booster à moitié vide).
+ */
+export function pickBooster(
+  ids: readonly string[],
+  recent: ReadonlySet<string>,
+  stats: ReadonlyMap<string, RatingStats>,
+  count: number,
+  seed: string,
+): string[] {
+  const fresh = ids.filter((id) => !recent.has(id))
+  const picked = pickWeightedSeeded(fresh, (id) => boosterWeight(stats.get(id)), count, seed)
+  if (picked.length >= count) return picked
+  const rest = ids.filter((id) => recent.has(id))
+  return [...picked, ...pickWeightedSeeded(rest, (id) => boosterWeight(stats.get(id)), count - picked.length, `${seed}:complement`)]
+}
+
+/** Recettes à écarter : repas du foyer de J-14 à J+7 (restes compris : même recette). */
+export function recentRecipeIds(
+  slots: { week_start: string; day_of_week: number; recipe_id: string }[],
+  today: Date,
+): Set<string> {
+  const from = new Date(today); from.setDate(from.getDate() - RECENT_DAYS)
+  const to = new Date(today); to.setDate(to.getDate() + AHEAD_DAYS)
+  const a = toISODate(from), b = toISODate(to)
+  const out = new Set<string>()
+  for (const s of slots) {
+    const d = slotDate(s.week_start, s.day_of_week)
+    if (d >= a && d <= b) out.add(s.recipe_id)
+  }
+  return out
+}
+
+export async function fetchRecentRecipeIds(familyId: string, today = new Date()): Promise<Set<string>> {
+  if (!supabase) return new Set()
+  const from = new Date(today); from.setDate(from.getDate() - RECENT_DAYS)
+  const to = new Date(today); to.setDate(to.getDate() + AHEAD_DAYS)
+  const { data: plans, error } = await supabase
+    .from('meal_plans')
+    .select('id, week_start')
+    .eq('family_id', familyId)
+    .gte('week_start', toISODate(getMonday(from)))
+    .lte('week_start', toISODate(to))
+  if (error) throw error
+  if (!plans?.length) return new Set()
+  const weekByPlan = new Map(plans.map((p: { id: string; week_start: string }) => [p.id, p.week_start]))
+  const { data: slots, error: e2 } = await supabase
+    .from('meal_slots')
+    .select('meal_plan_id, day_of_week, recipe_id')
+    .in('meal_plan_id', [...weekByPlan.keys()])
+  if (e2) throw e2
+  return recentRecipeIds(
+    (slots ?? []).map((s: any) => ({ ...s, week_start: weekByPlan.get(s.meal_plan_id)! })),
+    today,
+  )
+}
+
+/** Tirage complet ; les étoiles et le planning sont des bonus (le booster marche sans). */
+export async function drawBoosterIds(
+  ids: string[],
+  familyId: string | null,
+  dateKey: string,
+  count = BOOSTER_SIZE,
+): Promise<string[]> {
+  const [stats, recent] = await Promise.all([
+    fetchRatingStats(ids).catch(() => new Map<string, RatingStats>()),
+    familyId ? fetchRecentRecipeIds(familyId).catch(() => new Set<string>()) : Promise.resolve(new Set<string>()),
+  ])
+  return pickBooster(ids, recent, stats, count, `lichouz:booster:${familyId ?? 'seul'}:${dateKey}`)
+}
+
+// ── Une ouverture par jour (sur ce téléphone) ──
+
+const openedKey = (userId: string) => `lichouz:booster-ouvert:${userId}`
+
+export function boosterOpenedToday(userId: string | null, dateKey: string): boolean {
+  if (!userId) return true
+  try { return localStorage.getItem(openedKey(userId)) === dateKey } catch { return true }
+}
+
+export function markBoosterOpened(userId: string | null, dateKey: string): void {
+  if (!userId) return
+  try { localStorage.setItem(openedKey(userId), dateKey) } catch { /* navigation privée : tant pis */ }
+}

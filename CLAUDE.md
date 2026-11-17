@@ -17,7 +17,7 @@ Svelte 5 (runes : `$state`, `$derived`, `$effect`, `$props`) + TypeScript + Vite
 **Pièges Svelte** : `{@const}` enfant DIRECT d'un `{#each}`/`{#if}` ; la variable du canal Realtime ne doit PAS être en `$state` (boucle infinie).
 
 ## Routes (`src/lib/router.svelte.ts`)
-Tab bar (5) : Accueil | Recettes | Semaine | Courses | Historique. Autres : `nouvelle-recette`, `recette/<id>`, `editer-recette/<id>`, `compte`, `frigo`, `famille`, `mes-recettes`, `avis`, `nouveautes` (**`src/lib/nouveautes.ts` à compléter à chaque version visible**), `evenements`, `evenement/<id>`, `vie-privee`, `admin`, `aide` (**l'aide décrit l'appli : la mettre à jour quand une fonction change**). Publiques : `login`, `rejoindre/<jeton>`, `mot-de-passe-oublie`, `nouveau-mot-de-passe`, `confirmer-email` (paramètres `?token_hash=…&type=…` AVANT le `#`), `cgu`, `confidentialite`, `stockage` (`Legal.svelte`).
+Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `historique` (« Listes passées », depuis Courses), `nouvelle-recette`, `recette/<id>`, `editer-recette/<id>`, `compte`, `frigo`, `famille`, `mes-recettes`, `avis`, `nouveautes` (**`src/lib/nouveautes.ts` à compléter à chaque version visible**), `evenements`, `evenement/<id>`, `vie-privee`, `admin`, `aide` (**l'aide décrit l'appli : la mettre à jour quand une fonction change**). Publiques : `login`, `rejoindre/<jeton>`, `mot-de-passe-oublie`, `nouveau-mot-de-passe`, `confirmer-email` (paramètres `?token_hash=…&type=…` AVANT le `#`), `cgu`, `confidentialite`, `stockage` (`Legal.svelte`).
 - **Fenêtre d'accueil obligatoire** `ConsentGate.svelte` tant que `consent.status !== 'ok'` (`src/lib/consent.svelte.ts`). **Changer le fond des textes légaux = nouvelle `TERMS_VERSION` (`src/lib/legal.ts`) + migration qui change `current_terms_version()`** → tout le monde ré-accepte
 - Écran de bienvenue `Bienvenue.svelte` jusqu'à « Ne plus afficher » (clé `lichouz:bienvenue-vue:<id>`)
 
@@ -60,7 +60,8 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Historique. Autres : `nou
 
 ## État et suite (17/11/2026)
 - **En ligne : v2.3.0** (17/11/2026, sans migration) : onglet Tendances à la place d’Historique, devenu « Listes passées » dans Courses
-- À faire dans l’ordre : **Booster du jour** (accueil, 1 ouverture/jour ; toucher une carte = ouvrir ou planifier ? à demander) → **Commentaires** (modération à cadrer avec Titouan) → **Lot Succès** (trophées évolutifs + secrets, raretés, niveau, stats, calculés en base, nouvelle `TERMS_VERSION`). Détail : doc claude.ai `courses-famille/prompt-reprise-2026-11-17.md`
+- **v2.4.0 Booster du jour** (sans migration) : branche `v2-4-booster`
+- À faire ensuite : **Commentaires** (modération à cadrer avec Titouan) → **Lot Succès** (trophées évolutifs + secrets, raretés, niveau, stats, calculés en base, nouvelle `TERMS_VERSION`). Détail : doc claude.ai `courses-famille/prompt-reprise-2026-11-17.md`
 - En attente : export de sauvegarde de la prod ; relecture des textes légaux avec Titouan ; contacter Marmiton (Titouan) ; page Genèse reportée ; tests sur téléphone (QR, icône, étoiles, accord parental, fenêtre d'accueil)
 
 ## Commandes

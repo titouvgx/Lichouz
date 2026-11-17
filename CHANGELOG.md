@@ -21,6 +21,20 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [2.4.0] — 2026-11-17
+
+Migration : **aucune**.
+
+### Ajouté
+- **Booster du jour** sur l'accueil (`BoosterPack.svelte`, `src/lib/booster.ts`) : paquet qui se déchire, les 5 cartes en
+  jaillissent vers leur place ; une ouverture par jour (clé `lichouz:booster-ouvert:<id>` sur le téléphone), « Passer »,
+  mouvement réduit → cartes directes.
+
+### Modifié
+- Tirage des recettes du jour : graine par foyer + date (avant : date seule) ; écarte les recettes du planning du foyer
+  de J-14 à J+7 (complète avec elles s'il en manque) ; tirage pondéré par les étoiles (`pickWeightedSeeded`).
+- `slotDate` déplacé dans `src/lib/api/meals.ts`.
+
 ## [2.3.0] — 2026-11-17
 
 Migration : **aucune**.

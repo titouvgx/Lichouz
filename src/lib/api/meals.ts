@@ -24,6 +24,12 @@ export function toISODate(d: Date): string {
   return `${y}-${m}-${day}`
 }
 
+/** Date réelle d'un créneau (lundi de la semaine + jour 0 à 6). */
+export function slotDate(weekStart: string, day: number): string {
+  const [y, m, d] = weekStart.split('-').map(Number)
+  return toISODate(new Date(y, m - 1, d + day))
+}
+
 /** Avance ou recule d'un nombre de semaines. */
 export function shiftWeek(monday: Date, weeks: number): Date {
   const d = new Date(monday)
