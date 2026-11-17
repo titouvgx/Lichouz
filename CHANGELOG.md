@@ -21,6 +21,19 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [2.3.0] — 2026-11-17
+
+Migration : **aucune**.
+
+### Ajouté
+- Onglet **Tendances** (`src/pages/Tendances.svelte`, `src/lib/tendances.ts`) : Top 25 / 50 par étoiles
+  (moyenne puis nombre de votes, recettes lisibles et non archivées, via `recipe_rating_stats`),
+  plus cuisinées du mois dans le foyer (jours passés, restes exclus), nouvelles recettes des 30 derniers jours (hors catalogue).
+
+### Modifié
+- La barre du bas garde 5 onglets : **Tendances remplace Historique**, qui devient « Listes passées » (lien en haut de Courses, retour vers Courses).
+- Aide et Nouveautés mises à jour.
+
 ## [2.2.0] — 2026-11-17
 
 V2 « fun UX », 1er lot : les étoiles. **Migration 30 nécessaire** (`20261118200000_etoiles.sql`, contrôle `supabase/tests/controle_30_etoiles.sql`).

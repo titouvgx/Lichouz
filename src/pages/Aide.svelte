@@ -21,7 +21,8 @@
     { id: 'recettes', icon: 'book', title: 'Recettes' },
     { id: 'semaine', icon: 'calendar', title: 'Semaine' },
     { id: 'courses', icon: 'cart', title: 'Courses' },
-    { id: 'historique', icon: 'archive', title: 'Historique' },
+    { id: 'tendances', icon: 'star', title: 'Tendances' },
+    { id: 'historique', icon: 'archive', title: 'Listes passées' },
     { id: 'frigo', icon: 'chef', title: 'Qu’est-ce qu’on mange ?' },
     { id: 'famille', icon: 'users', title: 'Mon foyer, ma famille et les rôles' },
     { id: 'telephone', icon: 'settings', title: 'Sur ton téléphone' },
@@ -45,7 +46,7 @@
       <li><strong>Recettes</strong> : on garde nos recettes et on pioche dans le catalogue.</li>
       <li><strong>Semaine</strong> : on place les recettes sur les repas de la semaine.</li>
       <li><strong>Courses</strong> : la liste se calcule depuis la semaine ; on coche ensemble, en direct.</li>
-      <li><strong>Historique</strong> : les listes terminées sont rangées.</li>
+      <li><strong>Tendances</strong> : les recettes les mieux notées, les plus cuisinées du mois et les nouvelles.</li>
     </ol>
   </section>
 
@@ -92,10 +93,16 @@
               <li><strong>Ajouter un article</strong> hors recette (« papier toilette »…).</li>
               <li><strong>Habituels</strong> : ce que tu achètes souvent, ajouté en un geste.</li>
               <li><strong>Placard</strong> : ce que tu as toujours à la maison (sel, huile…) ; ces articles vont dans « Sûrement déjà à la maison ». S’il en manque, touche « Il en manque ».</li>
-              <li>À la fin : <strong>Terminer les courses</strong> range la liste dans l’historique.</li>
+              <li>À la fin : <strong>Terminer les courses</strong> range la liste dans les <strong>Listes passées</strong> (bouton en haut de Courses).</li>
+            </ul>
+          {:else if s.id === 'tendances'}
+            <ul>
+              <li><strong>Les mieux notées</strong> : Top 25 ou Top 50 des recettes que tu peux voir, classées par moyenne des étoiles (à égalité : celle qui a le plus de votes passe devant).</li>
+              <li><strong>Chez nous ce mois-ci</strong> : les recettes de la Semaine de ton foyer dont le jour est passé (les restes ne comptent pas).</li>
+              <li><strong>Nouvelles recettes</strong> : ajoutées ces 30 derniers jours par ton foyer ou ta famille.</li>
             </ul>
           {:else if s.id === 'historique'}
-            <p>Les listes de courses terminées, pour retrouver ce qu’on a acheté et quand.</p>
+            <p>Les listes de courses terminées, pour retrouver ce qu’on a acheté et quand. On y va depuis Courses → <strong>Listes passées</strong>.</p>
           {:else if s.id === 'frigo'}
             <p>
               Depuis l’accueil : tape ce qu’il te reste (« courgettes, œufs… »), Lichouz classe les recettes qui

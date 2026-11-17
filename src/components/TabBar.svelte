@@ -6,7 +6,7 @@
     { route: 'recettes',    label: 'Recettes',    icon: 'book' },
     { route: 'semaine',     label: 'Semaine',     icon: 'calendar' },
     { route: 'courses',     label: 'Courses',     icon: 'cart' },
-    { route: 'historique',  label: 'Historique',   icon: 'clock' },
+    { route: 'tendances',   label: 'Tendances',   icon: 'trend' },
   ]
 
   /** Index de l'onglet actif (-1 sur Mon compte, la connexion…) : place la pastille */
@@ -18,6 +18,9 @@
     }
     if (route === 'recettes') {
       return ['recettes', 'recette', 'nouvelle-recette', 'editer-recette'].includes(router.current)
+    }
+    if (route === 'courses') {
+      return router.current === 'courses' || router.current === 'historique' // listes passées
     }
     return router.current === route
   }
@@ -51,9 +54,9 @@
         {:else if tab.icon === 'cart'}
           <path d="M1 2h4l3 13h12l3-9H6"/>
           <path d="M9 20h1M18 20h1"/>
-        {:else if tab.icon === 'clock'}
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M12 6v6l4 2"/>
+        {:else if tab.icon === 'trend'}
+          <path d="M2 18 9 11l4 4 9-9"/>
+          <path d="M15 6h7v7"/>
         {/if}
       </svg>
       <span class="tab-label">{tab.label}</span>

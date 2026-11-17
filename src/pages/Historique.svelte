@@ -1,5 +1,6 @@
 <script lang="ts">
   import Icon from '../components/Icon.svelte'
+  import { href } from '../lib/router.svelte'
   import ConfirmDialog from '../components/ConfirmDialog.svelte'
   import { profileState } from '../lib/profile.svelte'
   import { toast } from '../lib/toast.svelte'
@@ -207,8 +208,9 @@
 </script>
 
 <div class="page">
+  <a href={href('courses')} class="back-link"><Icon name="arrow-left" size={18} /> Courses</a>
   <header class="head">
-    <h1>Historique</h1>
+    <h1>Listes passées</h1>
     {#if !loading && lists.length > 0}
       <p class="head-sub">{lists.length} liste{lists.length > 1 ? 's' : ''} terminée{lists.length > 1 ? 's' : ''}</p>
     {/if}
@@ -351,6 +353,20 @@
     padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     max-width: 640px;
     margin: 0 auto;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    margin-bottom: var(--sp-2);
+    color: var(--text);
+    font-weight: var(--fw-bold);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+    touch-action: manipulation;
   }
 
   /* ── En-tête ── */

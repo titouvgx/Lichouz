@@ -8,6 +8,7 @@
   //     masqués sans erreur si les tables n'existent pas encore côté base
   import { onMount, onDestroy } from 'svelte'
   import Icon from '../components/Icon.svelte'
+  import { href } from '../lib/router.svelte'
   import ConfirmDialog from '../components/ConfirmDialog.svelte'
   import StaplesDialog from '../components/StaplesDialog.svelte'
   import PantryDialog from '../components/PantryDialog.svelte'
@@ -474,6 +475,7 @@
 <div class="page">
   <header class="head deco-boules">
     <h1>Courses</h1>
+    <a class="past-link" href={href('historique')}><Icon name="archive" size={16} /> Listes passées</a>
     {#if list && total > 0}
       <p class="head-sub">
         {#if allDone}Tout est dans le chariot{:else}<strong class="count">{total - done}</strong> article{total - done > 1 ? 's' : ''} à prendre{/if}
@@ -729,6 +731,20 @@
 
   /* ── En-tête ── */
   .head h1 { padding-right: 56px; }
+
+  .past-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    color: var(--text);
+    font-weight: var(--fw-bold);
+    font-size: 14px;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+    touch-action: manipulation;
+  }
 
   .head-sub {
     margin-top: var(--sp-2);

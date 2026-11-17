@@ -14,7 +14,8 @@ export type Route =
   | 'editer-recette'   // édition : #/editer-recette/<id>
   | 'semaine'
   | 'courses'
-  | 'historique'
+  | 'historique'       // listes passées (depuis Courses, v2.3.0)
+  | 'tendances'        // top par étoiles, plus cuisinées, nouveautés (v2.3.0)
   | 'compte'           // page profil / mon compte
   | 'aide'             // aide : à quoi sert l'appli, onglet par onglet, FAQ
   | 'famille'          // ma famille : membres, invitations ; fondateur : ses familles
@@ -34,12 +35,12 @@ export type Route =
   | 'vie-privee'           // pseudo, mes données, accords parentaux, documents (v2.0.0)
   | 'introuvable'
 
-/** Les 5 onglets de la tab bar. */
-export const TAB_ROUTES = ['accueil', 'recettes', 'semaine', 'courses', 'historique'] as const
+/** Les 5 onglets de la tab bar (v2.3.0 : Tendances remplace Historique, passé dans Courses). */
+export const TAB_ROUTES = ['accueil', 'recettes', 'semaine', 'courses', 'tendances'] as const
 export type TabRoute = (typeof TAB_ROUTES)[number]
 
 const STATIC_ROUTES: string[] = [
-  'login', 'accueil', 'frigo', 'recettes', 'nouvelle-recette', 'semaine', 'courses', 'historique', 'compte',
+  'login', 'accueil', 'frigo', 'recettes', 'nouvelle-recette', 'semaine', 'courses', 'historique', 'tendances', 'compte',
   'famille', 'mes-recettes', 'avis', 'nouveautes', 'admin', 'aide', 'evenements', 'mot-de-passe-oublie', 'nouveau-mot-de-passe', 'confirmer-email',
   'cgu', 'confidentialite', 'stockage', 'vie-privee',
 ]
@@ -110,8 +111,8 @@ const ORDER: Record<Route, number> = {
   accueil: 0, frigo: 1, evenements: 2, evenement: 3,
   recettes: 10, recette: 11, 'nouvelle-recette': 11, 'editer-recette': 12,
   semaine: 20,
-  courses: 30,
-  historique: 40,
+  courses: 30, historique: 31,
+  tendances: 40,
   compte: 50, famille: 51, 'mes-recettes': 51, avis: 51, nouveautes: 51, admin: 52, aide: 53, 'vie-privee': 51,
   cgu: 54, confidentialite: 54, stockage: 54,
   rejoindre: -10, 'mot-de-passe-oublie': -9, 'nouveau-mot-de-passe': -9, 'confirmer-email': -9,

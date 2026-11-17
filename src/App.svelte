@@ -17,6 +17,7 @@
   import Semaine from './pages/Semaine.svelte'
   import Courses from './pages/Courses.svelte'
   import Historique from './pages/Historique.svelte'
+  import Tendances from './pages/Tendances.svelte'
   import MonCompte from './pages/MonCompte.svelte'
   import Famille from './pages/Famille.svelte'
   import MesRecettes from './pages/MesRecettes.svelte'
@@ -184,6 +185,8 @@
       <Courses />
     {:else if router.current === 'historique'}
       <Historique />
+    {:else if router.current === 'tendances'}
+      <Tendances />
     {:else if router.current === 'compte'}
       <MonCompte />
     {:else if router.current === 'famille'}

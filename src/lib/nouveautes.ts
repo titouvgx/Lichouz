@@ -10,6 +10,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.3.0',
+    date: '2026-11-17',
+    items: [
+      'Nouvel onglet Tendances : le Top 25 ou Top 50 des recettes les mieux notées.',
+      'Aussi dans Tendances : les recettes les plus cuisinées chez vous ce mois-ci, et les nouvelles recettes.',
+      'L’historique des courses est maintenant dans Courses → « Listes passées ».',
+    ],
+  },
+  {
     version: '2.2.0',
     date: '2026-11-17',
     items: [
