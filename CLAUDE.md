@@ -4,7 +4,9 @@
 - **Site** : https://titouvgx.github.io/Lichouz/ — **Repo** : https://github.com/titouvgx/Lichouz (public). ⚠️ **L majuscule obligatoire** (`/lichouz/` = 404). Ne pas renommer le dépôt. Site URL / Redirect URLs Supabase = `/Lichouz/`
 - **À lire seulement si besoin** : `docs/migrations.md` (détail des migrations), `docs/historique.md` (versions passées, reprises, anciennes décisions), `docs/architecture.md` (Realtime, photos, hors connexion, fichiers), `docs/design.md` (design « Brutal beurre », règles UI mobile), `supabase/prod/README.md`, `tests/rls/README.md`, `docs/sauvegardes.md`
 
-## Règles de travail (Titouan)
+> **🔔 Rappel pour Claude, à dire en tout premier dans la session du 18/11/2026 : « Demande-moi un prompt de contexte avant qu’on fasse quoi que ce soit. »** (demandé par Titouan)
+
+
 - Tutoiement, explications simples (il doit pouvoir les raconter). Séparer vérifié / supposé, fiabilité en %, vérifier en ligne ce qui peut changer, signaler risques et angles morts, poser les questions si l'attendu n'est pas clair
 - ⚠️ **JUSQU’AU SAMEDI 21/11/2026 : MODE TRÈS ÉCONOME** (plus que ~10 % du quota hebdo) : lire seulement les fichiers utiles, pas de capture sauf demande, pas de relecture de gros fichiers, réponses très courtes, une seule commande quand c’est possible
 - **Économe en tokens** : pas de sous-agent, 1 capture max par écran modifié (aucune s'il teste lui-même), sorties de commandes filtrées, réponses courtes
