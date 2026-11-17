@@ -6,6 +6,7 @@
 
 ## Règles de travail (Titouan)
 - Tutoiement, explications simples (il doit pouvoir les raconter). Séparer vérifié / supposé, fiabilité en %, vérifier en ligne ce qui peut changer, signaler risques et angles morts, poser les questions si l'attendu n'est pas clair
+- ⚠️ **JUSQU’AU SAMEDI 21/11/2026 : MODE TRÈS ÉCONOME** (plus que ~10 % du quota hebdo) : lire seulement les fichiers utiles, pas de capture sauf demande, pas de relecture de gros fichiers, réponses très courtes, une seule commande quand c’est possible
 - **Économe en tokens** : pas de sous-agent, 1 capture max par écran modifié (aucune s'il teste lui-même), sorties de commandes filtrées, réponses courtes
 - **Chaque version** : branche de travail → `preprod` → `main` (= déploiement, seulement après son « go »). Avant `main` : `npm run check`, `npm test`, `npm run build`, capture 393×852. `preprod` ne déploie rien ; Titouan la teste en local (`git checkout preprod && git pull && npm ci && npm run dev -- --host`, base `courses-test`). Jamais « Run workflow » du déploiement hors `main`
 - **Étiquettes `vX.Y.Z` (v minuscule) et Releases : créées par Titouan** (lui donner un texte court en Markdown)
