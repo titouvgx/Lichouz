@@ -21,6 +21,24 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [2.7.0] — 2026-11-19
+
+Migration : **32 `succes`** (`supabase/migrations/20261119200000_succes.sql`, contrôle `controle_32_succes.sql`),
+à passer sur `courses-test` puis `lichouz-prod` AVANT le code.
+
+### Ajouté
+- **Trophées** : 40 (19 évolutifs Bronze / Argent / Or + 21 secrets), **calculés par la base** (`achievement_progress`,
+  `refresh_my_achievements` qui renvoie les nouveaux paliers, `my_achievements`, seuils `achievement_tiers` = `src/lib/succes.ts`).
+  Raretés (commun 10, rare 25, épique 50, légendaire 100 points) et niveau du compte.
+- Toast « Trophée débloqué » (`UnlockToasts.svelte`), page **Mes trophées** (`#/succes`), résumé dans Mon compte, médailles dessinées.
+- Tables `user_achievements` (écrite par la base seule), `cook_sessions` (temps en mode « En cuisine », 4 h max),
+  `booster_openings` (boosters ouverts et cartes obtenues). Export « Mes données ».
+- Banc RLS : 3 tables + 7 scénarios (s'attribuer un trophée, lire ceux des autres, séance trop longue ou ancienne,
+  booster inventé, idempotence, export, 40 compteurs).
+
+### Modifié
+- **Conditions : version 2026-11-19** (Confidentialité « Tes trophées », durée de conservation) → chacun ré-accepte une fois.
+
 ## [2.6.0] — 2026-11-18
 
 Migration : **31 `commentaires`** (`supabase/migrations/20261119100000_commentaires.sql`, contrôle `controle_31_commentaires.sql`),

@@ -11,6 +11,8 @@
   import BoosterArt from '../components/BoosterArt.svelte'
   import BoosterCard from '../components/BoosterCard.svelte'
   import { auth } from '../lib/auth.svelte'
+  import { recordBoosterOpening } from '../lib/api/succes'
+  import { checkAchievements } from '../lib/achievements.svelte'
   import { profileState } from '../lib/profile.svelte'
   import { href } from '../lib/router.svelte'
   import { fetchRecipeIndex, fetchRecipesByIds, todayKey, type RecipeIndexEntry } from '../lib/api/recipes'
@@ -78,6 +80,11 @@
   }
 
   function markOpened(key: string) {
+    if (userId) {
+      recordBoosterOpening(userId, key, dateKey, cards.map((r) => r.id))
+        .then(() => checkAchievements(true))
+        .catch(() => {})
+    }
     markBoosterOpened(userId, dateKey, key)
     opened = new Set([...opened, key])
   }

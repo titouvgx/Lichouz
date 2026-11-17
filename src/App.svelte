@@ -19,6 +19,9 @@
   import Historique from './pages/Historique.svelte'
   import Tendances from './pages/Tendances.svelte'
   import Boosters from './pages/Boosters.svelte'
+  import Succes from './pages/Succes.svelte'
+  import UnlockToasts from './components/UnlockToasts.svelte'
+  import { checkAchievements } from './lib/achievements.svelte'
   import MonCompte from './pages/MonCompte.svelte'
   import Famille from './pages/Famille.svelte'
   import MesRecettes from './pages/MesRecettes.svelte'
@@ -92,6 +95,20 @@
   // l'accord parental donné), seule la fenêtre d'accueil est visible.
   const consentOk = $derived(consent.status === 'ok' && consent.userId === auth.user?.id)
 
+  // Trophées (v2.7.0) : vérifiés à l'ouverture, à chaque changement de page et au
+  // retour sur l'appli (au plus toutes les 15 s, voir lib/achievements.svelte.ts).
+  $effect(() => {
+    void router.current
+    if (!consentOk || !profileState.profile?.id) return
+    void checkAchievements()
+  })
+  $effect(() => {
+    if (!consentOk) return
+    const onVisible = () => { if (document.visibilityState === 'visible') void checkAchievements() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  })
+
   const showWelcome = $derived(
     consentOk && !!auth.user && !!profileState.profile?.id && !isPublicPage && router.current !== 'aide'
       && !welcome.closedThisLaunch && !welcomeSeen(profileState.profile.id),
@@ -126,6 +143,7 @@
 <!-- Fond commun à toutes les pages (y compris connexion et chargement) : pluie lente d'aliments -->
 <AppBackdrop />
 <ToastContainer />
+{#if consentOk}<UnlockToasts />{/if}
 
 {#if isPublicPage}
   {#if router.current === 'rejoindre'}
@@ -190,6 +208,8 @@
       <Tendances />
     {:else if router.current === 'boosters'}
       <Boosters />
+    {:else if router.current === 'succes'}
+      <Succes />
     {:else if router.current === 'compte'}
       <MonCompte />
     {:else if router.current === 'famille'}

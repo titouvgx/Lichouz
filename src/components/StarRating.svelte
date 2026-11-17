@@ -4,6 +4,7 @@
   import Icon from './Icon.svelte'
   import { toast } from '../lib/toast.svelte'
   import { auth } from '../lib/auth.svelte'
+  import { checkAchievements } from '../lib/achievements.svelte'
   import { fetchRatingStats, fetchMyRating, setMyRating, clearMyRating, formatAverage, type RatingStats } from '../lib/api/ratings'
 
   let { recipeId }: { recipeId: string } = $props()
@@ -42,6 +43,7 @@
       else await setMyRating(recipeId, uid, n)
       stats = (await fetchRatingStats([recipeId])).get(recipeId) ?? null
       toast.success(mine === null ? 'Note retirée' : `Merci ! ${n} étoile${n > 1 ? 's' : ''}`)
+      void checkAchievements(true)
     } catch {
       mine = before
       toast.error('La note n’a pas pu être enregistrée')

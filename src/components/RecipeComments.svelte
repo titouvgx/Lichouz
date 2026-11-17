@@ -7,6 +7,7 @@
   import { auth } from '../lib/auth.svelte'
   import { profileState } from '../lib/profile.svelte'
   import { toast } from '../lib/toast.svelte'
+  import { checkAchievements } from '../lib/achievements.svelte'
   import {
     fetchComments, addComment, deleteComment, commentProblem, COMMENT_MAX, type RecipeComment,
   } from '../lib/api/comments'
@@ -51,6 +52,7 @@
       await addComment(recipeId, text, userId, sf)
       text = ''
       await load()
+      void checkAchievements(true)
     } catch (e: any) {
       toast.error(e?.message ?? 'Envoi impossible')
     } finally {

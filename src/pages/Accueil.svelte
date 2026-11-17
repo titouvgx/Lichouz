@@ -12,6 +12,8 @@
   import FloatingRecipeCard from '../components/FloatingRecipeCard.svelte'
   import BoosterPack from '../components/BoosterPack.svelte'
   import BoosterAura from '../components/BoosterAura.svelte'
+  import { recordBoosterOpening } from '../lib/api/succes'
+  import { checkAchievements } from '../lib/achievements.svelte'
   import { boosterOpenedToday, markBoosterOpened } from '../lib/booster'
   import { auth } from '../lib/auth.svelte'
   import Cheminee from '../components/Cheminee.svelte'
@@ -152,12 +154,22 @@
   }
   onDestroy(() => clearTimeout(auraTimer))
 
+  /** Booster du jour enregistré en base (trophées Accro et Collectionneur) */
+  function recordDaily() {
+    if (!userId) return
+    recordBoosterOpening(userId, 'jour', dateKey, recipes.map((r) => r.id))
+      .then(() => checkAchievements(true))
+      .catch(() => {})
+  }
+
   function openBooster() {
+    recordDaily()
     markBoosterOpened(userId, dateKey)
     booster = 'ouvert'
   }
 
   function skipBooster() {
+    recordDaily()
     markBoosterOpened(userId, dateKey)
     booster = 'direct'
   }

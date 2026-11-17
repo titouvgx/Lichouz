@@ -15,6 +15,7 @@ export type Route =
   | 'semaine'
   | 'courses'
   | 'historique'       // listes passées (depuis Courses, v2.3.0)
+  | 'succes'           // mes trophées (v2.7.0), depuis Mon compte
   | 'boosters'         // boosters à thème (v2.5.0), depuis l'accueil
   | 'tendances'        // top par étoiles, plus cuisinées, nouveautés (v2.3.0)
   | 'compte'           // page profil / mon compte
@@ -41,7 +42,7 @@ export const TAB_ROUTES = ['accueil', 'recettes', 'semaine', 'courses', 'tendanc
 export type TabRoute = (typeof TAB_ROUTES)[number]
 
 const STATIC_ROUTES: string[] = [
-  'login', 'accueil', 'frigo', 'recettes', 'nouvelle-recette', 'semaine', 'courses', 'historique', 'tendances', 'boosters', 'compte',
+  'login', 'accueil', 'frigo', 'recettes', 'nouvelle-recette', 'semaine', 'courses', 'historique', 'tendances', 'boosters', 'succes', 'compte',
   'famille', 'mes-recettes', 'avis', 'nouveautes', 'admin', 'aide', 'evenements', 'mot-de-passe-oublie', 'nouveau-mot-de-passe', 'confirmer-email',
   'cgu', 'confidentialite', 'stockage', 'vie-privee',
 ]
@@ -114,7 +115,7 @@ const ORDER: Record<Route, number> = {
   semaine: 20,
   courses: 30, historique: 31,
   tendances: 40,
-  compte: 50, famille: 51, 'mes-recettes': 51, avis: 51, nouveautes: 51, admin: 52, aide: 53, 'vie-privee': 51,
+  compte: 50, succes: 51, famille: 51, 'mes-recettes': 51, avis: 51, nouveautes: 51, admin: 52, aide: 53, 'vie-privee': 51,
   cgu: 54, confidentialite: 54, stockage: 54,
   rejoindre: -10, 'mot-de-passe-oublie': -9, 'nouveau-mot-de-passe': -9, 'confirmer-email': -9,
   introuvable: 60,

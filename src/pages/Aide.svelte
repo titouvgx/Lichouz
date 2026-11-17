@@ -24,6 +24,7 @@
     { id: 'tendances', icon: 'star', title: 'Tendances' },
     { id: 'historique', icon: 'archive', title: 'Listes passées' },
     { id: 'frigo', icon: 'chef', title: 'Qu’est-ce qu’on mange ?' },
+    { id: 'trophees', icon: 'star', title: 'Trophées et niveau' },
     { id: 'famille', icon: 'users', title: 'Mon foyer, ma famille et les rôles' },
     { id: 'telephone', icon: 'settings', title: 'Sur ton téléphone' },
   ]
@@ -111,6 +112,13 @@
               Depuis l’accueil : tape ce qu’il te reste (« courgettes, œufs… »), Lichouz classe les recettes qui
               l’utilisent le mieux (le placard est compté comme disponible). Le calcul se fait dans ton téléphone.
             </p>
+          {:else if s.id === 'trophees'}
+            <ul>
+              <li><strong>40 trophées</strong> dans Mon compte → <a href={href('succes')}>Mes trophées</a> : 19 <strong>évolutifs</strong> (Bronze, Argent, Or, avec une barre de progression) et 21 <strong>secrets</strong> (on découvre ce qu’il fallait faire une fois obtenus).</li>
+              <li>Un trophée obtenu s’affiche en haut de l’écran. Chaque trophée rapporte des points selon sa rareté (Commun 10, Rare 25, Épique 50, Légendaire 100) ; les points font monter ton <strong>niveau</strong>.</li>
+              <li>Tout est calculé par Lichouz avec ce que tu fais : un repas compte comme cuisiné quand son jour est passé et que « Qui cuisine ? » c’est toi. Le temps en mode « En cuisine » compte aussi (4 h max par séance).</li>
+              <li>Tes trophées ne sont visibles que par toi.</li>
+            </ul>
           {:else if s.id === 'famille'}
             <p class="you">Ton rôle : <strong>{myRole}</strong>{ctx?.family ? ` · foyer « ${ctx.family.name} »` : ''}</p>
             <ul>

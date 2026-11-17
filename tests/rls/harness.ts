@@ -307,6 +307,12 @@ INSERT INTO public.recipe_ratings (recipe_id, profile_id, stars) VALUES
 INSERT INTO public.recipe_comments (recipe_id, author_id, super_family_id, body) VALUES
   ('${ID.recAshared}', '${ID.memberA}', '${ID.sfA}', 'Trop bon, on la refait !'),
   ('${ID.recB}', '${ID.adminB}', '${ID.sfB}', 'Commentaire de la famille B');
+-- Succès (migration 32) : une séance en cuisine, un booster ouvert, un trophée (écrits par la base)
+INSERT INTO public.cook_sessions (profile_id, recipe_id, started_at, ended_at, minutes) VALUES
+  ('${ID.adminA}', '${ID.recA}', now() - interval '40 minutes', now() - interval '5 minutes', 1);
+INSERT INTO public.booster_openings (profile_id, kind, day, recipe_ids) VALUES
+  ('${ID.adminA}', 'jour', current_date, ARRAY['${ID.recA}', '${ID.recAshared}']::uuid[]);
+INSERT INTO public.user_achievements (profile_id, achievement, tier) VALUES ('${ID.adminA}', 'plume', 1);
 INSERT INTO public.terms_acceptances (profile_id, version, age_group) VALUES
   ('${ID.adminA}',  public.current_terms_version(), 'majeur'),
   ('${ID.memberA}', public.current_terms_version(), 'moins_15'),

@@ -1,4 +1,17 @@
 <script lang="ts">
+  // Trophées (v2.7.0) : petit résumé « Niveau 3 · 12/40 trophées » ; en cas d'échec, texte par défaut
+  import { fetchMyAchievements } from '../lib/api/succes'
+  import { ACHIEVEMENTS, bestTiers, levelOf, totalPoints } from '../lib/succes'
+  let trophySummary = $state<string | null>(null)
+  $effect(() => {
+    fetchMyAchievements()
+      .then((d) => {
+        const got = bestTiers(d.unlocked).size
+        trophySummary = `Niveau ${levelOf(totalPoints(d.unlocked)).level} · ${got}/${ACHIEVEMENTS.length} trophées`
+      })
+      .catch(() => (trophySummary = null))
+  })
+
   import Icon from '../components/Icon.svelte'
   import ConfirmDialog from '../components/ConfirmDialog.svelte'
   import { auth, signOut } from '../lib/auth.svelte'
@@ -242,6 +255,14 @@
         <span class="link-sub">
           {profileState.context?.family?.name ?? 'Membres'}{canInviteInOwnFamily() ? ' · inviter des personnes' : ''}
         </span>
+      </span>
+      <Icon name="chevron-right" size={18} />
+    </a>
+    <a class="link-row row" href={href('succes')}>
+      <span class="section-icon"><Icon name="star" size={18} /></span>
+      <span class="link-text">
+        <span class="link-title">Mes trophées</span>
+        <span class="link-sub">{trophySummary ?? 'Niveau, points, trophées obtenus et à obtenir'}</span>
       </span>
       <Icon name="chevron-right" size={18} />
     </a>

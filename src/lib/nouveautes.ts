@@ -10,6 +10,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.7.0',
+    date: '2026-11-19',
+    items: [
+      'Trophées ! 40 à gagner en cuisinant, en planifiant, en faisant les courses… dont 21 secrets.',
+      'Mon compte → Mes trophées : ton niveau, tes points, ta progression. Un trophée obtenu s’affiche en haut de l’écran.',
+      'Les règles sont mises à jour pour ça : elles te sont redemandées une fois.',
+    ],
+  },
+  {
     version: '2.6.0',
     date: '2026-11-18',
     items: [

@@ -7,6 +7,9 @@
   //   des boutons ; à la fin : sonnerie, vibration (Android) et bandeau orange.
   //   Les minuteurs vivent tant que le mode En cuisine est ouvert.
   import { onMount, onDestroy, untrack } from 'svelte'
+  import { auth } from '../lib/auth.svelte'
+  import { recordCookSession } from '../lib/api/succes'
+  import { checkAchievements } from '../lib/achievements.svelte'
   import Icon from './Icon.svelte'
   import { formatIngredient } from '../lib/quantities'
   import { clockLabel, findDurations, type FoundDuration } from '../lib/timers'
@@ -150,6 +153,9 @@
     }
   }
 
+  // Toque d'or (v2.7.0) : durée passée en mode cuisine, enregistrée à la fermeture
+  const openedAt = new Date()
+
   let previousFocus: HTMLElement | null = null
   onMount(() => {
     previousFocus = document.activeElement as HTMLElement | null
@@ -167,6 +173,12 @@
     wakeLock?.release().catch(() => {})
     wakeLock = null
     previousFocus?.focus?.()
+    const uid = auth.user?.id
+    if (uid) {
+      recordCookSession(uid, recipe.id, openedAt)
+        .then(() => checkAchievements(true))
+        .catch(() => { /* hors connexion : tant pis pour cette séance */ })
+    }
   })
 </script>
 

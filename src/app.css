@@ -55,6 +55,13 @@
   --cat-accomp: #7BD389;
   --cat-dessert: #FF9EC7;
 
+  /* Raretés des trophées (v2.7.0) : médailles, texte noir dessus */
+  --rarity-commun: #E0A36E;      /* bronze */
+  --rarity-rare: #CBD5DF;        /* argent */
+  --rarity-epique: #FFD23F;      /* or */
+  --rarity-legendaire: #C9A0FF;  /* violet */
+  --rarity-locked: #D9D4C7;
+
   /* ── Ombres franches (jamais floues) ── */
   --shadow-color: var(--ink);
   --shadow-sm: 3px 3px 0 var(--shadow-color);

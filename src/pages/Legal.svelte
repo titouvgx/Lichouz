@@ -110,6 +110,8 @@
           <dd>18 ans ou plus, 15 à 17 ans, ou moins de 15 ans, avec la date d’acceptation des conditions et, avant 15 ans, l’accord du parent : c’est la preuve demandée par la loi.</dd>
           <dt>La vie du foyer</dt>
           <dd>Recettes, photos, planning, « qui cuisine », listes de courses (et qui a coché quoi), placard, événements et réponses, étoiles données aux recettes (ta note reste privée, seule la moyenne est visible), commentaires sur les recettes : c’est l’appli elle-même.</dd>
+          <dt>Tes trophées</dt>
+          <dd>Lichouz compte ce que tu fais dans l’appli (repas cuisinés, recettes créées, notes, commentaires, articles cochés, événements, boosters ouverts) et le temps passé en mode « En cuisine », pour te donner des trophées et un niveau. Ces chiffres sont calculés par la base et <strong>visibles par toi seul</strong>.</dd>
           <dt>Tes messages</dt>
           <dd>Les idées et retours que tu envoies.</dd>
           <dt>Le journal des erreurs</dt>

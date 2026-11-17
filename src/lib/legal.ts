@@ -1,8 +1,8 @@
 // Documents légaux (v2.0.0, lot C). Version = date de publication des CGU et de la
 // politique de confidentialité. ⚠️ Même valeur que public.current_terms_version()
-// (migration 31, avant : 29) ; changer les textes de façon importante = nouvelle date + nouvelle
+// (migration 32, avant : 31, 29) ; changer les textes de façon importante = nouvelle date + nouvelle
 // migration qui change la fonction → tout le monde ré-accepte à la prochaine ouverture.
-export const TERMS_VERSION = '2026-11-18'
+export const TERMS_VERSION = '2026-11-19'
 
 /** Date lisible de la version (« 17 novembre 2026 »). */
 export const TERMS_DATE_LABEL = new Date(`${TERMS_VERSION}T12:00:00`).toLocaleDateString('fr-FR', {
@@ -54,6 +54,7 @@ export const PROCESSORS = [
 export const RETENTION = [
   { what: 'Ton compte, ton profil, tes recettes', how: 'tant que ton compte existe ; effacés quand tu le supprimes (tes recettes restent dans le foyer, sans ton nom)' },
   { what: 'Preuve d’acceptation des conditions', how: 'tant que ton compte existe' },
+  { what: 'Tes trophées, ton temps en mode « En cuisine », les boosters ouverts', how: 'tant que ton compte existe ; effacés quand tu le supprimes' },
   { what: 'Tes commentaires sur les recettes', how: 'jusqu’à ce que tu les supprimes (ou un admin de ton foyer), effacés avec ton compte' },
   { what: 'Journal des erreurs de l’appli', how: '90 jours' },
   { what: 'Liens d’invitation utilisés, annulés ou expirés', how: '90 jours après' },

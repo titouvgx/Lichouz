@@ -258,9 +258,12 @@ const PUBLIC_TABLES = [
   'terms_acceptances',
   'recipe_ratings',
   'recipe_comments',
+  'user_achievements',
+  'cook_sessions',
+  'booster_openings',
 ] as const
 type Table = (typeof PUBLIC_TABLES)[number]
-const PK: Partial<Record<Table, string>> = { super_admins: 'user_id' }
+const PK: Partial<Record<Table, string>> = { super_admins: 'user_id', user_achievements: 'profile_id' }
 const pkOf = (t: Table) => PK[t] ?? 'id'
 
 /** Tables rattachées à un foyer (données privées du foyer). */
@@ -438,6 +441,18 @@ const INSERT_A: Record<Table, [string, unknown[]]> = {
   recipe_ratings: [
     `INSERT INTO public.recipe_ratings (recipe_id, profile_id, stars) VALUES ($1, coalesce(auth.uid(), $2), 3) RETURNING id`,
     [ID.recA2, ID.memberA2],
+  ],
+  user_achievements: [
+    `INSERT INTO public.user_achievements (profile_id, achievement, tier) VALUES (coalesce(auth.uid(), $1), 'chef', 3) RETURNING profile_id`,
+    [ID.memberA2],
+  ],
+  cook_sessions: [
+    `INSERT INTO public.cook_sessions (profile_id, started_at, ended_at, minutes) VALUES (coalesce(auth.uid(), $1), now() - interval '1 hour', now(), 1) RETURNING id`,
+    [ID.memberA2],
+  ],
+  booster_openings: [
+    `INSERT INTO public.booster_openings (profile_id, kind, day) VALUES (coalesce(auth.uid(), $1), 'pirate', current_date) RETURNING id`,
+    [ID.memberA2],
   ],
   recipe_comments: [
     `INSERT INTO public.recipe_comments (recipe_id, author_id, super_family_id, body) VALUES ($1, coalesce(auth.uid(), $2), $3, 'PIRATE') RETURNING id`,
@@ -3751,7 +3766,7 @@ describe('Migration 28 : événements (visibilité foyer / famille, qui fait quo
 
 // ════════════════════════════════════════════════════════════════════════════
 describe('Migration 29 : conformité (pseudo, conditions, accord parental, mes données, conservation)', () => {
-  const V = '2026-11-18' // version en vigueur (migration 31)
+  const V = '2026-11-19' // version en vigueur (migration 32)
   const pseudoOf = async (s: Scenario, id: string) =>
     (await s.su<{ p: string | null; d: string | null }>(`SELECT pseudo AS p, pseudo_changed_at::text AS d FROM public.profiles WHERE id = $1`, [id]))[0]
   const terms = (id: string) => ({ table: 'public.terms_acceptances', id })
@@ -4020,5 +4035,70 @@ describe('Migration 31 : commentaires (visibles dans la famille seulement)', () 
     expect(d.commentaires_ecrits).toEqual([expect.objectContaining({ texte: 'Trop bon, on la refait !' })])
     await s.su(`DELETE FROM auth.users WHERE id = $1`, [ID.memberA])
     expect(await list(s, 'adminA', ID.recAshared)).toEqual([])
+  })
+})
+
+describe('Migration 32 : succès (calculés par la base, visibles par soi seul)', () => {
+  type Who = Parameters<Scenario['as']>[0]
+  const refresh = async (s: Scenario, who: Who) =>
+    (await s.as(who, `SELECT achievement, tier FROM public.refresh_my_achievements()`)).rows as { achievement: string; tier: number }[]
+  const progress = async (s: Scenario, who: Who) =>
+    (await s.as(who, `SELECT public.my_achievements() AS a`)).rows[0].a.progress as Record<string, number>
+  /** Une semaine passée du foyer A, repas cuisinés par adminA : [jour, repas, recette] */
+  const cook = async (s: Scenario, week: string, meals: [number, 'midi' | 'soir', string][]) => {
+    const plan = (await s.su<{ id: string }>(`INSERT INTO public.meal_plans (family_id, week_start) VALUES ($1, $2) RETURNING id`, [ID.famA, week]))[0].id
+    for (const [d, m, r] of meals) {
+      await s.su(`INSERT INTO public.meal_slots (meal_plan_id, day_of_week, meal_type, recipe_id, portions, cook_id) VALUES ($1, $2, $3, $4, 4, $5)`, [plan, d, m, r, ID.adminA])
+    }
+  }
+
+  controle('les repas cuisinés débloquent « Chef du foyer » une seule fois, et un toast seulement la première fois', async (s) => {
+    const meals: [number, 'midi' | 'soir', string][] = []
+    for (let d = 0; d < 7; d++) { meals.push([d, 'midi', ID.recA]); if (d < 3) meals.push([d, 'soir', ID.recAshared]) }
+    await cook(s, '2025-03-03', meals)
+    expect((await progress(s, 'adminA')).chef).toBe(10)
+    const first = await refresh(s, 'adminA')
+    expect(first).toContainEqual({ achievement: 'chef', tier: 1 })
+    expect(first).toContainEqual({ achievement: 'flemmard', tier: 1 }) // recA 7 fois la même semaine
+    expect(first).toContainEqual({ achievement: 'double_service', tier: 1 })
+    expect(first).not.toContainEqual({ achievement: 'plume', tier: 1 }) // déjà obtenu (graine)
+    expect(await refresh(s, 'adminA')).toEqual([]) // rien de nouveau la 2e fois
+  })
+  controle('un repas prévu plus tard ou un reste ne compte pas comme cuisiné', async (s) => {
+    await cook(s, '2099-01-05', [[0, 'midi', ID.recA]])
+    expect((await progress(s, 'adminA')).chef).toBe(0)
+  })
+  attaque('on ne s’attribue pas un trophée, on ne lit pas ceux des autres', async (s) => {
+    expectBlocked(await s.as('memberA', `INSERT INTO public.user_achievements (profile_id, achievement, tier) VALUES (auth.uid(), 'vieux', 1) RETURNING profile_id`), 'soi-même')
+    await attemptOnRow(s, 'adminA', { table: 'public.user_achievements', id: ID.adminA, pk: 'profile_id' },
+      `UPDATE public.user_achievements SET tier = 3 WHERE profile_id = $1 RETURNING profile_id`, [ID.adminA])
+    expectBlocked(await s.as('memberA', `SELECT * FROM public.user_achievements WHERE profile_id = $1`, [ID.adminA]), 'même foyer')
+    expectRefused(await s.as('adminA', `SELECT public.achievement_progress()`), '42501', 'calcul brut réservé à la base')
+  })
+  attaque('séance en cuisine : durée plafonnée à 4 h, pas de séance ancienne, toujours à son nom', async (s) => {
+    expectOk(await s.as('memberA', `INSERT INTO public.cook_sessions (profile_id, started_at, ended_at, minutes) VALUES ($1, now() - interval '10 hours', now(), 1) RETURNING id`, [ID.adminA]), 'longue', 1)
+    const row = (await s.su<{ p: string; m: number }>(`SELECT profile_id AS p, minutes AS m FROM public.cook_sessions WHERE started_at < now() - interval '9 hours'`))[0]
+    expect(row).toEqual({ p: ID.memberA, m: 240 })
+    expectRefused(await s.as('memberA', `INSERT INTO public.cook_sessions (profile_id, started_at, ended_at, minutes) VALUES (auth.uid(), now() - interval '3 days', now() - interval '2 days', 1) RETURNING id`), '22023', 'ancienne')
+    expectBlocked(await s.as('memberA', `SELECT * FROM public.cook_sessions WHERE profile_id = $1`, [ID.adminA]), 'lire les autres')
+  })
+  attaque('booster : jour inventé, recette illisible ou deuxième ouverture refusés', async (s) => {
+    expectRefused(await s.as('adminB', `INSERT INTO public.booster_openings (profile_id, kind, day) VALUES (auth.uid(), 'jour', current_date - 10) RETURNING id`), '22023', 'jour')
+    expectRefused(await s.as('adminB', `INSERT INTO public.booster_openings (profile_id, kind, day, recipe_ids) VALUES (auth.uid(), 'jour', current_date, ARRAY[$1]::uuid[]) RETURNING id`, [ID.recA]), '42501', 'recette d’une autre famille')
+    expectOk(await s.as('adminB', `INSERT INTO public.booster_openings (profile_id, kind, day, recipe_ids) VALUES (auth.uid(), 'jour', current_date, ARRAY[$1]::uuid[]) RETURNING id`, [ID.recB]), 'ouvrir', 1)
+    expectRefused(await s.as('adminB', `INSERT INTO public.booster_openings (profile_id, kind, day) VALUES (auth.uid(), 'jour', current_date) RETURNING id`), '23505', 'deux fois')
+    expect((await progress(s, 'adminB')).collectionneur).toBe(1)
+  })
+  controle('mes données : succès, temps en cuisine et boosters dans l’export', async (s) => {
+    const d = (await s.as('adminA', `SELECT public.export_my_data() AS d`)).rows[0].d
+    expect(d.succes_obtenus).toEqual([expect.objectContaining({ succes: 'plume', palier: 1 })])
+    expect(d.temps_en_cuisine).toHaveLength(1)
+    expect(d.boosters_ouverts).toEqual([expect.objectContaining({ booster: 'jour' })])
+  })
+  controle('les 40 trophées ont un compteur', async (s) => {
+    const p = await progress(s, 'adminA')
+    const tiers = (await s.su<{ t: Record<string, number[]> }>(`SELECT public.achievement_tiers() AS t`))[0].t
+    expect(Object.keys(tiers)).toHaveLength(40)
+    expect(Object.keys(p).sort()).toEqual(Object.keys(tiers).sort())
   })
 })
