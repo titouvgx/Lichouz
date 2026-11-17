@@ -11,6 +11,8 @@
   import FloatingRecipeCard from '../components/FloatingRecipeCard.svelte'
   import Cheminee from '../components/Cheminee.svelte'
   import { theme } from '../lib/theme.svelte'
+  import { fetchEvents, type FamilyEvent } from '../lib/api/events'
+  import { countdownLabel, daysUntil, templateOf } from '../lib/evenements'
   import PlanRecipeDialog from '../components/PlanRecipeDialog.svelte'
   import { fetchRecipe } from '../lib/api/recipes'
   import { fetchTodayMeals, type TodayMeal } from '../lib/api/household'
@@ -55,6 +57,22 @@
     fetchTodayMeals(familyId)
       .then((m) => { if (!cancelled) todayMeals = m })
       .catch(() => { if (!cancelled) todayMeals = [] })
+    return () => { cancelled = true }
+  })
+
+  // Prochain événement (Noël, anniversaire…) dans les 60 jours : bandeau sous le bonjour.
+  // En cas d'échec (ancienne base sans événements) : on n'affiche rien.
+  let nextEvent = $state<FamilyEvent | null>(null)
+  $effect(() => {
+    if (profileState.loading || !profileState.profile?.family_id) return
+    void dateKey
+    let cancelled = false
+    fetchEvents()
+      .then((list) => {
+        if (cancelled) return
+        nextEvent = list.find((e) => { const n = daysUntil(e.starts_on); return n >= 0 && n <= 60 }) ?? null
+      })
+      .catch(() => { if (!cancelled) nextEvent = null })
     return () => { cancelled = true }
   })
 
@@ -175,6 +193,19 @@
           <span class="today-when">{nextMeal.mealType === 'midi' ? 'Ce midi' : 'Ce soir'}&nbsp;:</span>
           <strong>{nextMeal.title}</strong>{#if nextMeal.cookName}{' · '}<span class="today-cook">{nextMeal.cookName} cuisine</span>{/if}
         </span>
+        <Icon name="chevron-right" size={15} />
+      </a>
+    {/if}
+    {#if nextEvent}
+      <a href={href('evenement', nextEvent.id)} class="event-banner">
+        <Icon name={templateOf(nextEvent.kind).icon} size={18} />
+        <span class="event-text"><strong>{nextEvent.title}</strong> · {countdownLabel(nextEvent.starts_on).toLowerCase()}</span>
+        <Icon name="chevron-right" size={15} />
+      </a>
+    {:else if theme.name === 'noel'}
+      <a href="#/evenements/nouveau" class="event-banner">
+        <Icon name="star" size={18} />
+        <span class="event-text"><strong>Organiser Noël</strong> · qui vient, qui fait quoi</span>
         <Icon name="chevron-right" size={15} />
       </a>
     {/if}
@@ -303,6 +334,29 @@
   }
 
   /* Repas du jour : petit bloc blanc cliquable vers la fiche */
+  /* Prochain événement : même allure que « Ce soir », couleur d'action */
+  .event-banner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    max-width: calc(100% - 120px);
+    min-height: 44px;
+    margin-top: var(--sp-3);
+    padding: 6px 10px;
+    background: var(--accent);
+    color: var(--on-accent);
+    border: var(--line-w) solid var(--line);
+    box-shadow: var(--shadow-sm);
+    font-size: 14px;
+    line-height: 1.25;
+    touch-action: manipulation;
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .event-banner:active { transform: translate(2px, 2px); box-shadow: none; }
+
   .today-meal {
     display: inline-flex;
     align-items: center;

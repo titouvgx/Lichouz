@@ -21,6 +21,29 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [1.999.0] — 2026-11-17
+
+**Migration 28 à exécuter AVANT la mise en ligne** : `supabase/migrations/20261117120000_evenements.sql`,
+puis la requête de contrôle `supabase/tests/controle_28_evenements.sql` (tout à `true`).
+L'ancien site reste compatible (nouvelles tables seulement).
+
+### Ajouté
+- **Événements** (lot N) : modèles Noël, anniversaire, fête, autre (titre, date et pôles proposés) ;
+  date, heure, chez qui, thème, lien de playlist (https seulement), infos ; visible par le foyer ou
+  par toute la famille élargie (choix à la création). Pages `#/evenements` (à venir / passés,
+  « éphémère » : reste en avant jusqu'à 3 jours après) et `#/evenement/<id>`.
+- Réponses oui / peut-être / non (une par personne) ; « Qui fait quoi » : pôles proposés + tâches
+  libres, chacun s'inscrit ou se retire lui-même (`toggle_event_volunteer`, atomique).
+- Tables `events`, `event_tasks`, `event_rsvps` (RLS ; création par tout membre ; modification et
+  suppression par l'auteur ou un admin du foyer) ; gardes : auteur forcé, 30 événements par foyer,
+  30 tâches par événement, inscription de soi-même seulement ; `event_people` ne renvoie que les
+  prénoms des personnes de l'événement ; compte supprimé → retiré des « qui fait quoi ».
+- Accueil : bandeau du prochain événement (60 jours) ou « Organiser Noël » en thème Noël ;
+  lien « Événements » dans Mon compte.
+- Thème Noël : cheminée agrandie (guirlande, lueur), place réservée sous le bonjour.
+- Banc RLS : 3 tables de plus (24), attaques sur la visibilité foyer / famille, les inscriptions,
+  les réponses, les droits d'auteur.
+
 ## [1.99.3] — 2026-11-17
 
 **Aucune migration.**

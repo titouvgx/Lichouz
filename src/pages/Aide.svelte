@@ -134,6 +134,8 @@
     <dl>
       <dt>J’ai oublié mon mot de passe.</dt>
       <dd>Sur l’écran de connexion, « Mot de passe oublié ? » : tu reçois un e-mail pour en choisir un nouveau. Une fois enregistré, tu es déconnecté de tous tes appareils : reconnecte-toi avec le nouveau mot de passe.</dd>
+      <dt>Comment organiser Noël ou un anniversaire ?</dt>
+      <dd><a href={href('evenements')}>Événements</a> (depuis l’Accueil ou Mon compte) → « Créer un événement » : choisis un modèle, la date, chez qui, et si toute la famille le voit ou seulement ton foyer. Chacun répond s’il vient et s’inscrit dans « Qui fait quoi ». Seuls l’auteur et les admins du foyer modifient ou suppriment l’événement.</dd>
       <dt>Comment changer les couleurs (thème de Noël) ?</dt>
       <dd><a href={href('compte')}>Mon compte</a> → Affichage : Automatique (Noël du 1er décembre au 6 janvier), Classique ou Noël. Le mode clair ou sombre suit ton téléphone ; le choix est gardé sur ce téléphone.</dd>
       <dt>Le lien d’invitation ne marche pas.</dt>

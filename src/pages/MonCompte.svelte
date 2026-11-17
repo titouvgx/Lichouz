@@ -252,6 +252,14 @@
       </span>
       <Icon name="chevron-right" size={18} />
     </a>
+    <a class="link-row row" href={href('evenements')}>
+      <span class="section-icon"><Icon name="calendar" size={18} /></span>
+      <span class="link-text">
+        <span class="link-title">Événements</span>
+        <span class="link-sub">Noël, anniversaires : qui vient, qui fait quoi</span>
+      </span>
+      <Icon name="chevron-right" size={18} />
+    </a>
     <a class="link-row row" href={href('avis')}>
       <span class="section-icon"><Icon name="mail" size={18} /></span>
       <span class="link-text">

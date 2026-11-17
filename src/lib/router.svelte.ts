@@ -22,6 +22,8 @@ export type Route =
   | 'avis'             // idées et retours envoyés à Titouan (v1.6.0)
   | 'nouveautes'       // ce qui a changé, version par version (v1.6.0)
   | 'admin'            // super-admin : liens fondateur, vue d'ensemble
+  | 'evenements'       // fêtes et événements (v1.999.0) ; #/evenements/nouveau ouvre le formulaire
+  | 'evenement'        // un événement : #/evenement/<id>
   | 'rejoindre'        // public : #/rejoindre/<jeton> (création de compte par lien)
   | 'mot-de-passe-oublie'  // public : demande d'e-mail de réinitialisation
   | 'nouveau-mot-de-passe' // public : arrivée depuis l'e-mail (?token_hash=…&type=recovery)
@@ -34,7 +36,7 @@ export type TabRoute = (typeof TAB_ROUTES)[number]
 
 const STATIC_ROUTES: string[] = [
   'login', 'accueil', 'frigo', 'recettes', 'nouvelle-recette', 'semaine', 'courses', 'historique', 'compte',
-  'famille', 'mes-recettes', 'avis', 'nouveautes', 'admin', 'aide', 'mot-de-passe-oublie', 'nouveau-mot-de-passe', 'confirmer-email',
+  'famille', 'mes-recettes', 'avis', 'nouveautes', 'admin', 'aide', 'evenements', 'mot-de-passe-oublie', 'nouveau-mot-de-passe', 'confirmer-email',
 ]
 
 /** Pages accessibles sans être connecté (en plus de « login »). */
@@ -72,6 +74,9 @@ function readHash(): RouterState {
   if (parts[0] === 'editer-recette' && parts[1]) {
     return { current: 'editer-recette', recipeId: parts[1], token: null }
   }
+  if (parts[0] === 'evenement' && parts[1]) {
+    return { current: 'evenement', recipeId: parts[1], token: null }
+  }
   if (parts[0] === 'rejoindre') {
     return { current: 'rejoindre', recipeId: null, token: parts[1] ?? null }
   }
@@ -97,7 +102,7 @@ export const router: RouterState = $state(readHash())
 /** Position de chaque écran : onglets de gauche à droite, sous-pages juste après leur onglet. */
 const ORDER: Record<Route, number> = {
   login: -10,
-  accueil: 0, frigo: 1,
+  accueil: 0, frigo: 1, evenements: 2, evenement: 3,
   recettes: 10, recette: 11, 'nouvelle-recette': 11, 'editer-recette': 12,
   semaine: 20,
   courses: 30,
@@ -147,6 +152,7 @@ window.addEventListener('hashchange', () => {
 export function href(route: Route | string, id?: string): string {
   if (route === 'recette' && id) return `#/recette/${id}`
   if (route === 'editer-recette' && id) return `#/editer-recette/${id}`
+  if (route === 'evenement' && id) return `#/evenement/${id}`
   return `#/${route}`
 }
 

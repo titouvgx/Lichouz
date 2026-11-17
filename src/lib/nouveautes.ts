@@ -10,6 +10,16 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.999.0',
+    date: '2026-11-17',
+    items: [
+      'Événements : organise Noël, un anniversaire ou une fête (Accueil ou Mon compte → Événements).',
+      'Chacun répond « Je viens », « Peut-être » ou « Je ne viens pas », et s’inscrit dans « Qui fait quoi » (apéritif, plat, desserts…).',
+      'Chez qui, thème, lien de playlist, infos pratiques ; visible par ton foyer ou par toute la famille.',
+      'Thème de Noël : grande cheminée sur l’accueil.',
+    ],
+  },
+  {
     version: '1.99.3',
     date: '2026-11-17',
     items: [

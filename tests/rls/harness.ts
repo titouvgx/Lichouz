@@ -81,6 +81,15 @@ export const ID = {
   tplSlotA: 'a0000000-0000-4000-8000-000000000034',
   tplSlotA2: 'a2000000-0000-4000-8000-000000000034',
   tplSlotB: 'b0000000-0000-4000-8000-000000000034',
+  evtA: 'a0000000-0000-4000-8000-000000000035', // événements (migration evenements)
+  evtA2: 'a2000000-0000-4000-8000-000000000035',
+  evtB: 'b0000000-0000-4000-8000-000000000035',
+  taskA: 'a0000000-0000-4000-8000-000000000036',
+  taskA2: 'a2000000-0000-4000-8000-000000000036',
+  taskB: 'b0000000-0000-4000-8000-000000000036',
+  rsvpA: 'a0000000-0000-4000-8000-000000000037',
+  rsvpA2: 'a2000000-0000-4000-8000-000000000037',
+  rsvpB: 'b0000000-0000-4000-8000-000000000037',
   listA: 'a0000000-0000-4000-8000-000000000041',
   listA2: 'a2000000-0000-4000-8000-000000000041',
   listB: 'b0000000-0000-4000-8000-000000000041',
@@ -268,6 +277,21 @@ INSERT INTO public.week_template_slots (id, template_id, day_of_week, meal_type,
   ('${ID.tplSlotA}',  '${ID.tplA}',  0, 'soir', '${ID.recA}',  4),
   ('${ID.tplSlotB}',  '${ID.tplB}',  1, 'soir', '${ID.recB}',  4),
   ('${ID.tplSlotA2}', '${ID.tplA2}', 2, 'soir', '${ID.recA2}', 4);
+
+INSERT INTO public.events (id, family_id, created_by, title, starts_on) VALUES
+  ('${ID.evtA}',  '${ID.famA}',  '${ID.memberA}',  'Noël A',  '2026-12-24'),
+  ('${ID.evtB}',  '${ID.famB}',  '${ID.memberB}',  'Noël B',  '2026-12-24'),
+  ('${ID.evtA2}', '${ID.famA2}', '${ID.memberA2}', 'Noël A2', '2026-12-24');
+
+INSERT INTO public.event_tasks (id, event_id, label, created_by, volunteers) VALUES
+  ('${ID.taskA}',  '${ID.evtA}',  'Desserts', '${ID.memberA}',  ARRAY['${ID.adminA}']::uuid[]),
+  ('${ID.taskB}',  '${ID.evtB}',  'Desserts', '${ID.memberB}',  ARRAY['${ID.adminB}']::uuid[]),
+  ('${ID.taskA2}', '${ID.evtA2}', 'Desserts', '${ID.memberA2}', ARRAY['${ID.adminA2}']::uuid[]);
+
+INSERT INTO public.event_rsvps (id, event_id, profile_id, answer) VALUES
+  ('${ID.rsvpA}',  '${ID.evtA}',  '${ID.adminA}',  'oui'),
+  ('${ID.rsvpB}',  '${ID.evtB}',  '${ID.adminB}',  'oui'),
+  ('${ID.rsvpA2}', '${ID.evtA2}', '${ID.adminA2}', 'oui');
 
 INSERT INTO public.shopping_lists (id, family_id, meal_plan_id, status) VALUES
   ('${ID.listA}',  '${ID.famA}',  '${ID.planA}',  'active'),

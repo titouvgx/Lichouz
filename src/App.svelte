@@ -20,6 +20,8 @@
   import MonCompte from './pages/MonCompte.svelte'
   import Famille from './pages/Famille.svelte'
   import MesRecettes from './pages/MesRecettes.svelte'
+  import Evenements from './pages/Evenements.svelte'
+  import Evenement from './pages/Evenement.svelte'
   import Avis from './pages/Avis.svelte'
   import Nouveautes from './pages/Nouveautes.svelte'
   import ConfirmDialog from './components/ConfirmDialog.svelte'
@@ -166,6 +168,10 @@
       <MonCompte />
     {:else if router.current === 'famille'}
       <Famille />
+    {:else if router.current === 'evenements'}
+      <Evenements />
+    {:else if router.current === 'evenement'}
+      {#key router.recipeId}<Evenement />{/key}
     {:else if router.current === 'mes-recettes'}
       <MesRecettes />
     {:else if router.current === 'avis'}

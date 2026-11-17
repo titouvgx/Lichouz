@@ -205,6 +205,7 @@ const superFam: Record<Foyer, string> = { A: ID.sfA, A2: ID.sfA, B: ID.sfB }
 const rec: Record<Foyer, string> = { A: ID.recA, A2: ID.recA2, B: ID.recB }
 const plan: Record<Foyer, string> = { A: ID.planA, A2: ID.planA2, B: ID.planB }
 const tpl: Record<Foyer, string> = { A: ID.tplA, A2: ID.tplA2, B: ID.tplB }
+const evt: Record<Foyer, string> = { A: ID.evtA, A2: ID.evtA2, B: ID.evtB }
 const list: Record<Foyer, string> = { A: ID.listA, A2: ID.listA2, B: ID.listB }
 const member: Record<Foyer, Actor> = { A: 'memberA', A2: 'memberA2', B: 'memberB' }
 const admin: Record<Foyer, Actor> = { A: 'adminA', A2: 'adminA2', B: 'adminB' }
@@ -228,7 +229,7 @@ const PAIRS_SF: [Foyer, Foyer][] = [
 const lien = (x: Foyer, y: Foyer) => (superFam[x] === superFam[y] ? 'même super-famille' : 'autre super-famille')
 
 // ── Description des tables ─────────────────────────────────────────────────
-/** Les 21 tables du schéma public couvertes par le banc. */
+/** Les 24 tables du schéma public couvertes par le banc. */
 const PUBLIC_TABLES = [
   'super_families',
   'families',
@@ -251,6 +252,9 @@ const PUBLIC_TABLES = [
   'feedback',
   'week_templates',
   'week_template_slots',
+  'events',
+  'event_tasks',
+  'event_rsvps',
 ] as const
 type Table = (typeof PUBLIC_TABLES)[number]
 const PK: Partial<Record<Table, string>> = { super_admins: 'user_id' }
@@ -368,6 +372,28 @@ const SCOPED: Scoped[] = [
     moveVal: tpl,
     memberDelete: true,
   },
+  {
+    table: 'events',
+    label: 'les événements',
+    row: evt,
+    ownedBy: 'family_id = $1',
+    insert: (f) => [`INSERT INTO public.events (family_id, title, starts_on) VALUES ($1, 'PIRATE', '2026-12-31') RETURNING id`, [fam[f]]],
+    set: `title = 'PIRATE'`,
+    moveCol: 'family_id',
+    moveVal: fam,
+    memberDelete: true, // le membre est l'auteur des événements du banc
+  },
+  {
+    table: 'event_tasks',
+    label: 'les tâches des événements',
+    row: { A: ID.taskA, A2: ID.taskA2, B: ID.taskB },
+    ownedBy: 'event_id IN (SELECT id FROM public.events WHERE family_id = $1)',
+    insert: (f) => [`INSERT INTO public.event_tasks (event_id, label) VALUES ($1, 'PIRATE') RETURNING id`, [evt[f]]],
+    set: `label = 'PIRATE'`,
+    moveCol: 'event_id',
+    moveVal: evt,
+    memberDelete: true,
+  },
 ]
 
 /** Une insertion « légitime » par table (visant le foyer A) : réutilisée par
@@ -401,6 +427,10 @@ const INSERT_A: Record<Table, [string, unknown[]]> = {
   feedback: [
     `INSERT INTO public.feedback (user_id, message) VALUES (coalesce(auth.uid(), $1), 'PIRATE') RETURNING id`,
     [ID.memberA],
+  ],
+  event_rsvps: [
+    `INSERT INTO public.event_rsvps (event_id, profile_id, answer) VALUES ($1, coalesce(auth.uid(), $2), 'oui') RETURNING id`,
+    [ID.evtA, ID.memberA],
   ],
   ...(Object.fromEntries(SCOPED.map((t) => [t.table, t.insert('A')])) as Partial<Record<Table, [string, unknown[]]>>),
 } as Record<Table, [string, unknown[]]>
@@ -656,6 +686,14 @@ describe('Structure du schéma et fidélité du banc', () => {
       ['public.guard_item_checked_by()', { anon: false, authenticated: false }],
       ['public.check_recipe_image_exists()', { anon: false, authenticated: false }],
       ['public.recipe_exists(text)', { anon: false, authenticated: true }],
+      ['public.can_see_event(uuid)', { anon: false, authenticated: true }],
+      ['public.can_edit_event(uuid)', { anon: false, authenticated: true }],
+      ['public.event_people(uuid)', { anon: false, authenticated: true }],
+      ['public.toggle_event_volunteer(uuid, boolean)', { anon: false, authenticated: true }],
+      ['public.guard_event()', { anon: false, authenticated: false }],
+      ['public.guard_event_task()', { anon: false, authenticated: false }],
+      ['public.guard_event_rsvp()', { anon: false, authenticated: false }],
+      ['public.forget_event_volunteer()', { anon: false, authenticated: false }],
     ]
     for (const [fn, roles] of expected) {
       for (const [role, v] of Object.entries(roles)) expect(await can(role, fn), `${role} EXECUTE ${fn}`).toBe(v)
@@ -3544,3 +3582,142 @@ describe('v1.99.0 : gérer le catalogue dans l\'appli (super-admin)', () => {
       `UPDATE public.recipes SET visibility = 'famille' WHERE id = $1 RETURNING id`, [c.recipes])
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════
+describe('Migration 28 : événements (visibilité foyer / famille, qui fait quoi, réponses)', () => {
+  const famille = (s: Scenario) => s.su(`UPDATE public.events SET scope = 'famille' WHERE id = $1`, [ID.evtA])
+  const vols = async (s: Scenario, id: string) =>
+    (await s.su<{ v: string[] }>(`SELECT volunteers AS v FROM public.event_tasks WHERE id = $1`, [id]))[0].v
+  const task = { table: 'public.event_tasks', id: ID.taskA }
+  const event = { table: 'public.events', id: ID.evtA }
+  const rsvp = { table: 'public.event_rsvps', id: ID.rsvpA }
+
+  // ── Visibilité « famille » ──
+  controle('événement « famille » : un membre d\'un autre foyer de la famille le voit', async (s) => {
+    await famille(s)
+    expectOk(await s.as('memberA2', `SELECT id FROM public.events WHERE id = $1`, [ID.evtA]), 'lecture A2', 1)
+    expectOk(await s.as('memberA2', `SELECT id FROM public.event_tasks WHERE event_id = $1`, [ID.evtA]), 'tâches A2', 1)
+    expectOk(await s.as('memberA2', `SELECT id FROM public.event_rsvps WHERE event_id = $1`, [ID.evtA]), 'réponses A2', 1)
+  })
+  attaque('événement « famille » : invisible pour une autre famille (B)', async (s) => {
+    await famille(s)
+    expectBlocked(await s.as('memberB', `SELECT id FROM public.events WHERE id = $1`, [ID.evtA]), 'lecture B')
+    expectBlocked(await s.as('memberB', `SELECT id FROM public.event_tasks WHERE event_id = $1`, [ID.evtA]), 'tâches B')
+    expectBlocked(await s.as('memberB', `SELECT * FROM public.event_people($1)`, [ID.evtA]), 'prénoms B')
+  })
+  attaque('événement « famille » : le foyer A2 ne le modifie pas, ne le supprime pas', async (s) => {
+    await famille(s)
+    await attemptOnRow(s, 'adminA2', event, `UPDATE public.events SET title = 'PIRATE' WHERE id = $1 RETURNING id`, [ID.evtA])
+    await attemptOnRow(s, 'memberA2', event, `DELETE FROM public.events WHERE id = $1 RETURNING id`, [ID.evtA])
+  })
+  attaque('événement « foyer » : le foyer A2 (même famille) ne voit pas ses prénoms', async (s) => {
+    expectBlocked(await s.as('memberA2', `SELECT * FROM public.event_people($1)`, [ID.evtA]), 'prénoms A2')
+  })
+  controle('événement « famille » : A2 répond, propose une tâche, s\'inscrit et se retire', async (s) => {
+    await famille(s)
+    expectOk(await s.as('memberA2', `INSERT INTO public.event_rsvps (event_id, profile_id, answer) VALUES ($1, auth.uid(), 'peut_etre') RETURNING id`, [ID.evtA]), 'réponse', 1)
+    expectOk(await s.as('memberA2', `INSERT INTO public.event_tasks (event_id, label) VALUES ($1, 'Bûche') RETURNING id`, [ID.evtA]), 'tâche', 1)
+    expectOk(await s.as('memberA2', `UPDATE public.event_tasks SET volunteers = volunteers || auth.uid() WHERE id = $1 RETURNING id`, [ID.taskA]), 'inscription', 1)
+    expect(await vols(s, ID.taskA)).toEqual([ID.adminA, ID.memberA2])
+    expectOk(await s.as('memberA2', `UPDATE public.event_tasks SET volunteers = array_remove(volunteers, auth.uid()) WHERE id = $1 RETURNING id`, [ID.taskA]), 'retrait', 1)
+    expect(await vols(s, ID.taskA)).toEqual([ID.adminA])
+    const names = await s.as('memberA2', `SELECT display_name FROM public.event_people($1)`, [ID.evtA])
+    expect(names.error).toBeUndefined()
+    expect(names.rows.length).toBeGreaterThanOrEqual(2) // auteur + adminA (inscrit) + A2 (réponse)
+  })
+
+  // ── Qui fait quoi ──
+  attaque('« qui fait quoi » : on n\'inscrit pas quelqu\'un d\'autre (modification)', async (s) => {
+    await refusedOnRow(s, 'memberA', task,
+      `UPDATE public.event_tasks SET volunteers = volunteers || $2::uuid WHERE id = $1 RETURNING id`, [ID.taskA, ID.superAdmin], '42501', /toi-même/)
+  })
+  attaque('« qui fait quoi » : on n\'inscrit pas quelqu\'un d\'autre (création)', async (s) => {
+    const before = await countRows(s, 'public.event_tasks')
+    expectRefused(await s.as('memberA', `INSERT INTO public.event_tasks (event_id, label, volunteers) VALUES ($1, 'X', ARRAY[$2::uuid]) RETURNING id`,
+      [ID.evtA, ID.adminA]), '42501', 'inscrire un autre', /toi-même/)
+    expect(await countRows(s, 'public.event_tasks')).toBe(before)
+  })
+  attaque('« qui fait quoi » : un invité de A2 ne retire pas les autres et ne renomme pas la tâche', async (s) => {
+    await famille(s)
+    await refusedOnRow(s, 'memberA2', task, `UPDATE public.event_tasks SET volunteers = '{}' WHERE id = $1 RETURNING id`, [ID.taskA], '42501', /toi-même/)
+    await refusedOnRow(s, 'memberA2', task, `UPDATE public.event_tasks SET label = 'PIRATE' WHERE id = $1 RETURNING id`, [ID.taskA], '42501', /auteur/)
+    await attemptOnRow(s, 'memberA2', task, `DELETE FROM public.event_tasks WHERE id = $1 RETURNING id`, [ID.taskA])
+  })
+  attaque('« qui fait quoi » : volontaires en double ou vides refusés', async (s) => {
+    await refusedOnRow(s, 'memberA', task, `UPDATE public.event_tasks SET volunteers = ARRAY[$2::uuid, $2::uuid] WHERE id = $1 RETURNING id`, [ID.taskA, ID.adminA], '22023')
+  })
+  controle('« qui fait quoi » : inscription atomique (toggle_event_volunteer) sans effacer les autres', async (s) => {
+    await famille(s)
+    expectOk(await s.as('memberA2', `SELECT public.toggle_event_volunteer($1, true) AS v`, [ID.taskA]), 'inscription', 1)
+    expectOk(await s.as('memberA', `SELECT public.toggle_event_volunteer($1, true) AS v`, [ID.taskA]), 'inscription 2', 1)
+    expect(await vols(s, ID.taskA)).toEqual([ID.adminA, ID.memberA2, ID.memberA])
+    expectOk(await s.as('memberA2', `SELECT public.toggle_event_volunteer($1, false) AS v`, [ID.taskA]), 'retrait', 1)
+    expect(await vols(s, ID.taskA)).toEqual([ID.adminA, ID.memberA])
+  })
+  attaque('« qui fait quoi » : toggle_event_volunteer sur la tâche d\'un autre foyer ne fait rien', async (s) => {
+    const o = await s.as('memberB', `SELECT public.toggle_event_volunteer($1, true) AS v`, [ID.taskA])
+    expect(o.error).toBeUndefined()
+    expect(o.rows[0].v).toBeNull()
+    expect(await vols(s, ID.taskA)).toEqual([ID.adminA])
+  })
+  controle('« qui fait quoi » : l\'auteur de l\'événement réorganise (renomme, retire quelqu\'un)', async (s) => {
+    expectOk(await s.as('memberA', `UPDATE public.event_tasks SET label = 'Bûche', volunteers = '{}' WHERE id = $1 RETURNING id`, [ID.taskA]), 'réorganisation', 1)
+  })
+  controle('compte supprimé : retiré des « qui fait quoi »', async (s) => {
+    await s.su(`UPDATE public.event_tasks SET volunteers = ARRAY[$2::uuid, $3::uuid] WHERE id = $1`, [ID.taskA, ID.adminA, ID.memberA])
+    await s.su(`DELETE FROM public.profiles WHERE id = $1`, [ID.memberA])
+    expect(await vols(s, ID.taskA)).toEqual([ID.adminA])
+  })
+
+  // ── Droits sur l'événement ──
+  attaque('un membre ne modifie pas l\'événement d\'un autre membre de son foyer', async (s) => {
+    const id = (await s.su<{ id: string }>(`INSERT INTO public.events (family_id, created_by, title, starts_on) VALUES ($1, $2, 'De l''admin', '2026-12-25') RETURNING id`, [ID.famA, ID.adminA]))[0].id
+    await attemptOnRow(s, 'memberA', { table: 'public.events', id }, `UPDATE public.events SET title = 'PIRATE' WHERE id = $1 RETURNING id`, [id])
+    await attemptOnRow(s, 'memberA', { table: 'public.events', id }, `DELETE FROM public.events WHERE id = $1 RETURNING id`, [id])
+  })
+  controle('l\'admin du foyer modifie l\'événement d\'un membre', async (s) => {
+    expectOk(await s.as('adminA', `UPDATE public.events SET theme = 'Pull moche' WHERE id = $1 RETURNING id`, [ID.evtA]), 'admin', 1)
+  })
+  attaque('l\'auteur ne se fait pas passer pour un autre (created_by forcé)', async (s) => {
+    const o = await s.as('memberA', `INSERT INTO public.events (family_id, created_by, title, starts_on) VALUES ($1, $2, 'Usurpé', '2026-12-31') RETURNING created_by`, [ID.famA, ID.adminA])
+    expectOk(o, 'insertion', 1)
+    expect(o.rows[0].created_by).toBe(ID.memberA)
+    await s.as('memberA', `UPDATE public.events SET created_by = $2 WHERE id = $1`, [ID.evtA, ID.adminA])
+    expect((await s.su<{ c: string }>(`SELECT created_by AS c FROM public.events WHERE id = $1`, [ID.evtA]))[0].c).toBe(ID.memberA)
+  })
+  attaque('lien de playlist : https seulement', async (s) => {
+    for (const url of ['javascript:alert(1)', 'http://exemple.fr', 'https://a b']) {
+      await refusedOnRow(s, 'memberA', event, `UPDATE public.events SET playlist_url = $2 WHERE id = $1 RETURNING id`, [ID.evtA, url], '23514')
+    }
+  })
+  attaque('30 événements par foyer au plus', async (s) => {
+    for (let i = 0; i < 29; i++) await s.su(`INSERT INTO public.events (family_id, title, starts_on) VALUES ($1, $2, '2026-12-01')`, [ID.famA, `E${i}`])
+    expectRefused(await s.as('memberA', `INSERT INTO public.events (family_id, title, starts_on) VALUES ($1, 'De trop', '2026-12-31') RETURNING id`, [ID.famA]), '54000', '31e')
+  })
+
+  // ── Réponses ──
+  attaque('réponse : on ne répond pas à la place d\'un autre', async (s) => {
+    const before = await countRows(s, 'public.event_rsvps')
+    await attemptInsert(s, 'memberA', 'public.event_rsvps',
+      `INSERT INTO public.event_rsvps (event_id, profile_id, answer) VALUES ($1, $2, 'non') RETURNING id`, [ID.evtA, ID.superAdmin])
+    expect(await countRows(s, 'public.event_rsvps')).toBe(before)
+    await attemptOnRow(s, 'memberA', rsvp, `UPDATE public.event_rsvps SET answer = 'non' WHERE id = $1 RETURNING id`, [ID.rsvpA])
+    await attemptOnRow(s, 'memberA', rsvp, `DELETE FROM public.event_rsvps WHERE id = $1 RETURNING id`, [ID.rsvpA])
+  })
+  attaque('réponse : pas de réponse à l\'événement d\'un autre foyer (même famille ou pas)', async (s) => {
+    for (const actor of ['memberA2', 'memberB'] as const) {
+      await attemptInsert(s, actor, 'public.event_rsvps',
+        `INSERT INTO public.event_rsvps (event_id, profile_id, answer) VALUES ($1, auth.uid(), 'oui') RETURNING id`, [ID.evtA])
+    }
+  })
+  attaque('réponse : on ne déplace pas sa réponse vers un autre événement ou une autre personne', async (s) => {
+    await s.as('adminA', `UPDATE public.event_rsvps SET event_id = $2, profile_id = $3 WHERE id = $1`, [ID.rsvpA, ID.evtB, ID.memberA])
+    const r = await s.su<{ e: string; p: string }>(`SELECT event_id AS e, profile_id AS p FROM public.event_rsvps WHERE id = $1`, [ID.rsvpA])
+    expect(r[0]).toEqual({ e: ID.evtA, p: ID.adminA })
+  })
+  controle('réponse : on change et on retire sa propre réponse', async (s) => {
+    expectOk(await s.as('adminA', `UPDATE public.event_rsvps SET answer = 'peut_etre' WHERE id = $1 RETURNING id`, [ID.rsvpA]), 'changement', 1)
+    expectOk(await s.as('adminA', `DELETE FROM public.event_rsvps WHERE id = $1 RETURNING id`, [ID.rsvpA]), 'retrait', 1)
+  })
+})
+
