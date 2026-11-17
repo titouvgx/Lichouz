@@ -1,7 +1,7 @@
 <script lang="ts">
   // Médaille d'un trophée (v2.7.0) : ruban + disque à la couleur de la rareté,
   // icône au centre. Pas obtenu : gris ; secret pas obtenu : cadenas.
-  import Icon from './Icon.svelte'
+  import Icon, { type IconName } from './Icon.svelte'
   import { rarityOf, type Achievement } from '../lib/succes'
 
   let { achievement, tier = 0, size = 56, shine = false }: {
@@ -21,7 +21,7 @@
 <span class="medal" class:locked class:shine style:--size="{size}px" style:--medal={color} aria-hidden="true">
   <span class="ribbon"><span class="r1"></span><span class="r2"></span></span>
   <span class="disc">
-    <Icon name={hidden ? 'lock' : achievement.icon} size={Math.round(size * 0.42)} strokeWidth={2.2} />
+    <Icon name={hidden ? 'lock' : (achievement.icon as IconName)} size={Math.round(size * 0.42)} strokeWidth={2.2} />
     {#if !achievement.secret && tier > 0}
       <span class="tier">{'I'.repeat(tier)}</span>
     {/if}

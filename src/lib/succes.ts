@@ -3,8 +3,6 @@
 // seulement les textes, les raretés et les points. Seuils = achievement_tiers()
 // de la migration (test qui compare).
 
-import type { IconName } from '../components/Icon.svelte'
-
 export type Rarity = 'commun' | 'rare' | 'epique' | 'legendaire'
 
 export const RARITY_LABEL: Record<Rarity, string> = {
@@ -32,8 +30,8 @@ export interface Achievement {
   secret?: boolean
   /** Rareté d'un secret (les évolutifs suivent TIER_RARITY) */
   rarity?: Rarity
-  /** Icône dans la médaille (Icon.svelte) */
-  icon: IconName
+  /** Nom d'icône de Icon.svelte (vérifié par TrophyMedal) */
+  icon: string
 }
 
 export const ACHIEVEMENTS: readonly Achievement[] = [

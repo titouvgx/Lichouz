@@ -46,3 +46,10 @@ describe('Trophées : points et niveaux', () => {
     expect(levelOf(MAX_POINTS).level).toBeGreaterThanOrEqual(9)
   })
 })
+
+describe('Trophées : icônes', () => {
+  it('chaque icône existe dans Icon.svelte (le type ne le vérifie plus)', () => {
+    const icon = readFileSync(join(__dirname, '../../src/components/Icon.svelte'), 'utf8')
+    for (const a of ACHIEVEMENTS) expect(icon, `${a.key} → ${a.icon}`).toContain(`name === '${a.icon}'`)
+  })
+})
