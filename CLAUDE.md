@@ -35,7 +35,7 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `hist
 
 ## Migrations et bases
 - Détail : `docs/migrations.md`. Contrôles : `supabase/tests/controle_NN_*.sql`. Migrations GÉNÉRÉES (16, 18, 25 bis) jamais éditées à la main (`npm run recettes`)
-- **État des bases (à tenir à jour)** : `courses-test` (id `oczyjyehltrizhbuttad`, essais libres, pause après 7 j) et `lichouz-prod` (id `kfdtybskxobqfmpetzgc`) **à jour jusqu’à la migration 30** (17/11/2026, contrôles tout à true) ; **migration 31 passée sur `courses-test` le 17/11/2026 (contrôle 31 tout à true), PAS encore sur la prod**. ⚠️ **Aucun export de sauvegarde de la prod** (guide `docs/sauvegardes.md`)
+- **État des bases (à tenir à jour)** : `courses-test` (id `oczyjyehltrizhbuttad`, essais libres, pause après 7 j) et `lichouz-prod` (id `kfdtybskxobqfmpetzgc`) **à jour jusqu’à la migration 31** (17/11/2026, par le connecteur Supabase avec l’accord de Titouan, contrôles tout à true sur les deux). ⚠️ **Aucun export de sauvegarde de la prod** (guide `docs/sauvegardes.md`)
 - **Règle** : d'abord `courses-test`, puis `lichouz-prod` **seulement avec l'accord de Titouan** (il valide la fenêtre Supabase dans les 2 minutes) ; requête de contrôle AVANT de pousser le code qui en dépend. Nouvelle table = RLS + attaques ajoutées dans `tests/rls`. Jamais les vraies recettes de la famille dans le dépôt public
 
 ## Sécurité (OBLIGATOIRE)
@@ -45,7 +45,7 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `hist
 - **CSP** (`index.html`) : `*.supabase.co` et Unsplash seulement ; toute nouvelle source → l'ajouter
 - Actions GitHub épinglées par SHA, permissions minimales
 - Droits appli = droits base ; une suppression filtrée par RLS (0 ligne) est signalée, jamais affichée comme réussie
-- En place : `security-check.yml`, `verifications.yml`, banc RLS (1 571 tests en v2.2.0, 26 tables), journal des erreurs `src/lib/errorReport.ts` (texte nettoyé ; insérer SANS `.select()`)
+- En place : `security-check.yml`, `verifications.yml`, banc RLS (1 586 tests en v2.6.0, 28 tables), journal des erreurs `src/lib/errorReport.ts` (texte nettoyé ; insérer SANS `.select()`)
 
 ## Pièges connus
 - `signIn()` ne touche PAS `auth.loading`
@@ -60,9 +60,8 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `hist
 - Réglages Supabase (invitations, mot de passe oublié, SMTP Brevo) : `supabase/functions/README.md`, `supabase/prod/README.md`
 
 ## État et suite (17/11/2026)
-- **En ligne : v2.5.0** (17/11/2026, sans migration) : boosters à thème (`#/boosters`, lien discret sur l’accueil), paquets dessinés, tirage du jour mémorisé sur le téléphone. Avant : 2.4.x booster du jour + aura, 2.3.0 Tendances
+- **En ligne : v2.6.0** (17/11/2026, migration 31) : commentaires des recettes (famille seulement), conditions version 2026-11-18. Avant : 2.5.0 boosters à thème, 2.4.x booster du jour + aura, 2.3.0 Tendances
 - Boosters = **petit plus, jamais central** (décision de Titouan). Album, cartes rares, boosters bonus : avec le lot Succès (une seule ré-acceptation)
-- **v2.6.0 Commentaires** : branche `v2-6-commentaires`, migration 31 (nouvelle `TERMS_VERSION` 2026-11-18 → ré-acceptation). Famille seulement
 - **Todo si l’appli devient publique** (décision de Titouan) : les commentaires deviendront **publics pour tout le monde** → modération (signaler, masquer, page de modération), CGU, moins de 15 ans
 - À faire ensuite : **Lot Succès** (trophées évolutifs + secrets, raretés, niveau, stats, calculés en base, nouvelle `TERMS_VERSION`). Détail : doc claude.ai `courses-famille/prompt-reprise-2026-11-17.md`
 - **Todo, NE PAS FAIRE avant feu vert** : **bibliothèque des recettes obtenues** dans les boosters (garder pour de bon les cartes sorties ; table en base + RLS + Confidentialité ; à voir avec l’album du lot Succès)
