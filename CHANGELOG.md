@@ -21,6 +21,14 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [2.4.1] — 2026-11-17
+
+Migration : **aucune**.
+
+### Modifié
+- Ouverture du booster : aura plein écran (`BoosterAura.svelte` : halo qui part du paquet, voile léger, 16 étincelles), ~1,4 s,
+  sous les fenêtres (z-index 150), jamais en mouvement réduit.
+
 ## [2.4.0] — 2026-11-17
 
 Migration : **aucune**.

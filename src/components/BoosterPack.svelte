@@ -17,8 +17,11 @@
     onopen: () => void
     ondone?: () => void
     onskip: () => void
+    /** Dès le toucher (v2.4.1) : centre du paquet dans la fenêtre, pour l'aura */
+    ontear?: (center: { x: number; y: number }) => void
   }
-  let { ready, onopen, ondone, onskip }: Props = $props()
+  let { ready, onopen, ondone, onskip, ontear }: Props = $props()
+  let packEl: HTMLButtonElement | undefined = $state()
 
   /** Déchirure de la bande, puis lâcher des cartes pendant la descente (ms) */
   const TEAR_MS = 380
@@ -82,6 +85,8 @@
     opening = true
     release()
     navigator.vibrate?.(25)
+    const r = packEl?.getBoundingClientRect()
+    if (r) ontear?.({ x: r.left + r.width / 2, y: r.top + r.height / 2 })
     setTimeout(onopen, TEAR_MS)
     setTimeout(() => ondone?.(), DONE_MS)
   }
@@ -90,6 +95,7 @@
 <div class="booster" class:opening>
   <div class="float">
     <button
+      bind:this={packEl}
       class="pack"
       class:tilting
       style:--tx={tx}

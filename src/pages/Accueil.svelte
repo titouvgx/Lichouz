@@ -11,6 +11,7 @@
   import { computeFloatLayout, MIN_ZONE_HEIGHT } from '../lib/floatLayout'
   import FloatingRecipeCard from '../components/FloatingRecipeCard.svelte'
   import BoosterPack from '../components/BoosterPack.svelte'
+  import BoosterAura from '../components/BoosterAura.svelte'
   import { boosterOpenedToday, markBoosterOpened } from '../lib/booster'
   import { auth } from '../lib/auth.svelte'
   import Cheminee from '../components/Cheminee.svelte'
@@ -140,6 +141,16 @@
     booster = reduceMotion || boosterOpenedToday(userId, key) ? 'direct' : 'ferme'
     packGone = false
   })
+
+  /** Aura plein écran à l'ouverture (v2.4.1), retirée après l'animation */
+  let aura = $state<{ x: number; y: number } | null>(null)
+  let auraTimer: ReturnType<typeof setTimeout> | undefined
+  function startAura(center: { x: number; y: number }) {
+    aura = center
+    clearTimeout(auraTimer)
+    auraTimer = setTimeout(() => (aura = null), 1800)
+  }
+  onDestroy(() => clearTimeout(auraTimer))
 
   function openBooster() {
     markBoosterOpened(userId, dateKey)
@@ -273,7 +284,11 @@
           onopen={openBooster}
           ondone={() => (packGone = true)}
           onskip={skipBooster}
+          ontear={startAura}
         />
+      {/if}
+      {#if aura}
+        <BoosterAura x={aura.x} y={aura.y} />
       {/if}
       {#if booster !== 'ferme'}
         {#each layout.slots as slot, i (i)}

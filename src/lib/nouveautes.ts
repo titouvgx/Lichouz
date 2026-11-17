@@ -10,6 +10,11 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.4.1',
+    date: '2026-11-17',
+    items: ['Ouvrir le booster fait maintenant scintiller tout l’écran, comme une aura.'],
+  },
+  {
     version: '2.4.0',
     date: '2026-11-17',
     items: [
