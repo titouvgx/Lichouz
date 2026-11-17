@@ -5,6 +5,8 @@
   // Pause quand l'appli n'est pas à l'écran (batterie).
   import { onMount } from 'svelte'
 
+  let { size = 56 }: { size?: number } = $props()
+
   let paused = $state(false)
   onMount(() => {
     const onVisibility = () => { paused = document.visibilityState !== 'visible' }
@@ -14,7 +16,11 @@
 </script>
 
 <div class="cheminee" class:paused aria-hidden="true">
-  <svg viewBox="0 0 64 64" width="56" height="56">
+  <svg viewBox="0 0 64 64" width={size} height={size}>
+    <!-- guirlande et lueur (visibles surtout en grand) -->
+    <path class="trait fin" d="M4 14c6 5 12 5 18 0 6 5 12 5 20 0 6 5 12 5 18 0" />
+    <circle class="boule b1" cx="13" cy="17.5" r="1.6" /><circle class="boule b2" cx="32" cy="17.5" r="1.6" /><circle class="boule b3" cx="51" cy="17.5" r="1.6" />
+    <ellipse class="lueur" cx="32" cy="52" rx="13" ry="8" />
     <!-- manteau et briques -->
     <path class="trait" d="M4 14h56v6H4zM8 20h48v40H8z" />
     <path class="trait fin" d="M8 30h10M46 30h10M8 40h10M46 40h10M8 50h10M46 50h10M13 20v10M51 20v10M13 40v10M51 40v10" />
@@ -33,9 +39,8 @@
 
 <style>
   .cheminee {
-    width: 56px;
-    height: 56px;
     color: var(--line);
+    line-height: 0;
   }
 
   svg { display: block; overflow: visible; }
@@ -62,7 +67,18 @@
   .f1 { fill: var(--accent); }
   .f2 { fill: var(--highlight); animation-duration: 1.1s; animation-delay: -0.4s; }
 
-  .paused .flamme { animation-play-state: paused; }
+  .boule { fill: var(--highlight); stroke: currentColor; stroke-width: 0.8; }
+  .b2 { fill: var(--accent); }
+
+  /* Lueur du feu : pulse doucement (opacité seulement) */
+  .lueur {
+    fill: var(--highlight);
+    opacity: 0.35;
+    animation: lueur 2.4s ease-in-out infinite alternate;
+  }
+  @keyframes lueur { from { opacity: 0.2; } to { opacity: 0.45; } }
+
+  .paused .flamme, .paused .lueur { animation-play-state: paused; }
 
   @keyframes crepite {
     0%   { transform: scale(1, 1);       opacity: 1; }
@@ -72,6 +88,6 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .flamme { animation: none; }
+    .flamme, .lueur { animation: none; }
   }
 </style>

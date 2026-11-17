@@ -156,8 +156,11 @@
 
 <div class="page accueil">
 
-  <header class="hero">
-    {#if theme.name === 'noel'}<span class="hero-deco"><Cheminee /></span>{/if}
+  <header class="hero" class:hero-noel={theme.name === 'noel'}>
+    {#if theme.name === 'noel'}
+      <!-- Thème Noël : grande cheminée en haut à droite, derrière le texte et les cartes -->
+      <div class="hearth" aria-hidden="true"><Cheminee size={132} /></div>
+    {/if}
     <span class="date-chip">{dateLabel}</span>
     <h1>
       {greeting}{firstName ? ` ${firstName}` : ''}
@@ -255,12 +258,17 @@
     padding-right: 56px; /* place pour l'avatar en haut à droite */
   }
 
-  /* Thème Noël : cheminée sous l'avatar, dans la colonne déjà réservée */
-  .hero-deco {
+  /* Thème Noël : grande cheminée dans le coin libre à droite du bonjour,
+     sous l'avatar ; derrière le texte et les cartes (z-index -1, au-dessus du fond animé). */
+  .hearth {
     position: absolute;
-    top: 60px;
-    right: 0;
+    top: 52px;
+    right: -4px;
+    z-index: -1;
+    pointer-events: none;
   }
+  /* La cheminée garde sa place : les cartes du jour commencent en dessous */
+  .hero-noel { min-height: 188px; }
 
   /* Date : petite étiquette noire, comme un bandeau de rayon */
   .date-chip {
