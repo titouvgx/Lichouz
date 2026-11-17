@@ -108,7 +108,7 @@
     {:else}
       <div class="logo" aria-hidden="true"><Icon name="shield" size={36} /></div>
       <h1 id="gate-title">Avant de continuer</h1>
-      <p class="lead">Lichouz a maintenant des règles écrites : ce qu’on peut y faire, et ce qu’on fait de tes données. Trois choses à faire, une seule fois.</p>
+      <p class="lead">Les règles de Lichouz : ce qu’on peut y faire, et ce qu’on fait de tes données. <strong>Nouveau (18 novembre)</strong> : les commentaires sur les recettes, lus par toute ta famille. Trois choses à faire, une seule fois.</p>
 
       <form class="card form" onsubmit={(e) => { e.preventDefault(); submit() }}>
         <!-- 1. Pseudo -->

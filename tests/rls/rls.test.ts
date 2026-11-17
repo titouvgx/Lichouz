@@ -257,6 +257,7 @@ const PUBLIC_TABLES = [
   'event_rsvps',
   'terms_acceptances',
   'recipe_ratings',
+  'recipe_comments',
 ] as const
 type Table = (typeof PUBLIC_TABLES)[number]
 const PK: Partial<Record<Table, string>> = { super_admins: 'user_id' }
@@ -437,6 +438,10 @@ const INSERT_A: Record<Table, [string, unknown[]]> = {
   recipe_ratings: [
     `INSERT INTO public.recipe_ratings (recipe_id, profile_id, stars) VALUES ($1, coalesce(auth.uid(), $2), 3) RETURNING id`,
     [ID.recA2, ID.memberA2],
+  ],
+  recipe_comments: [
+    `INSERT INTO public.recipe_comments (recipe_id, author_id, super_family_id, body) VALUES ($1, coalesce(auth.uid(), $2), $3, 'PIRATE') RETURNING id`,
+    [ID.recA2, ID.memberA2, ID.sfA],
   ],
   terms_acceptances: [
     `INSERT INTO public.terms_acceptances (profile_id, version, age_group) VALUES (coalesce(auth.uid(), $1), public.current_terms_version(), 'majeur') RETURNING id`,
@@ -3746,7 +3751,7 @@ describe('Migration 28 : événements (visibilité foyer / famille, qui fait quo
 
 // ════════════════════════════════════════════════════════════════════════════
 describe('Migration 29 : conformité (pseudo, conditions, accord parental, mes données, conservation)', () => {
-  const V = '2026-11-17'
+  const V = '2026-11-18' // version en vigueur (migration 31)
   const pseudoOf = async (s: Scenario, id: string) =>
     (await s.su<{ p: string | null; d: string | null }>(`SELECT pseudo AS p, pseudo_changed_at::text AS d FROM public.profiles WHERE id = $1`, [id]))[0]
   const terms = (id: string) => ({ table: 'public.terms_acceptances', id })
@@ -3956,3 +3961,64 @@ describe('Migration 30 : étoiles (votes privés, moyenne visible)', () => {
   })
 })
 
+
+describe('Migration 31 : commentaires (visibles dans la famille seulement)', () => {
+  const list = async (s: Scenario, who: Parameters<Scenario['as']>[0], rec: string) =>
+    (await s.as(who, `SELECT body, author_name, mine, can_delete FROM public.recipe_comments_list($1)`, [rec])).rows
+  const post = (s: Scenario, who: Parameters<Scenario['as']>[0], rec: string, body: string) =>
+    s.as(who, `INSERT INTO public.recipe_comments (recipe_id, author_id, super_family_id, body) VALUES ($1, auth.uid(), public.my_super_family_id(), $2) RETURNING id`, [rec, body])
+  const commentId = async (s: Scenario, body: string) =>
+    (await s.su<{ id: string }>(`SELECT id FROM public.recipe_comments WHERE body = $1`, [body]))[0].id
+
+  controle('écrire sur une recette lisible ; toute la famille le lit, avec le prénom', async (s) => {
+    expectOk(await post(s, 'adminA2', ID.recAshared, '  Validé par le foyer A2  '), 'écrire', 1)
+    const rows = await list(s, 'adminA', ID.recAshared)
+    expect(rows.map((r: any) => r.body)).toEqual(['Trop bon, on la refait !', 'Validé par le foyer A2'])
+    expect(rows[0]).toMatchObject({ mine: false, can_delete: true }) // adminA est admin du foyer de memberA
+    expect(rows[1]).toMatchObject({ mine: false, can_delete: false }) // autre foyer
+  })
+  controle('un moins de 15 ans peut écrire dans sa famille', async (s) => {
+    expectOk(await post(s, 'memberA', ID.recA, 'Miam'), 'enfant', 1)
+  })
+  attaque('une autre famille ne voit pas les commentaires, même sur une recette commune', async (s) => {
+    expect(await list(s, 'adminB', ID.recAshared)).toEqual([])
+    expectBlocked(await s.as('adminB', `SELECT body FROM public.recipe_comments WHERE super_family_id = $1`, [ID.sfA]), 'lecture directe')
+    // et la famille A ne voit pas ceux de B
+    expectBlocked(await s.as('adminA', `SELECT body FROM public.recipe_comments WHERE super_family_id = $1`, [ID.sfB]), 'sens inverse')
+  })
+  attaque('pas de commentaire sur une recette qu’on ne lit pas, ni au nom d’un autre, ni dans une autre famille', async (s) => {
+    const before = await countRows(s, 'public.recipe_comments')
+    expectBlocked(await post(s, 'adminB', ID.recA, 'pirate'), 'recette illisible')
+    await s.as('adminA', `INSERT INTO public.recipe_comments (recipe_id, author_id, super_family_id, body) VALUES ($1, $2, $3, 'usurpé')`, [ID.recB, ID.adminB, ID.sfB])
+    await s.as('adminA', `INSERT INTO public.recipe_comments (recipe_id, author_id, super_family_id, body) VALUES ($1, $2, $3, 'déguisé')`, [ID.recAshared, ID.memberA, ID.sfB])
+    const forged = await s.su<{ a: string; f: string }>(`SELECT author_id AS a, super_family_id AS f FROM public.recipe_comments WHERE body IN ('usurpé', 'déguisé')`)
+    for (const r of forged) expect(r).toEqual({ a: ID.adminA, f: ID.sfA }) // auteur et famille forcés par la base
+    expect(await countRows(s, 'public.recipe_comments')).toBeLessThanOrEqual(before + 1)
+  })
+  attaque('texte vide ou trop long refusé', async (s) => {
+    expectRefused(await post(s, 'adminA', ID.recA, '   '), '23514', 'vide')
+    expectRefused(await post(s, 'adminA', ID.recA, 'x'.repeat(501)), '23514', 'trop long')
+    expectOk(await post(s, 'adminA', ID.recA, 'x'.repeat(500)), '500 pile', 1)
+  })
+  attaque('pas de modification, et suppression seulement par l’auteur ou un admin de son foyer', async (s) => {
+    const id = await commentId(s, 'Trop bon, on la refait !')
+    await attemptOnRow(s, 'memberA', { table: 'public.recipe_comments', id }, `UPDATE public.recipe_comments SET body = 'modifié' WHERE id = $1 RETURNING id`, [id])
+    await attemptOnRow(s, 'adminA2', { table: 'public.recipe_comments', id }, `DELETE FROM public.recipe_comments WHERE id = $1 RETURNING id`, [id])
+    await attemptOnRow(s, 'adminB', { table: 'public.recipe_comments', id }, `DELETE FROM public.recipe_comments WHERE id = $1 RETURNING id`, [id])
+    expectOk(await s.as('adminA', `DELETE FROM public.recipe_comments WHERE id = $1 RETURNING id`, [id]), 'admin du foyer', 1)
+  })
+  controle('l’auteur supprime son commentaire', async (s) => {
+    const id = await commentId(s, 'Commentaire de la famille B')
+    expectOk(await s.as('adminB', `DELETE FROM public.recipe_comments WHERE id = $1 RETURNING id`, [id]), 'auteur', 1)
+  })
+  attaque('30 commentaires par heure au plus', async (s) => {
+    for (let i = 0; i < 30; i++) expectOk(await post(s, 'adminA2', ID.recA2, `n°${i}`), `n°${i}`, 1)
+    expectRefused(await post(s, 'adminA2', ID.recA2, 'un de trop'), 'P0001', '31e')
+  })
+  controle('mes données : les commentaires écrits sont dans l’export ; supprimer le compte les efface', async (s) => {
+    const d = (await s.as('memberA', `SELECT public.export_my_data() AS d`)).rows[0].d
+    expect(d.commentaires_ecrits).toEqual([expect.objectContaining({ texte: 'Trop bon, on la refait !' })])
+    await s.su(`DELETE FROM auth.users WHERE id = $1`, [ID.memberA])
+    expect(await list(s, 'adminA', ID.recAshared)).toEqual([])
+  })
+})

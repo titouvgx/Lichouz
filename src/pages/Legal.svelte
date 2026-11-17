@@ -58,7 +58,7 @@
       <section class="card">
         <h2>3. Ce que tu ajoutes</h2>
         <ul>
-          <li>Tes recettes, photos et textes restent à toi. En les ajoutant, tu permets aux personnes qui peuvent les voir (ton foyer, ou toute la famille si tu les partages) de les lire et de s’en servir dans l’appli.</li>
+          <li>Tes recettes, photos, textes et commentaires restent à toi. En les ajoutant, tu permets aux personnes qui peuvent les voir (ton foyer, ou toute la famille si tu les partages) de les lire et de s’en servir dans l’appli.</li>
           <li>N’ajoute que ce que tu as le droit d’utiliser : pas de photo prise sur internet sans autorisation, pas de texte recopié mot pour mot d’un livre ou d’un site.</li>
           <li>Si tu supprimes ton compte, tes recettes restent dans ton foyer, sans ton nom.</li>
         </ul>
@@ -66,7 +66,7 @@
 
       <section class="card">
         <h2>4. Bien vivre ensemble</h2>
-        <p>Pas de contenu illégal, blessant ou gênant pour les autres. Un admin de ton foyer peut mettre un compte en pause ou le retirer.</p>
+        <p>Pas de contenu illégal, blessant ou gênant pour les autres, y compris dans les commentaires : ils sont lus par toute ta famille, enfants compris. Un admin de ton foyer peut supprimer un commentaire écrit dans son foyer, mettre un compte en pause ou le retirer.</p>
       </section>
 
       <section class="card">
@@ -109,7 +109,7 @@
           <dt>Ton âge (tranche seulement)</dt>
           <dd>18 ans ou plus, 15 à 17 ans, ou moins de 15 ans, avec la date d’acceptation des conditions et, avant 15 ans, l’accord du parent : c’est la preuve demandée par la loi.</dd>
           <dt>La vie du foyer</dt>
-          <dd>Recettes, photos, planning, « qui cuisine », listes de courses (et qui a coché quoi), placard, événements et réponses, étoiles données aux recettes (ta note reste privée, seule la moyenne est visible) : c’est l’appli elle-même.</dd>
+          <dd>Recettes, photos, planning, « qui cuisine », listes de courses (et qui a coché quoi), placard, événements et réponses, étoiles données aux recettes (ta note reste privée, seule la moyenne est visible), commentaires sur les recettes : c’est l’appli elle-même.</dd>
           <dt>Tes messages</dt>
           <dd>Les idées et retours que tu envoies.</dd>
           <dt>Le journal des erreurs</dt>
@@ -122,7 +122,7 @@
         <h2>Qui voit quoi</h2>
         <ul>
           <li><strong>Ton foyer</strong> voit ton prénom, ton pseudo, et la vie du foyer.</li>
-          <li><strong>Ta famille</strong> (les autres foyers) voit seulement ce que tu partages avec elle (recettes partagées, événements « famille »).</li>
+          <li><strong>Ta famille</strong> (les autres foyers) voit seulement ce que tu partages avec elle (recettes partagées, événements « famille ») et tes <strong>commentaires</strong> sur les recettes, avec ton prénom et ton pseudo. Personne en dehors de ta famille ne les voit, même sur les recettes du catalogue.</li>
           <li><strong>{CONTROLLER.name}</strong>, qui administre l’appli, peut techniquement accéder à la base. Il ne s’en sert que pour faire marcher et réparer l’appli (statistiques en nombres, journal des erreurs, retours).</li>
           <li>Personne d’autre, sauf les prestataires ci-dessous, pour l’hébergement.</li>
         </ul>

@@ -303,6 +303,10 @@ INSERT INTO public.recipe_ratings (recipe_id, profile_id, stars) VALUES
   ('${ID.recAshared}', '${ID.adminA}', 5),
   ('${ID.recAshared}', '${ID.memberA}', 2),
   ('${ID.recB}', '${ID.adminB}', 4);
+-- Commentaires (migration 31) : memberA sur la recette partagée (famille A), adminB sur la sienne
+INSERT INTO public.recipe_comments (recipe_id, author_id, super_family_id, body) VALUES
+  ('${ID.recAshared}', '${ID.memberA}', '${ID.sfA}', 'Trop bon, on la refait !'),
+  ('${ID.recB}', '${ID.adminB}', '${ID.sfB}', 'Commentaire de la famille B');
 INSERT INTO public.terms_acceptances (profile_id, version, age_group) VALUES
   ('${ID.adminA}',  public.current_terms_version(), 'majeur'),
   ('${ID.memberA}', public.current_terms_version(), 'moins_15'),

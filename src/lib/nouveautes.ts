@@ -10,6 +10,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.6.0',
+    date: '2026-11-18',
+    items: [
+      'Commentaires : en bas de chaque recette, laisse une astuce, une variante ou un « on a adoré ».',
+      'Ils sont lus par ta famille seulement, même sur les recettes du catalogue.',
+      'Les règles ont été mises à jour pour ça : elles te sont redemandées une fois.',
+    ],
+  },
+  {
     version: '2.5.0',
     date: '2026-11-17',
     items: [

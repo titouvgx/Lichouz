@@ -9,6 +9,7 @@
   import ConfirmDialog from '../components/ConfirmDialog.svelte'
   import PlanRecipeDialog from '../components/PlanRecipeDialog.svelte'
   import CookMode from '../components/CookMode.svelte'
+  import RecipeComments from '../components/RecipeComments.svelte'
   import { router, href, navigate } from '../lib/router.svelte'
   import { profileState } from '../lib/profile.svelte'
   import { fetchRecipe, setRecipeArchived } from '../lib/api/recipes'
@@ -314,6 +315,9 @@
         {/if}
       </div>
 
+      <!-- ── Commentaires (v2.6.0, famille seulement) ── -->
+      <div class="comments-wrap"><RecipeComments recipeId={recipe.id} /></div>
+
       {#if canEdit}
         <div class="admin">
           <a href={href('editer-recette', recipe.id)} class="btn btn-outline admin-btn">
@@ -371,6 +375,8 @@
 </div>
 
 <style>
+  .comments-wrap { margin-top: var(--sp-5, 24px); }
+
   .detail {
     max-width: 1080px;
     margin: 0 auto;

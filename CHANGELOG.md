@@ -21,6 +21,21 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [2.6.0] — 2026-11-18
+
+Migration : **31 `commentaires`** (`supabase/migrations/20261119100000_commentaires.sql`, contrôle `controle_31_commentaires.sql`),
+à passer sur `courses-test` puis `lichouz-prod` AVANT le code.
+
+### Ajouté
+- **Commentaires** en bas de chaque fiche recette (`RecipeComments.svelte`, `src/lib/api/comments.ts`) : visibles
+  dans la famille de l'auteur seulement (même sur le catalogue), 500 caractères, 30/h, suppression par l'auteur ou
+  un admin de son foyer, pas de modification ; prénom + pseudo via `recipe_comments_list`. Export « Mes données ».
+- Banc RLS : table `recipe_comments` + 9 scénarios (autre famille, usurpation, longueur, suppression, limite, export).
+
+### Modifié
+- **Conditions : version 2026-11-18** (CGU « Ce que tu ajoutes » et « Bien vivre ensemble », Confidentialité
+  « La vie du foyer », « Qui voit quoi », durée de conservation) → chacun ré-accepte une fois.
+
 ## [2.5.0] — 2026-11-17
 
 Migration : **aucune**.

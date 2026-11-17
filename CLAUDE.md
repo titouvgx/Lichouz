@@ -2,7 +2,7 @@
 
 **Lichouz** : PWA familiale (recettes, planning de la semaine, liste de courses partagée en temps réel).
 - **Site** : https://titouvgx.github.io/Lichouz/ — **Repo** : https://github.com/titouvgx/Lichouz (public). ⚠️ **L majuscule obligatoire** (`/lichouz/` = 404). Ne pas renommer le dépôt. Site URL / Redirect URLs Supabase = `/Lichouz/`
-- **À lire seulement si besoin** : `docs/migrations.md` (détail des 30 migrations), `docs/historique.md` (versions passées, reprises, anciennes décisions), `docs/architecture.md` (Realtime, photos, hors connexion, fichiers), `docs/design.md` (design « Brutal beurre », règles UI mobile), `supabase/prod/README.md`, `tests/rls/README.md`, `docs/sauvegardes.md`
+- **À lire seulement si besoin** : `docs/migrations.md` (détail des migrations), `docs/historique.md` (versions passées, reprises, anciennes décisions), `docs/architecture.md` (Realtime, photos, hors connexion, fichiers), `docs/design.md` (design « Brutal beurre », règles UI mobile), `supabase/prod/README.md`, `tests/rls/README.md`, `docs/sauvegardes.md`
 
 ## Règles de travail (Titouan)
 - Tutoiement, explications simples (il doit pouvoir les raconter). Séparer vérifié / supposé, fiabilité en %, vérifier en ligne ce qui peut changer, signaler risques et angles morts, poser les questions si l'attendu n'est pas clair
@@ -29,6 +29,7 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `hist
 - **Invitations** : lien unique 7 jours, seul `sha256(jeton)` stocké, réservable à un e-mail (empreinte + indice), compte créé par la fonction `accepter-invitation` (non confirmé → e-mail « Confirm signup »)
 - **Recettes** : archivées, jamais supprimées ; `visibility` = `famille` (= foyer, défaut) | `super_famille` | `catalogue` (50 livrées, JSON dans `supabase/recettes/`, lecture seule sauf super-admin) ; étiquettes = liste fixe (CHECK + `src/lib/etiquettes.ts`, test qui compare). Planning, listes, habituels, placard, semaines types, événements : par foyer (`is_family`)
 - **Étoiles** (`recipe_ratings`) : vote privé, moyenne via `recipe_rating_stats(uuid[])`
+- **Commentaires** (`recipe_comments`, migration 31) : visibles dans la famille de l’auteur seulement, lecture par `recipe_comments_list(uuid)`, pas de modification
 - Conformité : `terms_acceptances`, accord parental < 15 ans (`parental_consents`), `export_my_data`, purge de nuit `purge_expired_data` (pg_cron `lichouz-purge`, 03:17 UTC — **efface pour de bon**)
 - API front : `src/lib/api/*.ts` ; contexte (`family`, `superFamily`, `isFounder`, `isSuperAdmin`) dans `src/lib/profile.svelte.ts`
 
@@ -61,7 +62,9 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `hist
 ## État et suite (17/11/2026)
 - **En ligne : v2.5.0** (17/11/2026, sans migration) : boosters à thème (`#/boosters`, lien discret sur l’accueil), paquets dessinés, tirage du jour mémorisé sur le téléphone. Avant : 2.4.x booster du jour + aura, 2.3.0 Tendances
 - Boosters = **petit plus, jamais central** (décision de Titouan). Album, cartes rares, boosters bonus : avec le lot Succès (une seule ré-acceptation)
-- À faire ensuite : **Commentaires** (modération à cadrer avec Titouan) → **Lot Succès** (trophées évolutifs + secrets, raretés, niveau, stats, calculés en base, nouvelle `TERMS_VERSION`). Détail : doc claude.ai `courses-famille/prompt-reprise-2026-11-17.md`
+- **v2.6.0 Commentaires** : branche `v2-6-commentaires`, migration 31 (nouvelle `TERMS_VERSION` 2026-11-18 → ré-acceptation). Famille seulement
+- **Todo si l’appli devient publique** (décision de Titouan) : les commentaires deviendront **publics pour tout le monde** → modération (signaler, masquer, page de modération), CGU, moins de 15 ans
+- À faire ensuite : **Lot Succès** (trophées évolutifs + secrets, raretés, niveau, stats, calculés en base, nouvelle `TERMS_VERSION`). Détail : doc claude.ai `courses-famille/prompt-reprise-2026-11-17.md`
 - **Todo, NE PAS FAIRE avant feu vert** : **bibliothèque des recettes obtenues** dans les boosters (garder pour de bon les cartes sorties ; table en base + RLS + Confidentialité ; à voir avec l’album du lot Succès)
 - En attente : export de sauvegarde de la prod ; relecture des textes légaux avec Titouan ; contacter Marmiton (Titouan) ; page Genèse reportée ; tests sur téléphone (QR, icône, étoiles, accord parental, fenêtre d'accueil)
 
