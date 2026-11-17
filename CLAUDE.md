@@ -35,7 +35,7 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `hist
 
 ## Migrations et bases
 - Détail : `docs/migrations.md`. Contrôles : `supabase/tests/controle_NN_*.sql`. Migrations GÉNÉRÉES (16, 18, 25 bis) jamais éditées à la main (`npm run recettes`)
-- **État des bases (à tenir à jour)** : `courses-test` (id `oczyjyehltrizhbuttad`, essais libres, pause après 7 j) et `lichouz-prod` (id `kfdtybskxobqfmpetzgc`) **à jour jusqu’à la migration 31** (17/11/2026, par le connecteur Supabase avec l’accord de Titouan, contrôles tout à true sur les deux). ⚠️ **Aucun export de sauvegarde de la prod** (guide `docs/sauvegardes.md`)
+- **État des bases (à tenir à jour)** : `courses-test` (id `oczyjyehltrizhbuttad`, essais libres, pause après 7 j) et `lichouz-prod` (id `kfdtybskxobqfmpetzgc`) **à jour jusqu’à la migration 31** (17/11/2026, par le connecteur Supabase avec l’accord de Titouan, contrôles tout à true sur les deux) ; **migration 32 passée sur `courses-test` le 17/11/2026 (contrôle 32 tout à true, 40 compteurs vérifiés), PAS encore sur la prod**. ⚠️ **Aucun export de sauvegarde de la prod** (guide `docs/sauvegardes.md`)
 - **Règle** : d'abord `courses-test`, puis `lichouz-prod` **seulement avec l'accord de Titouan** (il valide la fenêtre Supabase dans les 2 minutes) ; requête de contrôle AVANT de pousser le code qui en dépend. Nouvelle table = RLS + attaques ajoutées dans `tests/rls`. Jamais les vraies recettes de la famille dans le dépôt public
 
 ## Sécurité (OBLIGATOIRE)
@@ -45,7 +45,7 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `hist
 - **CSP** (`index.html`) : `*.supabase.co` et Unsplash seulement ; toute nouvelle source → l'ajouter
 - Actions GitHub épinglées par SHA, permissions minimales
 - Droits appli = droits base ; une suppression filtrée par RLS (0 ligne) est signalée, jamais affichée comme réussie
-- En place : `security-check.yml`, `verifications.yml`, banc RLS (1 586 tests en v2.6.0, 28 tables), journal des erreurs `src/lib/errorReport.ts` (texte nettoyé ; insérer SANS `.select()`)
+- En place : `security-check.yml`, `verifications.yml`, banc RLS (1 611 tests en v2.7.0, 31 tables), journal des erreurs `src/lib/errorReport.ts` (texte nettoyé ; insérer SANS `.select()`)
 
 ## Pièges connus
 - `signIn()` ne touche PAS `auth.loading`
