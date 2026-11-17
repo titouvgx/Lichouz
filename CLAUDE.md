@@ -59,9 +59,10 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `hist
 - Réglages Supabase (invitations, mot de passe oublié, SMTP Brevo) : `supabase/functions/README.md`, `supabase/prod/README.md`
 
 ## État et suite (17/11/2026)
-- **En ligne : v2.4.1** (17/11/2026, sans migration) : booster du jour sur l’accueil (2.4.0) + aura à l’ouverture (2.4.1). v2.3.0 : onglet Tendances, Historique devenu « Listes passées » dans Courses
-- **v2.5.0 Boosters à thème** (sans migration) : branche `v2-5-boosters-themes`. Album, cartes rares, boosters bonus : avec le lot Succès (une seule ré-acceptation)
+- **En ligne : v2.5.0** (17/11/2026, sans migration) : boosters à thème (`#/boosters`, lien discret sur l’accueil), paquets dessinés, tirage du jour mémorisé sur le téléphone. Avant : 2.4.x booster du jour + aura, 2.3.0 Tendances
+- Boosters = **petit plus, jamais central** (décision de Titouan). Album, cartes rares, boosters bonus : avec le lot Succès (une seule ré-acceptation)
 - À faire ensuite : **Commentaires** (modération à cadrer avec Titouan) → **Lot Succès** (trophées évolutifs + secrets, raretés, niveau, stats, calculés en base, nouvelle `TERMS_VERSION`). Détail : doc claude.ai `courses-famille/prompt-reprise-2026-11-17.md`
+- **Todo, NE PAS FAIRE avant feu vert** : **bibliothèque des recettes obtenues** dans les boosters (garder pour de bon les cartes sorties ; table en base + RLS + Confidentialité ; à voir avec l’album du lot Succès)
 - En attente : export de sauvegarde de la prod ; relecture des textes légaux avec Titouan ; contacter Marmiton (Titouan) ; page Genèse reportée ; tests sur téléphone (QR, icône, étoiles, accord parental, fenêtre d'accueil)
 
 ## Commandes

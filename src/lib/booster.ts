@@ -103,14 +103,21 @@ export async function drawBoosterIds(
   count = BOOSTER_SIZE,
   kind = 'jour',
   groupOf?: (id: string) => string | null | undefined,
+  userId: string | null = null,
 ): Promise<string[]> {
+  // Tirage déjà fait aujourd'hui sur ce téléphone : on le garde tel quel
+  // (sinon planifier une carte ou une nouvelle étoile changerait les cartes).
+  const cached = readCachedDraw(userId, kind, dateKey)
+  if (cached) return cached
   const [stats, recent] = await Promise.all([
     fetchRatingStats(ids).catch(() => new Map<string, RatingStats>()),
     familyId ? fetchRecentRecipeIds(familyId).catch(() => new Set<string>()) : Promise.resolve(new Set<string>()),
   ])
   // Graine du booster du jour inchangée depuis v2.4.0 (même tirage qu'avant)
   const seed = kind === 'jour' ? `lichouz:booster:${familyId ?? 'seul'}:${dateKey}` : `lichouz:booster:${kind}:${familyId ?? 'seul'}:${dateKey}`
-  return pickBooster(ids, recent, stats, count, seed, groupOf)
+  const picked = pickBooster(ids, recent, stats, count, seed, groupOf)
+  saveCachedDraw(userId, kind, dateKey, picked)
+  return picked
 }
 
 // ── Une ouverture par jour et par booster (sur ce téléphone) ──
@@ -127,4 +134,26 @@ export function boosterOpenedToday(userId: string | null, dateKey: string, kind 
 export function markBoosterOpened(userId: string | null, dateKey: string, kind = 'jour'): void {
   if (!userId) return
   try { localStorage.setItem(openedKey(userId, kind), dateKey) } catch { /* navigation privée : tant pis */ }
+}
+
+// ── Tirage du jour mémorisé (v2.5.0) ──
+// Une entrée par booster, remplacée le lendemain : { date, ids }.
+
+const drawKey = (userId: string, kind: string) => `lichouz:booster-tirage:${userId}:${kind}`
+
+export function readCachedDraw(userId: string | null, kind: string, dateKey: string): string[] | null {
+  if (!userId) return null
+  try {
+    const v = JSON.parse(localStorage.getItem(drawKey(userId, kind)) ?? 'null')
+    return v && v.date === dateKey && Array.isArray(v.ids) && v.ids.length > 0 && v.ids.every((x: unknown) => typeof x === 'string')
+      ? v.ids
+      : null
+  } catch {
+    return null
+  }
+}
+
+export function saveCachedDraw(userId: string | null, kind: string, dateKey: string, ids: string[]): void {
+  if (!userId || ids.length === 0) return
+  try { localStorage.setItem(drawKey(userId, kind), JSON.stringify({ date: dateKey, ids })) } catch { /* tant pis */ }
 }

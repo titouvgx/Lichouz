@@ -66,7 +66,7 @@
       const byId = new Map(index.map((r) => [r.id, r]))
       const ids = await drawBoosterIds(
         t.ids, profileState.profile?.family_id ?? null, dateKey, BOOSTER_SIZE, t.theme.key,
-        t.theme.distinctOrigin ? (id) => byId.get(id)?.origin : undefined,
+        t.theme.distinctOrigin ? (id) => byId.get(id)?.origin : undefined, userId,
       )
       const rows = await fetchRecipesByIds(ids)
       if (my === seq) cards = rows

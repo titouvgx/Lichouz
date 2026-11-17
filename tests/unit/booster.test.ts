@@ -52,3 +52,21 @@ describe('Booster : recettes à écarter', () => {
     expect([...set].sort()).toEqual(['j+7', 'j-14'])
   })
 })
+
+describe('Booster : tirage mémorisé pour la journée', () => {
+  it('relit le tirage du jour, ignore celui de la veille', async () => {
+    const store = new Map<string, string>()
+    ;(globalThis as any).localStorage = {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+    }
+    const { readCachedDraw, saveCachedDraw } = await import('../../src/lib/booster')
+    saveCachedDraw('u1', 'jour', '2026-11-17', ['a', 'b'])
+    expect(readCachedDraw('u1', 'jour', '2026-11-17')).toEqual(['a', 'b'])
+    expect(readCachedDraw('u1', 'jour', '2026-11-18')).toBeNull()
+    expect(readCachedDraw('u1', 'monde', '2026-11-17')).toBeNull()
+    expect(readCachedDraw(null, 'jour', '2026-11-17')).toBeNull()
+    store.set('lichouz:booster-tirage:u1:jour', 'pas du json')
+    expect(readCachedDraw('u1', 'jour', '2026-11-17')).toBeNull()
+  })
+})

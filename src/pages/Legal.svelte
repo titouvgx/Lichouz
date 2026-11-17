@@ -178,6 +178,8 @@
           <dd>Les fichiers de l’appli et les photos déjà vues (cache du navigateur), la dernière liste de courses, ton profil et tes cochages en attente de réseau.</dd>
           <dt>Tes réglages</dt>
           <dd>Le thème choisi, les filtres de recettes (effacés en fermant l’appli), « écran de bienvenue vu », « nouveautés vues », « conditions acceptées ».</dd>
+          <dt>Les boosters</dt>
+          <dd>Le jour où tu as ouvert chaque booster et les recettes tirées ce jour-là, pour retrouver les mêmes cartes jusqu’à minuit (remplacées le lendemain).</dd>
           <dt>Sécurité</dt>
           <dd>Un repère pendant un changement de mot de passe, effacé ensuite.</dd>
         </dl>

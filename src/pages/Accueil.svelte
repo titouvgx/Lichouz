@@ -43,7 +43,7 @@
     const familyId = profileState.profile?.family_id ?? null
     loading = true
     error = null
-    fetchDailyRecipes(familyId, key)
+    fetchDailyRecipes(familyId, key, DAILY_RECIPES_COUNT, auth.user?.id ?? null)
       .then((r) => { if (!cancelled) recipes = r })
       .catch((e) => { if (!cancelled) error = e?.message ?? 'Erreur de chargement' })
       .finally(() => { if (!cancelled) loading = false })

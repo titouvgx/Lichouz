@@ -36,6 +36,11 @@ Migration : **aucune**.
 ### Modifié
 - `pickBooster` : option « un par groupe » ; tirage du booster du jour inchangé.
 
+### Corrigé
+- Les cartes d'un booster ne changent plus dans la journée (planifier une carte l'écartait du tirage, une nouvelle
+  étoile changeait les chances) : tirage du jour mémorisé sur le téléphone (`lichouz:booster-tirage:<id>:<booster>`).
+- Page Stockage : ajout de ce que les boosters gardent sur le téléphone (précision, pas de nouvelle `TERMS_VERSION`).
+
 ## [2.4.1] — 2026-11-17
 
 Migration : **aucune**.

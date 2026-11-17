@@ -564,6 +564,7 @@ export async function fetchDailyRecipes(
   familyId: string | null,
   dateKey = todayKey(),
   count = DAILY_RECIPES_COUNT,
+  userId: string | null = null,
 ): Promise<RecipeWithCategory[]> {
   if (!supabase) return []
 
@@ -577,7 +578,7 @@ export async function fetchDailyRecipes(
   const ids = (idRows ?? []).map((r: { id: string }) => r.id)
   if (ids.length === 0) return []
 
-  const picked = await drawBoosterIds(ids, familyId, dateKey, count)
+  const picked = await drawBoosterIds(ids, familyId, dateKey, count, 'jour', undefined, userId)
 
   const { data, error } = await supabase
     .from('recipes')
