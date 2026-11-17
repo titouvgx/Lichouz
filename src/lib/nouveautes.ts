@@ -13,7 +13,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     version: '2.4.0',
     date: '2026-11-17',
     items: [
-      'Booster du jour : sur l’accueil, ouvre le paquet et les 5 recettes du jour en sortent (une ouverture par jour, ou « Passer »).',
+      'Booster du jour : sur l’accueil, fais bouger le paquet pour le voir briller, touche-le pour le déchirer et les 5 recettes du jour en sortent (une ouverture par jour, ou « Passer »).',
       'Le tirage évite ce que ton foyer a cuisiné ces 2 dernières semaines ou déjà prévu, et favorise les recettes les mieux notées.',
     ],
   },

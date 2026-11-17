@@ -132,10 +132,13 @@
   type BoosterState = 'ferme' | 'ouvert' | 'direct'
   const userId = $derived(auth.user?.id ?? null)
   let booster = $state<BoosterState>('direct')
+  /** Le paquet reste affiché pendant qu'il descend, derrière les cartes */
+  let packGone = $state(false)
 
   $effect(() => {
     const key = dateKey // nouveau booster à minuit
     booster = reduceMotion || boosterOpenedToday(userId, key) ? 'direct' : 'ferme'
+    packGone = false
   })
 
   function openBooster() {
@@ -264,9 +267,15 @@
       onpointermove={onPointerMove}
       onpointerleave={resetParallax}
     >
-      {#if booster === 'ferme'}
-        <BoosterPack ready={!loading && recipes.length > 0} onopen={openBooster} onskip={skipBooster} />
-      {:else}
+      {#if booster === 'ferme' || (booster === 'ouvert' && !packGone)}
+        <BoosterPack
+          ready={!loading && recipes.length > 0}
+          onopen={openBooster}
+          ondone={() => (packGone = true)}
+          onskip={skipBooster}
+        />
+      {/if}
+      {#if booster !== 'ferme'}
         {#each layout.slots as slot, i (i)}
           <FloatingRecipeCard
             {slot}

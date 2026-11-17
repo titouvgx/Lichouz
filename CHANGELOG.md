@@ -28,7 +28,7 @@ Migration : **aucune**.
 ### Ajouté
 - **Booster du jour** sur l'accueil (`BoosterPack.svelte`, `src/lib/booster.ts`) : paquet qui se déchire, les 5 cartes en
   jaillissent vers leur place ; une ouverture par jour (clé `lichouz:booster-ouvert:<id>` sur le téléphone), « Passer »,
-  mouvement réduit → cartes directes.
+  mouvement réduit → cartes directes. Reflet brillant et inclinaison 3D au doigt ; à l’ouverture, la bande se déchire et le paquet descend pendant que les cartes sortent.
 
 ### Modifié
 - Tirage des recettes du jour : graine par foyer + date (avant : date seule) ; écarte les recettes du planning du foyer
