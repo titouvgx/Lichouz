@@ -472,7 +472,7 @@
 </script>
 
 <div class="page">
-  <header class="head">
+  <header class="head deco-boules">
     <h1>Courses</h1>
     {#if list && total > 0}
       <p class="head-sub">
@@ -577,7 +577,7 @@
       </section>
     {:else}
       <div class="tools" class:single={!staples && !pantry}>
-        <button class="add-btn" onclick={() => (showAddForm = true)}>
+        <button class="add-btn deco-neige" onclick={() => (showAddForm = true)}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           Ajouter un article
         </button>

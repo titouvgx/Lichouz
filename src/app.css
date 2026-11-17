@@ -205,6 +205,51 @@
   }
 }
 
+
+/* ── Décorations de Noël « par endroits » (v1.999.0) ─────────────
+   Seulement en thème Noël, sur quelques éléments choisis (pas partout) :
+     .deco-neige  → couche de neige posée sur le bord du haut (carte, bouton, barre d'onglets)
+     .deco-boules → boules de sapin suspendues dans l'en-tête d'un écran
+   Images en SVG intégré (data:, autorisé par la CSP img-src) : aucune ressource externe.
+   Purement décoratif : pointer-events none, aucune incidence sur la lecture ni les clics. */
+:where(:root[data-theme="noel"] .deco-neige) { position: relative; } /* spécificité nulle : un élément déjà positionné (fixed…) le reste */
+:root[data-theme="noel"] .deco-neige::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  top: -9px;
+  height: 16px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 18' preserveAspectRatio='none'%3E%3Cpath d='M0 0H120V8C112 8 110 14 104 14C98 14 99 7 92 7C86 7 84 11 78 11C72 11 72 6 64 6C58 6 57 16 50 16C43 16 45 7 38 7C32 7 31 12 24 12C18 12 17 8 8 8C4 8 2 8 0 8Z' fill='%23FFFFFF'/%3E%3Cpath d='M120 8C112 8 110 14 104 14C98 14 99 7 92 7C86 7 84 11 78 11C72 11 72 6 64 6C58 6 57 16 50 16C43 16 45 7 38 7C32 7 31 12 24 12C18 12 17 8 8 8C4 8 2 8 0 8' fill='none' stroke='%231A1A1A' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x left top / 120px 16px;
+  pointer-events: none;
+  z-index: 2;
+}
+:where(:root[data-theme="noel"] .deco-boules) { position: relative; }
+:root[data-theme="noel"] .deco-boules::after {
+  content: '';
+  position: absolute;
+  top: calc(-8px - env(safe-area-inset-top, 0px));
+  right: 64px;
+  width: 90px;
+  height: 84px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 84'%3E%3Cg stroke='%231A1A1A' stroke-width='1.6'%3E%3Cpath d='M15 0V24M45 0V44M75 0V30' fill='none'/%3E%3Crect x='11' y='22' width='8' height='5' fill='%23F2C14E'/%3E%3Ccircle cx='15' cy='36' r='10' fill='%23EA5A44'/%3E%3Crect x='41' y='42' width='8' height='5' fill='%23F2C14E'/%3E%3Ccircle cx='45' cy='58' r='12' fill='%2317492A'/%3E%3Crect x='71' y='28' width='8' height='5' fill='%23F2C14E'/%3E%3Ccircle cx='75' cy='42' r='9' fill='%23F2C14E'/%3E%3C/g%3E%3Cpath d='M10 32a6 6 0 0 1 5-3M39 52a7 7 0 0 1 6-4M71 38a5 5 0 0 1 4-3' stroke='%23FFFFFF' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / contain;
+  transform-origin: 50% 0;
+  animation: deco-balance 4s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 1;
+}
+@keyframes deco-balance {
+  from { transform: rotate(-2.5deg); }
+  to   { transform: rotate(2.5deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme="noel"] .deco-boules::after { animation: none; }
+}
+/* Petits écrans : les boules ne doivent pas toucher le titre */
+@media (max-width: 360px) {
+  :root[data-theme="noel"] .deco-boules::after { right: 58px; width: 70px; height: 66px; }
+}
+
 /* ── Reset ─────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100dvh; }

@@ -23,7 +23,7 @@
   }
 </script>
 
-<nav class="tab-bar" aria-label="Navigation principale" style:--count={tabs.length}>
+<nav class="tab-bar deco-neige" aria-label="Navigation principale" style:--count={tabs.length}>
   <!-- Bloc orange qui glisse sous l'onglet actif (une seule pièce, déplacée par transform) -->
   <span
     class="indicator"

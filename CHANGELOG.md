@@ -28,6 +28,7 @@ puis la requête de contrôle `supabase/tests/controle_28_evenements.sql` (tout 
 L'ancien site reste compatible (nouvelles tables seulement).
 
 ### Ajouté
+- Thème Noël : décorations par endroits (neige posée sur la barre d'onglets, « Ajouter un article », « Qu'est-ce qu'on mange ? » et la fiche d'un événement ; boules de sapin suspendues sur Courses et Recettes). Rien en thème classique ; boules immobiles si « réduire les animations ».
 - **Événements** (lot N) : modèles Noël, anniversaire, fête, autre (titre, date et pôles proposés) ;
   date, heure, chez qui, thème, lien de playlist (https seulement), infos ; visible par le foyer ou
   par toute la famille élargie (choix à la création). Pages `#/evenements` (à venir / passés,

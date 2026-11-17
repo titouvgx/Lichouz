@@ -152,7 +152,7 @@
       <p class="countdown">{countdownLabel(ev.starts_on)}</p>
     </header>
 
-    <section class="card infos" aria-label="Infos">
+    <section class="card infos deco-neige" aria-label="Infos">
       {#if ev.location}<p><strong>Chez</strong> {ev.location}</p>{/if}
       {#if ev.theme}<p><strong>Thème</strong> {ev.theme}</p>{/if}
       <p><strong>Pour</strong> {ev.scope === 'famille' ? 'toute la famille' : 'notre foyer'}</p>

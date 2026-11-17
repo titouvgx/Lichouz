@@ -248,7 +248,7 @@
 
     <!-- Hors de la zone flottante : la zone (flex: 1) rétrécit d'autant et
          computeFloatLayout reçoit la hauteur restante → aucune carte dessous. -->
-    <a href={href('frigo')} class="fridge-cta">
+    <a href={href('frigo')} class="fridge-cta deco-neige">
       <span class="fridge-icon"><Icon name="chef" size={20} /></span>
       <span class="fridge-text">
         <strong>Qu'est-ce qu'on mange&nbsp;?</strong>

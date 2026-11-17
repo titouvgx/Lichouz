@@ -220,7 +220,7 @@
 </script>
 
 <div class="page">
-  <header class="head">
+  <header class="head deco-boules">
     <h1>Recettes</h1>
     {#if !indexLoading && !error && index.length > 0}
       <p class="head-sub" aria-live="polite">{countLabel}</p>
