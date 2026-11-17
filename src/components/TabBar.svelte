@@ -14,7 +14,7 @@
 
   function isActive(route: TabRoute): boolean {
     if (route === 'accueil') {
-      return router.current === 'accueil' || router.current === 'frigo' // sous-page de l'accueil
+      return router.current === 'accueil' || router.current === 'frigo' || router.current === 'boosters' // sous-pages de l'accueil
     }
     if (route === 'recettes') {
       return ['recettes', 'recette', 'nouvelle-recette', 'editer-recette'].includes(router.current)

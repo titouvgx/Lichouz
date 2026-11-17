@@ -62,6 +62,7 @@
           {#if s.id === 'accueil'}
             <p>Chaque jour, un <strong>booster</strong> de 5 recettes à ouvrir (une fois par jour) : touche le paquet, les cartes en sortent. « Passer » les montre directement. Touche une carte pour voir la recette, ou son calendrier pour la mettre dans ta semaine.</p>
             <p>Le tirage est le même pour tout ton foyer ; il évite ce que vous avez cuisiné ces 2 dernières semaines ou déjà prévu, et favorise les recettes les mieux notées.</p>
+            <p>Une fois le booster du jour ouvert, le lien <strong>+ Boosters à thème</strong> (en bas de l’accueil) propose des petits paquets en plus : Express, Petit budget, Tour du monde, Tout vert, Réconfort, Les petits (et Les fêtes en décembre). Chacun s’ouvre une fois par jour.</p>
             <p>Si un repas est prévu aujourd’hui, l’accueil l’affiche (« Ce soir : … ») avec la personne qui cuisine.</p>
           {:else if s.id === 'recettes'}
             <ul>

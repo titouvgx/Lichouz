@@ -10,6 +10,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.5.0',
+    date: '2026-11-17',
+    items: [
+      'Boosters à thème : en bas de l’accueil, « + Boosters à thème » (Express, Petit budget, Tour du monde, Tout vert, Réconfort, Les petits).',
+      'Chaque paquet a son dessin et s’ouvre une fois par jour ; le booster du jour a maintenant un soleil.',
+    ],
+  },
+  {
     version: '2.4.1',
     date: '2026-11-17',
     items: ['Ouvrir le booster fait maintenant scintiller tout l’écran, comme une aura.'],

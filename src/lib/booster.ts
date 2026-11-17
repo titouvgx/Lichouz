@@ -26,6 +26,7 @@ export function boosterWeight(stats: RatingStats | undefined): number {
 /**
  * Les `count` recettes du booster. S'il ne reste pas assez de recettes après
  * avoir écarté les récentes, on complète avec elles (jamais de booster à moitié vide).
+ * `groupOf` (facultatif) : une seule recette par groupe (ex. une par origine).
  */
 export function pickBooster(
   ids: readonly string[],
@@ -33,12 +34,25 @@ export function pickBooster(
   stats: ReadonlyMap<string, RatingStats>,
   count: number,
   seed: string,
+  groupOf?: (id: string) => string | null | undefined,
 ): string[] {
-  const fresh = ids.filter((id) => !recent.has(id))
-  const picked = pickWeightedSeeded(fresh, (id) => boosterWeight(stats.get(id)), count, seed)
-  if (picked.length >= count) return picked
-  const rest = ids.filter((id) => recent.has(id))
-  return [...picked, ...pickWeightedSeeded(rest, (id) => boosterWeight(stats.get(id)), count - picked.length, `${seed}:complement`)]
+  const weight = (id: string) => boosterWeight(stats.get(id))
+  const ordered = [
+    ...pickWeightedSeeded(ids.filter((id) => !recent.has(id)), weight, ids.length, seed),
+    ...pickWeightedSeeded(ids.filter((id) => recent.has(id)), weight, ids.length, `${seed}:complement`),
+  ]
+  const out: string[] = []
+  const groups = new Set<string>()
+  for (const id of ordered) {
+    if (out.length >= count) break
+    const g = groupOf?.(id)
+    if (g != null) {
+      if (groups.has(g)) continue
+      groups.add(g)
+    }
+    out.push(id)
+  }
+  return out
 }
 
 /** Recettes à écarter : repas du foyer de J-14 à J+7 (restes compris : même recette). */
@@ -87,24 +101,30 @@ export async function drawBoosterIds(
   familyId: string | null,
   dateKey: string,
   count = BOOSTER_SIZE,
+  kind = 'jour',
+  groupOf?: (id: string) => string | null | undefined,
 ): Promise<string[]> {
   const [stats, recent] = await Promise.all([
     fetchRatingStats(ids).catch(() => new Map<string, RatingStats>()),
     familyId ? fetchRecentRecipeIds(familyId).catch(() => new Set<string>()) : Promise.resolve(new Set<string>()),
   ])
-  return pickBooster(ids, recent, stats, count, `lichouz:booster:${familyId ?? 'seul'}:${dateKey}`)
+  // Graine du booster du jour inchangée depuis v2.4.0 (même tirage qu'avant)
+  const seed = kind === 'jour' ? `lichouz:booster:${familyId ?? 'seul'}:${dateKey}` : `lichouz:booster:${kind}:${familyId ?? 'seul'}:${dateKey}`
+  return pickBooster(ids, recent, stats, count, seed, groupOf)
 }
 
-// ── Une ouverture par jour (sur ce téléphone) ──
+// ── Une ouverture par jour et par booster (sur ce téléphone) ──
+// Booster du jour : clé d'origine (v2.4.0) ; thèmes : clé suffixée.
 
-const openedKey = (userId: string) => `lichouz:booster-ouvert:${userId}`
+const openedKey = (userId: string, kind: string) =>
+  kind === 'jour' ? `lichouz:booster-ouvert:${userId}` : `lichouz:booster-ouvert:${userId}:${kind}`
 
-export function boosterOpenedToday(userId: string | null, dateKey: string): boolean {
+export function boosterOpenedToday(userId: string | null, dateKey: string, kind = 'jour'): boolean {
   if (!userId) return true
-  try { return localStorage.getItem(openedKey(userId)) === dateKey } catch { return true }
+  try { return localStorage.getItem(openedKey(userId, kind)) === dateKey } catch { return true }
 }
 
-export function markBoosterOpened(userId: string | null, dateKey: string): void {
+export function markBoosterOpened(userId: string | null, dateKey: string, kind = 'jour'): void {
   if (!userId) return
-  try { localStorage.setItem(openedKey(userId), dateKey) } catch { /* navigation privée : tant pis */ }
+  try { localStorage.setItem(openedKey(userId, kind), dateKey) } catch { /* navigation privée : tant pis */ }
 }

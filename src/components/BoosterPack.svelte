@@ -9,7 +9,8 @@
   // - « Passer » → onskip() : les cartes arrivent directement.
   // Seuls transform et opacity sont animés ; mouvement réduit = jamais affiché
   // (l'accueil montre les cartes directement).
-  import CatLogo from './CatLogo.svelte'
+  import BoosterArt from './BoosterArt.svelte'
+  import type { BoosterArtKey } from '../lib/boosterThemes'
 
   interface Props {
     /** false tant que le tirage n'est pas prêt : le paquet attend */
@@ -19,8 +20,17 @@
     onskip: () => void
     /** Dès le toucher (v2.4.1) : centre du paquet dans la fenêtre, pour l'aura */
     ontear?: (center: { x: number; y: number }) => void
+    /** v2.5.0 : nom, sous-titre, dessin et couleur du paquet (booster du jour par défaut) */
+    name?: string
+    sub?: string
+    art?: BoosterArtKey
+    tone?: string
+    count?: number
   }
-  let { ready, onopen, ondone, onskip, ontear }: Props = $props()
+  let {
+    ready, onopen, ondone, onskip, ontear,
+    name = 'Du jour', sub = 'Le booster', art = 'jour', tone = 'var(--accent)', count = 5,
+  }: Props = $props()
   let packEl: HTMLButtonElement | undefined = $state()
 
   /** Déchirure de la bande, puis lâcher des cartes pendant la descente (ms) */
@@ -107,16 +117,17 @@
       onpointerleave={(e) => { if (e.pointerType === 'mouse' && !start) release() }}
       onclick={onClick}
       disabled={!ready}
-      aria-label="Ouvrir le booster du jour : 5 recettes"
+      aria-label="Ouvrir le booster {name} : {count} recettes"
     >
       <span class="pack-top" aria-hidden="true">
         <span class="tear-hint">Déchire ici</span>
         <span class="shine shine-top"></span>
       </span>
-      <span class="pack-body" aria-hidden="true">
-        <span class="pack-logo"><CatLogo size={56} /></span>
-        <span class="pack-title">Booster<br />du jour</span>
-        <span class="pack-sub">5 recettes</span>
+      <span class="pack-body" aria-hidden="true" style:--tone={tone}>
+        <span class="pack-kicker">{sub}</span>
+        <span class="pack-art"><BoosterArt {art} size={78} /></span>
+        <span class="pack-title">{name}</span>
+        <span class="pack-sub">{count} recettes</span>
         <span class="shine"></span>
         <span class="glow"></span>
       </span>
@@ -203,28 +214,45 @@
     justify-content: center;
     gap: var(--sp-2);
     overflow: hidden;
-    background: var(--accent);
-    color: var(--on-accent);
+    padding: var(--sp-2);
+    background: var(--tone, var(--accent));
+    color: var(--ink, var(--text));
     border: var(--line-w) solid var(--line);
     box-shadow: var(--shadow-md);
   }
-  .pack-logo {
-    display: grid;
-    place-items: center;
-    width: 72px;
-    height: 72px;
-    background: var(--surface);
-    border: var(--line-w) solid var(--line);
+  /* Petite étiquette noire au-dessus du dessin */
+  .pack-kicker {
+    padding: 2px 6px;
+    background: var(--band);
+    color: var(--text-on-band);
+    font-size: 10px;
+    font-weight: var(--fw-bold);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-caps);
   }
+  .pack-art { display: grid; place-items: center; transform: rotate(-4deg); }
+  /* Nom du thème : gros, serré, contour blanc + ombre franche (style autocollant) */
   .pack-title {
+    max-width: 100%;
     font-family: var(--font-display, inherit);
     font-weight: var(--fw-bold);
-    font-size: 22px;
-    line-height: 1;
+    font-size: 24px;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
     text-transform: uppercase;
     text-align: center;
+    color: var(--line);
+    -webkit-text-stroke: 1px var(--line);
+    text-shadow:
+      2px 2px 0 var(--surface),
+      -1px -1px 0 var(--surface),
+      1px -1px 0 var(--surface),
+      -1px 1px 0 var(--surface),
+      4px 4px 0 var(--line);
+    transform: rotate(-3deg);
+    overflow-wrap: anywhere;
   }
-  .pack-sub { font-size: 13px; font-weight: var(--fw-bold); }
+  .pack-sub { font-size: 12px; font-weight: var(--fw-bold); }
 
   /* ── Reflet : bande claire en biais, déplacée par transform ──
      Au repos elle balaie le paquet toutes les 4 s ; quand on l'incline,

@@ -318,7 +318,10 @@
     <footer class="accueil-footer">
       <p class="countdown">
         <span class="dot" aria-hidden="true"></span>
-        <span>Nouvelles idées dans <strong>{countdown}</strong></span>
+        <span>
+          Nouvelles idées dans <strong>{countdown}</strong>
+          {#if booster !== 'ferme'}<br /><a href={href('boosters')} class="more-boosters">+ Boosters à thème</a>{/if}
+        </span>
       </p>
       <a href={href('recettes')} class="see-all">Toutes les recettes →</a>
     </footer>
@@ -553,6 +556,19 @@
     font-size: 13px;
     line-height: 1.25;
     color: var(--text);
+  }
+
+  /* Lien discret vers les boosters à thème (v2.5.0), une fois le booster du jour ouvert */
+  .more-boosters {
+    display: inline-block;
+    padding: 12px 0; /* zone de tap de 44 px sans pousser la mise en page */
+    margin: -12px 0;
+    color: var(--text);
+    font-weight: var(--fw-bold);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+    touch-action: manipulation;
   }
 
   .countdown strong {

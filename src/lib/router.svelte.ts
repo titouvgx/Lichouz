@@ -15,6 +15,7 @@ export type Route =
   | 'semaine'
   | 'courses'
   | 'historique'       // listes passées (depuis Courses, v2.3.0)
+  | 'boosters'         // boosters à thème (v2.5.0), depuis l'accueil
   | 'tendances'        // top par étoiles, plus cuisinées, nouveautés (v2.3.0)
   | 'compte'           // page profil / mon compte
   | 'aide'             // aide : à quoi sert l'appli, onglet par onglet, FAQ
@@ -40,7 +41,7 @@ export const TAB_ROUTES = ['accueil', 'recettes', 'semaine', 'courses', 'tendanc
 export type TabRoute = (typeof TAB_ROUTES)[number]
 
 const STATIC_ROUTES: string[] = [
-  'login', 'accueil', 'frigo', 'recettes', 'nouvelle-recette', 'semaine', 'courses', 'historique', 'tendances', 'compte',
+  'login', 'accueil', 'frigo', 'recettes', 'nouvelle-recette', 'semaine', 'courses', 'historique', 'tendances', 'boosters', 'compte',
   'famille', 'mes-recettes', 'avis', 'nouveautes', 'admin', 'aide', 'evenements', 'mot-de-passe-oublie', 'nouveau-mot-de-passe', 'confirmer-email',
   'cgu', 'confidentialite', 'stockage', 'vie-privee',
 ]
@@ -108,7 +109,7 @@ export const router: RouterState = $state(readHash())
 /** Position de chaque écran : onglets de gauche à droite, sous-pages juste après leur onglet. */
 const ORDER: Record<Route, number> = {
   login: -10,
-  accueil: 0, frigo: 1, evenements: 2, evenement: 3,
+  accueil: 0, frigo: 1, boosters: 1, evenements: 2, evenement: 3,
   recettes: 10, recette: 11, 'nouvelle-recette': 11, 'editer-recette': 12,
   semaine: 20,
   courses: 30, historique: 31,

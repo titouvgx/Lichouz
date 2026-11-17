@@ -21,6 +21,21 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [2.5.0] — 2026-11-17
+
+Migration : **aucune**.
+
+### Ajouté
+- **Boosters à thème** (`#/boosters`, `src/pages/Boosters.svelte`, `src/lib/boosterThemes.ts`) : Express (≤ 20 min),
+  Petit budget (€), Tour du monde (une origine « Monde » par carte), Tout vert (végétarien / vegan), Réconfort,
+  Les petits, Les fêtes (1er déc. – 6 janv.). Thème affiché s'il a au moins 3 recettes. Une ouverture par thème et
+  par jour (clé `lichouz:booster-ouvert:<id>:<thème>`), même tirage que le booster du jour (graine par thème).
+- Lien discret « + Boosters à thème » en bas de l'accueil, seulement après l'ouverture du booster du jour.
+- Paquets dessinés (`BoosterArt.svelte`) : un dessin et le nom du thème en grand ; le booster du jour a un soleil.
+
+### Modifié
+- `pickBooster` : option « un par groupe » ; tirage du booster du jour inchangé.
+
 ## [2.4.1] — 2026-11-17
 
 Migration : **aucune**.
