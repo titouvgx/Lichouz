@@ -18,6 +18,11 @@
   } from '../lib/api/famille'
   import type { Invitation } from '../lib/types'
   import {
+    fetchModerationComments, deleteModerationComment, fetchModerationAccounts,
+    type ModerationComment, type ModerationAccount,
+  } from '../lib/api/moderation'
+  import { setAccountDisabled } from '../lib/api/famille'
+  import {
     fetchFeedback, setFeedbackStatus, fetchErrors, clearErrors,
     type FeedbackRow, type FeedbackStatus, type ErrorRow,
   } from '../lib/api/feedback'
@@ -55,6 +60,7 @@
       void loadStats()
       void loadFeedback()
       void loadErrors()
+      void loadModeration()
     })
   })
 
@@ -68,6 +74,53 @@
   let errorsError = $state<string | null>(null)
   let confirmClearErrors = $state(false)
   let clearing = $state(false)
+
+  // ── Modération (v2.9.0) ──
+  let modComments = $state<ModerationComment[]>([])
+  let modAccounts = $state<ModerationAccount[]>([])
+  let modLoading = $state(true)
+  let modError = $state<string | null>(null)
+  let showAccounts = $state(false)
+  let modBusy = $state(false)
+  let modAction = $state<{ kind: 'comment'; c: ModerationComment } | { kind: 'account'; a: ModerationAccount } | null>(null)
+
+  async function loadModeration() {
+    modLoading = true
+    modError = null
+    try {
+      const [c, a] = await Promise.all([fetchModerationComments(100), fetchModerationAccounts()])
+      modComments = c
+      modAccounts = a
+    } catch (e) {
+      modError = messageOf(e, 'La modération n’a pas pu être chargée.')
+    } finally {
+      modLoading = false
+    }
+  }
+
+  async function confirmModAction() {
+    const act = modAction
+    if (!act) return
+    modBusy = true
+    try {
+      if (act.kind === 'comment') {
+        await deleteModerationComment(act.c.id)
+        modComments = modComments.filter((x) => x.id !== act.c.id)
+        toast.success('Commentaire supprimé')
+      } else {
+        const next = !act.a.disabled
+        await setAccountDisabled(act.a.user_id, next)
+        modAccounts = modAccounts.map((x) => (x.user_id === act.a.user_id ? { ...x, disabled: next } : x))
+        modComments = modComments.map((x) => (x.author_id === act.a.user_id ? { ...x, disabled: next } : x))
+        toast.success(next ? 'Compte désactivé' : 'Compte réactivé')
+      }
+      modAction = null
+    } catch (e) {
+      toast.error(messageOf(e, 'L’action a échoué.'))
+    } finally {
+      modBusy = false
+    }
+  }
 
   const KIND_LABEL = { idee: 'Idée', bug: 'Bug', autre: 'Autre' } as const
   const openFeedback = $derived(feedback.filter((f) => f.status !== 'fait'))
@@ -515,6 +568,63 @@
     </section>
 
     <!-- ── Journal des erreurs (v1.6.0) ── -->
+    <section class="card" aria-labelledby="moderation-title">
+      <h2 id="moderation-title" class="section-title">
+        <span class="section-icon"><Icon name="alert-circle" size={18} /></span> Modération
+      </h2>
+      {#if modLoading}
+        <p class="empty" aria-busy="true">Chargement…</p>
+      {:else if modError}
+        {@render errorBox(modError, loadModeration)}
+      {:else}
+        <h3 class="stats-sub">Derniers commentaires (toutes familles)</h3>
+        {#if modComments.length === 0}
+          <p class="empty">Aucun commentaire.</p>
+        {:else}
+          <ul class="msg-list">
+            {#each modComments as c (c.id)}
+              <li class="msg">
+                <p class="msg-meta">
+                  {c.author_pseudo ?? c.author_name ?? 'Compte supprimé'}{c.family_name ? ` · ${c.family_name}` : ''} · {c.recipe_title} · {dateTime(c.created_at)}
+                  {#if c.disabled}<span class="tag">Compte désactivé</span>{/if}
+                </p>
+                <p class="msg-text">{c.body}</p>
+                <div class="msg-actions">
+                  <button class="link-btn" onclick={() => (modAction = { kind: 'comment', c })}>Supprimer</button>
+                </div>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+        <button class="link-btn" onclick={() => (showAccounts = !showAccounts)} aria-expanded={showAccounts}>
+          {showAccounts ? 'Masquer' : 'Voir'} les {modAccounts.length} comptes
+        </button>
+        {#if showAccounts}
+          <ul class="msg-list">
+            {#each modAccounts as a (a.user_id)}
+              <li class="msg" class:done={a.disabled}>
+                <p class="msg-meta">
+                  {a.pseudo ?? a.display_name}{a.family_name ? ` · ${a.family_name}` : ''} · {a.role === 'admin' ? 'admin' : 'membre'}
+                  {#if a.is_super}<span class="tag">Super-admin</span>{/if}
+                  {#if a.disabled}<span class="tag">Désactivé</span>{/if}
+                </p>
+                {#if !a.is_super}
+                  <div class="msg-actions">
+                    <button class="link-btn" onclick={() => (modAction = { kind: 'account', a })}>
+                      {a.disabled ? 'Réactiver' : 'Désactiver'}
+                    </button>
+                  </div>
+                {/if}
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      {/if}
+      <button class="link-btn" onclick={loadModeration} disabled={modLoading} aria-busy={modLoading}>
+        <Icon name="refresh" size={16} /> Actualiser
+      </button>
+    </section>
+
     <section class="card" aria-labelledby="errors-title">
       <h2 id="errors-title" class="section-title">
         <span class="section-icon"><Icon name="alert-circle" size={18} /></span>
@@ -555,6 +665,25 @@
     oncancel={() => (confirmClearErrors = false)}
   >
     <p>Les {errors.length} erreurs affichées seront supprimées définitivement.</p>
+  </ConfirmDialog>
+{/if}
+
+{#if modAction}
+  <ConfirmDialog
+    title={modAction.kind === 'comment' ? 'Supprimer ce commentaire ?' : modAction.a.disabled ? 'Réactiver ce compte ?' : 'Désactiver ce compte ?'}
+    confirmLabel={modAction.kind === 'comment' ? 'Supprimer' : modAction.a.disabled ? 'Réactiver' : 'Désactiver'}
+    danger={!(modAction.kind === 'account' && modAction.a.disabled)}
+    busy={modBusy}
+    onconfirm={confirmModAction}
+    oncancel={() => (modAction = null)}
+  >
+    {#if modAction.kind === 'comment'}
+      <p>Le commentaire sera supprimé définitivement.</p>
+    {:else if modAction.a.disabled}
+      <p>La personne retrouvera l’accès à l’appli.</p>
+    {:else}
+      <p>La personne garde ses données mais ne voit plus rien. Tu pourras la réactiver.</p>
+    {/if}
   </ConfirmDialog>
 {/if}
 

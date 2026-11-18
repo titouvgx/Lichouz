@@ -36,6 +36,7 @@ Déplacé de `CLAUDE.md` le 17/11/2026. Fichiers dans `supabase/migrations/` (da
 - 32 succes (v2.7.0 : 40 trophées calculés par la base ; `user_achievements` (lecture soi seul, écriture par `refresh_my_achievements` seulement), `cook_sessions` (4 h max, séance de moins d'un jour), `booster_openings` (une par booster et par jour, recettes lisibles) ; `achievement_tiers`, `achievement_progress` (réservée à la base), `my_achievements` ; export ; **`current_terms_version()` = 2026-11-19** → ré-acceptation ; contrôle : `supabase/tests/controle_32_succes.sql`)
 - 33 recettes_lot_02 (v2.8.0 : **GÉNÉRÉE** par `npm run recettes` depuis `supabase/recettes/lots/lot-02.json` ; 10 recettes ajoutées au catalogue avec leurs étiquettes (ajout seulement, jamais d'écrasement) ; photos : migration 34 à venir ; contrôles 19 et 25 : catalogue ≥ 50)
 - 34 recettes_lot_02_photos (**GÉNÉRÉE** depuis `lot-02.json` ; 7 photos Unsplash sur 10, seulement pour les recettes du catalogue sans photo ; Rougail, Fajitas au bœuf et White Russian : pas de photo libre fiable trouvée)
+- 35 moderation (v2.9.0 : `moderation_comments`, `moderation_delete_comment`, `moderation_accounts`, toutes réservées au super-admin (42501 sinon) ; désactiver un compte = `set_account_disabled` existante)
 
 ## État des bases — détail historique
 

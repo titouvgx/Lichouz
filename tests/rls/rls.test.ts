@@ -4104,3 +4104,49 @@ describe('Migration 32 : succès (calculés par la base, visibles par soi seul)'
     expect(Object.keys(p).sort()).toEqual(Object.keys(tiers).sort())
   })
 })
+
+
+describe('Migration 35 : modération par le super-admin', () => {
+  const LIST = `SELECT id, body, family_name FROM public.moderation_comments(100)`
+  const commentId = async (s: Scenario, body: string) =>
+    (await s.su<{ id: string }>(`SELECT id FROM public.recipe_comments WHERE body = $1`, [body]))[0].id
+  const hasExec = async (s: Scenario, role: string, fn: string) =>
+    (await s.su<{ v: boolean }>(`SELECT has_function_privilege($1, $2, 'EXECUTE') AS v`, [role, fn]))[0].v
+
+  attaque('anon ne peut exécuter aucune fonction de modération', async (s) => {
+    for (const fn of ['public.moderation_comments(integer)', 'public.moderation_delete_comment(uuid)', 'public.moderation_accounts()']) {
+      expect(await hasExec(s, 'anon', fn), fn).toBe(false)
+    }
+  })
+  attaque('ni un admin de foyer, ni un membre, ni le fondateur d’une autre famille ne lisent la modération', async (s) => {
+    for (const who of ['adminA', 'memberA', 'adminB'] as const) {
+      expectRefused(await s.as(who, LIST), '42501', `${who} liste`, /super-admin/)
+      expectRefused(await s.as(who, `SELECT * FROM public.moderation_accounts()`), '42501', `${who} comptes`, /super-admin/)
+    }
+  })
+  attaque('ni un admin ni un membre ne suppriment un commentaire par la modération', async (s) => {
+    const id = await commentId(s, 'Trop bon, on la refait !')
+    for (const who of ['adminA', 'memberA', 'adminB'] as const) {
+      expectRefused(await s.as(who, `SELECT public.moderation_delete_comment($1)`, [id]), '42501', who)
+    }
+    expect((await s.su(`SELECT 1 FROM public.recipe_comments WHERE id = $1`, [id])).length).toBe(1)
+  })
+  controle('le super-admin voit les commentaires de toutes les familles', async (s) => {
+    const rows = (await s.as('superAdmin', LIST)).rows as { body: string }[]
+    const bodies = rows.map((r) => r.body)
+    expect(bodies).toContain('Trop bon, on la refait !')
+    expect(bodies).toContain('Commentaire de la famille B')
+  })
+  controle('le super-admin supprime un commentaire ; un commentaire absent est signalé, pas affiché comme réussi', async (s) => {
+    const id = await commentId(s, 'Commentaire de la famille B')
+    expectOk(await s.as('superAdmin', `SELECT public.moderation_delete_comment($1)`, [id]), 'suppression')
+    expect((await s.su(`SELECT 1 FROM public.recipe_comments WHERE id = $1`, [id])).length).toBe(0)
+    expectRefused(await s.as('superAdmin', `SELECT public.moderation_delete_comment($1)`, [id]), 'P0002', 'déjà supprimé')
+  })
+  controle('la liste des comptes indique les comptes désactivés', async (s) => {
+    await s.su(`INSERT INTO private.disabled_accounts (user_id) VALUES ($1)`, [ID.memberA])
+    const rows = (await s.as('superAdmin', `SELECT user_id, disabled FROM public.moderation_accounts()`)).rows as { user_id: string; disabled: boolean }[]
+    expect(rows.find((r) => r.user_id === ID.memberA)?.disabled).toBe(true)
+    expect(rows.find((r) => r.user_id === ID.adminA)?.disabled).toBe(false)
+  })
+})
