@@ -21,6 +21,8 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [2.9.0] — 2026-11-18
+
 - **Modération super-admin** (migration 35) : section « Modération » dans la page Admin : derniers commentaires de toutes les familles (suppression), liste des comptes (désactiver / réactiver). Trois fonctions SQL réservées au super-admin, aucune table nouvelle ; 6 tests ajoutés au banc RLS.
 
 - Photos Unsplash du lot 2 (7 recettes sur 10), migration 34 générée ; test d'installation adapté.
