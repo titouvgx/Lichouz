@@ -21,6 +21,8 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+- Photos Unsplash du lot 2 (7 recettes sur 10), migration 34 générée ; test d'installation adapté.
+
 ## [2.8.0] — 2026-11-18
 
 Migration : **33 `recettes_lot_02`** (`supabase/migrations/20261120100000_recettes_lot_02.sql`, GÉNÉRÉE par `npm run recettes`),

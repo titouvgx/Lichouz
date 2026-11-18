@@ -42,6 +42,7 @@ describe('installation neuve (procédure de mise en prod)', () => {
     expect(await one(`SELECT count(*)::int AS n FROM public.recipes WHERE visibility <> 'catalogue'`)).toEqual({ n: 0 })
     // Photos du catalogue (migration recettes_photos) : toutes celles de photos.json
     const attendues = JSON.parse(readFileSync(join(MIG, '..', 'recettes', 'photos.json'), 'utf8')).photos.filter((p: { url: string | null }) => p.url).length
+      + lireLots().lots.reduce((n, l) => n + l.recettes.filter((r) => r.photo).length, 0)
     expect(await one(`SELECT count(*)::int AS n FROM public.recipes WHERE visibility = 'catalogue' AND image_url LIKE 'https://images.unsplash.com/photo-%'`)).toEqual({ n: attendues })
     expect(await one(`SELECT count(*)::int AS n FROM public.known_ingredients`)).toEqual({ n: 513 })
     // Aucune table publique sans RLS

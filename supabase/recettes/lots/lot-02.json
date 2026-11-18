@@ -66,7 +66,12 @@
         ],
         "budget": 1
       },
-      "photo": null
+      "photo": {
+        "url": "https://images.unsplash.com/photo-1527628126150-086ff233b951?w=800&h=600&fit=crop&auto=format",
+        "photographe": "Bon Vivant",
+        "verifiee": true,
+        "note": "Timbale en cuivre avec rondelles de citron vert."
+      }
     },
     {
       "title": "White Russian",
@@ -193,7 +198,12 @@
         ],
         "budget": 2
       },
-      "photo": null
+      "photo": {
+        "url": "https://images.unsplash.com/photo-1625321643320-5321f48312b2?w=800&h=600&fit=crop&auto=format",
+        "photographe": "Shayna Douglas",
+        "verifiee": true,
+        "note": "Verre de cocktail orangé, ambiance plage tropicale."
+      }
     },
     {
       "title": "Fajitas au bœuf",
@@ -550,7 +560,12 @@
         ],
         "budget": 3
       },
-      "photo": null
+      "photo": {
+        "url": "https://images.unsplash.com/photo-1623961990059-28356e226a77?w=800&h=600&fit=crop&auto=format",
+        "photographe": "Douglas Lopez",
+        "verifiee": true,
+        "note": "Grande poêle de paella espagnole."
+      }
     },
     {
       "title": "Salade lyonnaise",
@@ -654,7 +669,12 @@
         ],
         "budget": 1
       },
-      "photo": null
+      "photo": {
+        "url": "https://images.unsplash.com/photo-1742054292299-7b8850c8f899?w=800&h=600&fit=crop&auto=format",
+        "photographe": "Mathias Reding",
+        "verifiee": true,
+        "note": "Salade fraîche avec œuf poché."
+      }
     },
     {
       "title": "Crumble pommes-poires",
@@ -736,7 +756,12 @@
         ],
         "budget": 1
       },
-      "photo": null
+      "photo": {
+        "url": "https://images.unsplash.com/photo-1605698802040-b783f33b49a5?w=800&h=600&fit=crop&auto=format",
+        "photographe": "Max Nayman",
+        "verifiee": true,
+        "note": "Crumble de fruits doré dans une assiette."
+      }
     },
     {
       "title": "Butter chicken",
@@ -872,7 +897,12 @@
         ],
         "budget": 2
       },
-      "photo": null
+      "photo": {
+        "url": "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=800&h=600&fit=crop&auto=format",
+        "photographe": "Raman",
+        "verifiee": true,
+        "note": "Poulet au beurre dans un bol en bois."
+      }
     },
     {
       "title": "Bibimbap",
@@ -1002,7 +1032,12 @@
         ],
         "budget": 2
       },
-      "photo": null
+      "photo": {
+        "url": "https://images.unsplash.com/photo-1590301157890-4810ed352733?w=800&h=600&fit=crop&auto=format",
+        "photographe": "Vicky Ng",
+        "verifiee": true,
+        "note": "Bol de bibimbap garni de légumes."
+      }
     }
   ]
 }
