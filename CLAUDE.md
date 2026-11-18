@@ -39,7 +39,7 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `hist
 
 ## Migrations et bases
 - Détail : `docs/migrations.md`. Contrôles : `supabase/tests/controle_NN_*.sql`. Migrations GÉNÉRÉES (16, 18, 25 bis, 33…) jamais éditées à la main (`npm run recettes` ; un lot = `supabase/recettes/lots/lot-NN.json`, ses migrations lui sont propres)
-- **État des bases (à tenir à jour)** : `courses-test` (id `oczyjyehltrizhbuttad`, essais libres, pause après 7 j) et `lichouz-prod` (id `kfdtybskxobqfmpetzgc`) **à jour jusqu’à la migration 32** (17/11/2026, contrôles tout à true) ; **`lichouz-prod` a en plus la 33** (18/11/2026, lot 2, appliquée sans passer par `courses-test` sur demande de Titouan, contrôle : 60 au catalogue) ; `courses-test` : 33 à rattraper. ⚠️ **Aucun export de sauvegarde de la prod** (guide `docs/sauvegardes.md`)
+- **État des bases (à tenir à jour)** : `courses-test` (id `oczyjyehltrizhbuttad`, essais libres, pause après 7 j) et `lichouz-prod` (id `kfdtybskxobqfmpetzgc`) **à jour jusqu’à la migration 32** (17/11/2026, contrôles tout à true) ; **`lichouz-prod` a en plus la 33 et la 34** (18/11/2026, lot 2 + 7 photos, appliquées sans passer par `courses-test` sur demande de Titouan, contrôles : 60 au catalogue, 56 avec photo) ; `courses-test` : 33 et 34 à rattraper. ⚠️ **Aucun export de sauvegarde de la prod** (guide `docs/sauvegardes.md`)
 - **Règle** : d'abord `courses-test`, puis `lichouz-prod` **seulement avec l'accord de Titouan** (il valide la fenêtre Supabase dans les 2 minutes) ; requête de contrôle AVANT de pousser le code qui en dépend. Nouvelle table = RLS + attaques ajoutées dans `tests/rls`. Jamais les vraies recettes de la famille dans le dépôt public
 
 ## Sécurité (OBLIGATOIRE)
