@@ -21,6 +21,21 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [2.8.0] — 2026-11-18
+
+Migration : **33 `recettes_lot_02`** (`supabase/migrations/20261120100000_recettes_lot_02.sql`, GÉNÉRÉE par `npm run recettes`),
+passée sur `lichouz-prod` le 18/11/2026 AVANT le code (contrôle : 60 recettes au catalogue, tout à true). `courses-test` : pas encore.
+
+### Ajouté
+- **10 recettes au catalogue** (lot 2), réécrites avec nos mots, avec étiquettes : Moscow Mule, White Russian, Sex on the Beach
+  (catégorie « Boisson & cocktail »), Fajitas au bœuf, Rougail saucisses, Paella, Salade lyonnaise, Crumble pommes-poires,
+  Butter chicken, Bibimbap. Photos Unsplash : lot suivant (migration 34).
+- **Lots de recettes** : `supabase/recettes/lots/lot-NN.json` → une migration par lot (`scripts/recettes/lots.ts`), sans toucher
+  aux migrations 16, 18 et 25 bis déjà appliquées. Test `tests/unit/lots.test.ts`.
+
+### Modifié
+- Les tests et contrôles qui comptaient « 50 recettes » comptent maintenant le catalogue complet (50 + lots).
+
 ## [2.7.0] — 2026-11-19
 
 Migration : **32 `succes`** (`supabase/migrations/20261119200000_succes.sql`, contrôle `controle_32_succes.sql`),

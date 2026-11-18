@@ -1,6 +1,7 @@
 // Installation NEUVE (procédure de mise en prod) : les 3 fichiers produits par
 // « npm run prod:sql », collés dans l'ordre sur une base vide, donnent une
 // base complète et cohérente (sans les données de test du banc).
+import { lireLots } from '../../scripts/recettes/lots.ts'
 import { PGlite } from '@electric-sql/pglite'
 import { pg_trgm } from '@electric-sql/pglite/contrib/pg_trgm'
 import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto'
@@ -37,7 +38,7 @@ describe('installation neuve (procédure de mise en prod)', () => {
     expect(await one(`SELECT count(*)::int AS n FROM public.super_families WHERE founder_id = '${USER}'`)).toEqual({ n: 1 })
     expect(await one(`SELECT role FROM public.profiles WHERE id = '${USER}'`)).toEqual({ role: 'admin' })
     expect(await one(`SELECT count(*)::int AS n FROM public.super_admins WHERE user_id = '${USER}'`)).toEqual({ n: 1 })
-    expect(await one(`SELECT count(*)::int AS n FROM public.recipes WHERE visibility = 'catalogue'`)).toEqual({ n: 50 })
+    expect(await one(`SELECT count(*)::int AS n FROM public.recipes WHERE visibility = 'catalogue'`)).toEqual({ n: 50 + lireLots().lots.reduce((n, l) => n + l.recettes.length, 0) })
     expect(await one(`SELECT count(*)::int AS n FROM public.recipes WHERE visibility <> 'catalogue'`)).toEqual({ n: 0 })
     // Photos du catalogue (migration recettes_photos) : toutes celles de photos.json
     const attendues = JSON.parse(readFileSync(join(MIG, '..', 'recettes', 'photos.json'), 'utf8')).photos.filter((p: { url: string | null }) => p.url).length

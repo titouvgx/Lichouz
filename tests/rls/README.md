@@ -67,7 +67,7 @@ de **contrôles positifs** et de **contrôles de structure**, et la liste des é
      **nouveau1** / **nouveau2** (pour `consume_invitation`) ;
    - recettes : `recA` (A, `famille`), `recAshared` (A, `super_famille`), `recA2` (A2, `famille`),
      `recB` (B, `famille`), chacune avec ingrédient et étape, auteur = un membre du foyer ;
-     les 50 recettes livrées sont au `catalogue` (le banc utilise « Bœuf bourguignon ») ;
+     les 60 recettes livrées (50 + lot 2) sont au `catalogue` (le banc utilise « Bœuf bourguignon ») ;
    - pour A, A2 et B : planning (semaines différentes), créneau, liste, article, habituel,
      placard ; photos dans `recipe-photos` (dont une pour `recAshared` et une pour `recA2`) ;
    - invitations en attente : une par foyer (créées par son admin) + un lien « fondateur »

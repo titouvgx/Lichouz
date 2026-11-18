@@ -13,7 +13,7 @@ SELECT
     AND public.tags_in_list('{}'::text[], ARRAY['vegan']) AS liste_fixe_ok,
   (SELECT string_agg(name, ' | ' ORDER BY position, name) FROM public.recipe_categories)
     = 'Apéritif | Entrée | Plat | Accompagnement | Sauce | Dessert | Petit-déj & goûter | Boisson & cocktail' AS types_de_plat_ok,
-  (SELECT count(*) = 50 FROM public.recipes
+  (SELECT count(*) >= 50 FROM public.recipes
     WHERE visibility = 'catalogue' AND (cardinality(themes) > 0 OR budget IS NOT NULL)) AS catalogue_etiquete_ok,
   (SELECT count(*) = 0 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
     WHERE n.nspname = 'public' AND c.relkind = 'r' AND NOT c.relrowsecurity) AS toutes_tables_rls_ok;

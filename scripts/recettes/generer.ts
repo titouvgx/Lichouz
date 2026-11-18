@@ -68,10 +68,10 @@ export function lireRecettes(): { corrections: Recette[]; nouvelles: Recette[]; 
   return { corrections, nouvelles, erreurs }
 }
 
-const q = (s: string) => `'${s.replace(/'/g, "''")}'`
+export const q = (s: string) => `'${s.replace(/'/g, "''")}'`
 const num = (n: number | null) => (n === null ? 'NULL' : String(n))
 
-function insertContenu(r: Recette): string {
+export function insertContenu(r: Recette): string {
   const ings = r.ingredients
     .map(
       (i, p) =>

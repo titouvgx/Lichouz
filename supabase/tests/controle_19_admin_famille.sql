@@ -3,7 +3,7 @@
 -- ============================================================
 -- À lancer dans le SQL Editor juste après la migration 19.
 -- Attendu : une seule ligne, toutes les colonnes « _ok » à true,
--- recettes_catalogue = 50. comptes_sans_profil est une information
+-- recettes_catalogue = 50 (60 depuis le lot 2, migration 33). comptes_sans_profil est une information
 -- (comptes de connexion sans famille : à regarder s'il y en a).
 -- ============================================================
 SELECT

@@ -10,6 +10,14 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.8.0',
+    date: '2026-11-18',
+    items: [
+      '10 nouvelles recettes au catalogue : cocktails, paella, bibimbap, butter chicken, rougail saucisses…',
+      'Une catégorie « Boisson & cocktail » pour les retrouver facilement.',
+    ],
+  },
+  {
     version: '2.7.0',
     date: '2026-11-19',
     items: [

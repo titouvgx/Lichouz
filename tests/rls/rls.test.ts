@@ -37,9 +37,11 @@ import {
   type Scenario,
 } from './harness'
 import { lireRecettes } from '../../scripts/recettes/generer.ts'
+import { lireLots } from '../../scripts/recettes/lots.ts'
 
 /** 20 recettes de démo (seed_recipes) + nouvelles recettes livrées (migration recettes_v1). */
-const NB_RECETTES_LIVREES = 20 + lireRecettes().nouvelles.length
+const NB_RECETTES_LIVREES = 20 + lireRecettes().nouvelles.length // catalogue à la migration 17
+const NB_CATALOGUE = NB_RECETTES_LIVREES + lireLots().lots.reduce((n, l) => n + l.recettes.length, 0) // + lots (migration 33…)
 
 // ── Base partagée par tout le fichier ──────────────────────────────────────
 let bench: Bench
@@ -613,9 +615,9 @@ describe('Structure du schéma et fidélité du banc', () => {
        FROM public.recipes WHERE family_id = $1 AND created_by = $2 AND id <> $3`,
       [ID.famA, ID.adminA, ID.recA],
     )
-    expect(r[0].n).toBe(NB_RECETTES_LIVREES)
-    expect(r[0].cat).toBe(NB_RECETTES_LIVREES)
-    expect(await countRows(s, 'public.recipes', `visibility = 'catalogue'`)).toBe(NB_RECETTES_LIVREES)
+    expect(r[0].n).toBe(NB_CATALOGUE)
+    expect(r[0].cat).toBe(NB_CATALOGUE)
+    expect(await countRows(s, 'public.recipes', `visibility = 'catalogue'`)).toBe(NB_CATALOGUE)
   })
 
   structure('la migration rattache les foyers existants à UNE super-famille (fondateur = super-admin) et met les recettes livrées au catalogue', async () => {
@@ -624,7 +626,7 @@ describe('Structure du schéma et fidélité du banc', () => {
     expect(f.superFamilies[0].founder_id, 'fondateur = premier super-admin').toBe(ID.superAdmin)
     expect(f.familiesWithoutSuperFamily).toBe(0)
     expect([...f.familiesInIt].sort()).toEqual([ID.famA, ID.famB].sort())
-    expect(f.recipesByVisibility).toEqual({ catalogue: NB_RECETTES_LIVREES })
+    expect(f.recipesByVisibility).toEqual({ catalogue: NB_CATALOGUE })
   })
 
   structure('données de test : SA ⊃ {A, A2} (fondateur super-admin), SB ⊃ {B} (fondateur admin B)', async (s) => {
@@ -1629,13 +1631,13 @@ describe('Recettes : visibilité famille / super-famille / catalogue', () => {
   for (const X of FOYERS) {
     controle(`membre ${X} voit le catalogue + ses recettes + celles partagées dans sa super-famille, rien d'autre`, async (s) => {
       const o = await s.as(member[X], `SELECT id, visibility FROM public.recipes`)
-      expectOk(o, 'lecture', NB_RECETTES_LIVREES + propres[X].length)
-      expect(o.rows.filter((r) => r.visibility === 'catalogue')).toHaveLength(NB_RECETTES_LIVREES)
+      expectOk(o, 'lecture', NB_CATALOGUE + propres[X].length)
+      expect(o.rows.filter((r) => r.visibility === 'catalogue')).toHaveLength(NB_CATALOGUE)
       expect(o.rows.filter((r) => r.visibility !== 'catalogue').map((r) => r.id).sort()).toEqual([...propres[X]].sort())
     })
   }
   controle('super-admin voit toutes les recettes', async (s) => {
-    expectOk(await s.as('superAdmin', `SELECT id FROM public.recipes`), 'lecture', NB_RECETTES_LIVREES + 4)
+    expectOk(await s.as('superAdmin', `SELECT id FROM public.recipes`), 'lecture', NB_CATALOGUE + 4)
   })
 
   // Catalogue : création / passage interdits
@@ -1672,7 +1674,7 @@ describe('Recettes : visibilité famille / super-famille / catalogue', () => {
     const o = await s.as('memberA', `UPDATE public.recipes SET visibility = 'famille'`)
     expect(o.error, fmt(o)).toBeUndefined()
     expect(o.count, 'seules ses 2 recettes sont touchées').toBe(2)
-    expect(await countRows(s, 'public.recipes', `visibility = 'catalogue'`)).toBe(NB_RECETTES_LIVREES)
+    expect(await countRows(s, 'public.recipes', `visibility = 'catalogue'`)).toBe(NB_CATALOGUE)
     expect((await cat())[0].h, 'le catalogue a changé').toBe(before)
   })
   controle('super-admin crée une recette du catalogue', async (s) => {
@@ -2705,7 +2707,7 @@ describe('Administration : supprimer une famille (delete_family)', () => {
     }
     // Les autres foyers n'ont rien perdu
     expect(await countRows(s, 'public.meal_plans', 'family_id = $1', [ID.famA])).toBeGreaterThan(0)
-    expect(await countRows(s, 'public.recipes', `visibility = 'catalogue'`)).toBe(50)
+    expect(await countRows(s, 'public.recipes', `visibility = 'catalogue'`)).toBe(NB_CATALOGUE)
   })
 })
 
@@ -3260,11 +3262,11 @@ describe('Migration 25 : étiquettes des recettes (liste fixe, mêmes droits que
     const r = await s.su<{ name: string }>(`SELECT name FROM public.recipe_categories ORDER BY position, name`)
     expect(r.map((x) => x.name)).toEqual(['Apéritif', 'Entrée', 'Plat', 'Accompagnement', 'Sauce', 'Dessert', 'Petit-déj & goûter', 'Boisson & cocktail'])
   })
-  structure('les 50 recettes du catalogue ont reçu leurs étiquettes', async (s) => {
+  structure('les recettes du catalogue ont reçu leurs étiquettes', async (s) => {
     const r = await s.su<{ n: number; sans_origine: number }>(
       `SELECT count(*)::int AS n, count(*) FILTER (WHERE origin IS NULL)::int AS sans_origine
          FROM public.recipes WHERE visibility = 'catalogue' AND (cardinality(themes) > 0 OR budget IS NOT NULL)`)
-    expect(r[0].n).toBe(50)
+    expect(r[0].n).toBe(NB_CATALOGUE)
     expect(r[0].sans_origine).toBe(3)
   })
 })

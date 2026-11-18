@@ -1,0 +1,1008 @@
+{
+  "_lisez_moi": "Lot 2 du catalogue : recettes réécrites avec nos mots, étiquettes incluses. Généré en migrations par npm run recettes (scripts/recettes/lots.ts). Photo : null tant qu'elle n'est pas choisie (Unsplash gratuit, pas Unsplash+).",
+  "migration": "20261120100000_recettes_lot_02.sql",
+  "migration_photos": "20261120100100_recettes_lot_02_photos.sql",
+  "kind": "nouvelles",
+  "recettes": [
+    {
+      "title": "Moscow Mule",
+      "category": "Boisson & cocktail",
+      "prep_time_min": 5,
+      "default_portions": 1,
+      "ingredients": [
+        {
+          "name": "Vodka",
+          "quantity": 4,
+          "unit": "cl",
+          "rayon": "Boissons"
+        },
+        {
+          "name": "Ginger beer",
+          "quantity": 12,
+          "unit": "cl",
+          "rayon": "Boissons"
+        },
+        {
+          "name": "Citron vert",
+          "quantity": 0.5,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Menthe fraîche",
+          "quantity": 1,
+          "unit": "branche",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Glaçons",
+          "quantity": null,
+          "unit": null,
+          "rayon": "Surgelés"
+        }
+      ],
+      "steps": [
+        "Remplir un grand verre (ou une timbale en cuivre) de glaçons jusqu'au bord. Plus le verre est froid, plus le cocktail reste pétillant.",
+        "Couper une rondelle dans le demi-citron vert pour la décoration, puis presser le reste (environ 1,5 cl de jus) dans le verre. Verser la vodka par-dessus.",
+        "Compléter avec la ginger beer bien froide et remuer une seule fois, doucement, pour garder les bulles. La ginger beer est plus épicée qu'un ginger ale : c'est elle qui donne son caractère au cocktail.",
+        "Décorer avec la rondelle de citron vert et la branche de menthe, froissée entre les doigts pour libérer son parfum. Servir aussitôt."
+      ],
+      "sources": [
+        "https://www.vinatis.com/blog-moscow-mule-recette-cocktail-vodka",
+        "https://www.demotivateur.fr/food/recette/moscow-mule-1422",
+        "https://www.thedailymeal.com/1011887/moscow-mule-recipe"
+      ],
+      "etiquettes": {
+        "diets": [
+          "vegetarien",
+          "vegan",
+          "sans_lactose",
+          "sans_porc"
+        ],
+        "origin": "etats_unis",
+        "themes": [
+          "ete",
+          "fetes"
+        ],
+        "budget": 1
+      },
+      "photo": null
+    },
+    {
+      "title": "White Russian",
+      "category": "Boisson & cocktail",
+      "prep_time_min": 5,
+      "default_portions": 1,
+      "ingredients": [
+        {
+          "name": "Vodka",
+          "quantity": 4,
+          "unit": "cl",
+          "rayon": "Boissons"
+        },
+        {
+          "name": "Liqueur de café",
+          "quantity": 2,
+          "unit": "cl",
+          "rayon": "Boissons"
+        },
+        {
+          "name": "Crème liquide",
+          "quantity": 2,
+          "unit": "cl",
+          "rayon": "Produits laitiers & œufs"
+        },
+        {
+          "name": "Glaçons",
+          "quantity": null,
+          "unit": null,
+          "rayon": "Surgelés"
+        }
+      ],
+      "steps": [
+        "Remplir à moitié un verre court (type verre à whisky) de glaçons.",
+        "Verser la vodka puis la liqueur de café sur la glace et remuer quelques secondes avec une cuillère.",
+        "Verser la crème liquide très doucement en la faisant couler sur le dos d'une cuillère : elle reste en surface et dessine une belle couche blanche.",
+        "Servir tel quel et remuer au moment de boire, pour mélanger la crème au café. À savourer en fin de repas, comme un dessert."
+      ],
+      "sources": [
+        "https://www.tastingtable.com/cook/recipes/How-to-Make-a-Classic-White-Russian-Cocktail",
+        "https://sainsburysmagazine.co.uk/recipes/drinks/white-russian",
+        "https://www.demotivateur.fr/food/white-russian-12800"
+      ],
+      "etiquettes": {
+        "diets": [
+          "vegetarien",
+          "sans_porc"
+        ],
+        "origin": "etats_unis",
+        "themes": [
+          "films",
+          "hiver",
+          "fetes"
+        ],
+        "budget": 2
+      },
+      "photo": null
+    },
+    {
+      "title": "Sex on the Beach",
+      "category": "Boisson & cocktail",
+      "prep_time_min": 5,
+      "default_portions": 1,
+      "ingredients": [
+        {
+          "name": "Vodka",
+          "quantity": 4,
+          "unit": "cl",
+          "rayon": "Boissons"
+        },
+        {
+          "name": "Liqueur de pêche",
+          "quantity": 2,
+          "unit": "cl",
+          "rayon": "Boissons"
+        },
+        {
+          "name": "Jus d'orange",
+          "quantity": 4,
+          "unit": "cl",
+          "rayon": "Boissons"
+        },
+        {
+          "name": "Jus de cranberry",
+          "quantity": 4,
+          "unit": "cl",
+          "rayon": "Boissons"
+        },
+        {
+          "name": "Orange",
+          "quantity": 1,
+          "unit": "tranche",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Glaçons",
+          "quantity": null,
+          "unit": null,
+          "rayon": "Surgelés"
+        }
+      ],
+      "steps": [
+        "Remplir un grand verre de glaçons.",
+        "Verser la vodka, la liqueur de pêche et le jus d'orange, puis remuer doucement.",
+        "Verser le jus de cranberry en dernier, lentement : il descend et colore le fond du verre en rouge.",
+        "Décorer avec la tranche d'orange posée sur le bord du verre. Servir bien frais, avec une paille."
+      ],
+      "sources": [
+        "https://cocktailmag.fr/en/cocktail-recipe/vodka/sex-on-the-beach",
+        "https://figaronautisme.meteoconsult.fr/actus-nautisme/2017-07-18/44227-un-sex-on-the-beach-s-il-vous-plait",
+        "https://www.saq.com/fr/sex-on-the-beach-ec"
+      ],
+      "etiquettes": {
+        "diets": [
+          "vegetarien",
+          "vegan",
+          "sans_lactose",
+          "sans_porc"
+        ],
+        "origin": "etats_unis",
+        "themes": [
+          "ete",
+          "fetes"
+        ],
+        "budget": 2
+      },
+      "photo": null
+    },
+    {
+      "title": "Fajitas au bœuf",
+      "category": "Plat",
+      "prep_time_min": 30,
+      "default_portions": 4,
+      "ingredients": [
+        {
+          "name": "Bavette ou rumsteck",
+          "quantity": 500,
+          "unit": "g",
+          "rayon": "Viandes & poissons"
+        },
+        {
+          "name": "Poivron rouge",
+          "quantity": 1,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Poivron vert",
+          "quantity": 1,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Oignon",
+          "quantity": 2,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Citron vert",
+          "quantity": 1,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Ail",
+          "quantity": 2,
+          "unit": "gousse",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Paprika",
+          "quantity": 2,
+          "unit": "c. à café",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Cumin moulu",
+          "quantity": 1,
+          "unit": "c. à café",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Piment en poudre",
+          "quantity": 1,
+          "unit": "c. à café",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Huile d'olive",
+          "quantity": 3,
+          "unit": "c. à soupe",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Tortillas de blé",
+          "quantity": 8,
+          "unit": "pièce",
+          "rayon": "Épicerie salée"
+        },
+        {
+          "name": "Crème fraîche épaisse",
+          "quantity": 150,
+          "unit": "g",
+          "rayon": "Produits laitiers & œufs"
+        },
+        {
+          "name": "Avocat",
+          "quantity": 1,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Coriandre fraîche",
+          "quantity": 0.5,
+          "unit": "botte",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Sel",
+          "quantity": null,
+          "unit": null,
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Poivre",
+          "quantity": null,
+          "unit": null,
+          "rayon": "Condiments & épices"
+        }
+      ],
+      "steps": [
+        "Préparer la marinade : presser le citron vert, écraser l'ail, puis mélanger avec 2 c. à soupe d'huile, le paprika, le cumin, le piment, du sel et du poivre.",
+        "Couper la viande en bandes d'environ 1 cm d'épaisseur en travaillant en travers des fibres, la mélanger à la marinade et laisser reposer au frais de 30 min à 2 h.",
+        "Couper les poivrons et les oignons en lanières. Les faire revenir 8 à 10 min dans une grande poêle avec le reste d'huile, à feu vif, jusqu'à ce qu'ils soient dorés mais encore croquants. Les réserver.",
+        "Dans la même poêle bien chaude, saisir la viande 2 à 3 min en la remuant, jusqu'à ce qu'elle soit dorée. Remettre les légumes pour les réchauffer 1 min.",
+        "Réchauffer les tortillas quelques secondes à la poêle sèche ou au four, écraser l'avocat à la fourchette et ciseler la coriandre.",
+        "Servir la viande et les légumes dans les tortillas, avec la crème fraîche, l'avocat et la coriandre. Chacun garnit et roule sa fajita à table."
+      ],
+      "sources": [
+        "https://guide-alimentaire.canada.ca/fr/recettes/fajitas-boeuf-creme-sure-lime",
+        "https://www.weber.com/CA/fr/recettes/red-meat/fajitas-de-jupe-de-b%C5%93uf-grill%C3%A9e/weber-2410834.html",
+        "https://dubocalalassiette.fr/blog/quelle-viande-de-boeuf-pour-fajitas/"
+      ],
+      "etiquettes": {
+        "diets": [
+          "sans_porc"
+        ],
+        "origin": "mexique",
+        "themes": [
+          "enfants",
+          "fetes"
+        ],
+        "budget": 2
+      },
+      "photo": null
+    },
+    {
+      "title": "Rougail saucisses",
+      "category": "Plat",
+      "prep_time_min": 55,
+      "default_portions": 4,
+      "ingredients": [
+        {
+          "name": "Saucisses fumées",
+          "quantity": 4,
+          "unit": "pièce",
+          "rayon": "Viandes & poissons"
+        },
+        {
+          "name": "Tomate",
+          "quantity": 600,
+          "unit": "g",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Oignon",
+          "quantity": 2,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Ail",
+          "quantity": 4,
+          "unit": "gousse",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Gingembre frais",
+          "quantity": 20,
+          "unit": "g",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Piment frais",
+          "quantity": 1,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Thym",
+          "quantity": 2,
+          "unit": "branche",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Huile",
+          "quantity": 2,
+          "unit": "c. à soupe",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Riz blanc",
+          "quantity": 300,
+          "unit": "g",
+          "rayon": "Épicerie salée"
+        },
+        {
+          "name": "Sel",
+          "quantity": null,
+          "unit": null,
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Poivre",
+          "quantity": null,
+          "unit": null,
+          "rayon": "Condiments & épices"
+        }
+      ],
+      "steps": [
+        "Plonger les saucisses 5 min dans de l'eau bouillante pour enlever l'excès de gras et de sel, puis les égoutter et les couper en tronçons de 3 à 4 cm.",
+        "Éplucher et émincer les oignons, écraser l'ail, râper le gingembre. Couper les tomates en petits dés (ou les écraser grossièrement). Épépiner et hacher le piment : il est très fort, en mettre moins si les enfants mangent.",
+        "Faire dorer les tronçons de saucisse 5 min dans l'huile, à feu moyen, puis les retirer et les garder de côté.",
+        "Dans la même cocotte, faire revenir les oignons 5 min, puis ajouter l'ail, le gingembre et le piment pour 1 min.",
+        "Ajouter les tomates, le thym, un peu de sel et de poivre (peu de sel : les saucisses sont déjà salées). Remettre les saucisses, couvrir et laisser mijoter 20 min à feu doux.",
+        "Découvrir et laisser réduire 10 min, jusqu'à ce que la sauce soit épaisse. Pendant ce temps, cuire le riz selon le paquet.",
+        "Servir le rougail sur le riz. À la Réunion, on l'accompagne souvent de lentilles ou de haricots rouges."
+      ],
+      "sources": [
+        "https://terreexotique.com/blog/rougail-saucisse-cari-creole",
+        "https://ileauxepices.com/blog/2013/01/07/recette-du-rougail-saucisse-reunionnais-traditionnel/wpid697/",
+        "https://avf.asso.fr/tours/wp-content/uploads/sites/173/2022/03/Rougail-saucisse-reunionnais.pdf"
+      ],
+      "etiquettes": {
+        "diets": [],
+        "origin": "antilles",
+        "themes": [
+          "reconfort"
+        ],
+        "budget": 1
+      },
+      "photo": null
+    },
+    {
+      "title": "Paella",
+      "category": "Plat",
+      "prep_time_min": 70,
+      "default_portions": 6,
+      "ingredients": [
+        {
+          "name": "Riz rond spécial paella",
+          "quantity": 400,
+          "unit": "g",
+          "rayon": "Épicerie salée"
+        },
+        {
+          "name": "Cuisses de poulet",
+          "quantity": 4,
+          "unit": "pièce",
+          "rayon": "Viandes & poissons"
+        },
+        {
+          "name": "Crevettes crues",
+          "quantity": 300,
+          "unit": "g",
+          "rayon": "Viandes & poissons"
+        },
+        {
+          "name": "Moules",
+          "quantity": 500,
+          "unit": "g",
+          "rayon": "Viandes & poissons"
+        },
+        {
+          "name": "Calamars",
+          "quantity": 200,
+          "unit": "g",
+          "rayon": "Viandes & poissons"
+        },
+        {
+          "name": "Poivron rouge",
+          "quantity": 1,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Tomate",
+          "quantity": 2,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Oignon",
+          "quantity": 1,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Ail",
+          "quantity": 3,
+          "unit": "gousse",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Petits pois surgelés",
+          "quantity": 150,
+          "unit": "g",
+          "rayon": "Surgelés"
+        },
+        {
+          "name": "Bouillon de volaille",
+          "quantity": 1,
+          "unit": "l",
+          "rayon": "Épicerie salée"
+        },
+        {
+          "name": "Safran",
+          "quantity": 1,
+          "unit": "pincée",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Paprika doux",
+          "quantity": 1,
+          "unit": "c. à café",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Huile d'olive",
+          "quantity": 4,
+          "unit": "c. à soupe",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Citron",
+          "quantity": 1,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Sel",
+          "quantity": null,
+          "unit": null,
+          "rayon": "Condiments & épices"
+        }
+      ],
+      "steps": [
+        "Chauffer le bouillon et y faire infuser le safran. Gratter et rincer les moules, jeter celles qui restent ouvertes quand on les tapote. Couper les calamars en anneaux. Couper le poivron en lanières, les tomates en dés, hacher l'oignon et l'ail.",
+        "Dans une très grande poêle ou un grand plat à paella, chauffer l'huile et faire dorer les cuisses de poulet 10 min en les retournant. Saler légèrement.",
+        "Ajouter l'oignon, le poivron, l'ail et les calamars, et cuire 5 min. Ajouter les tomates et le paprika, et laisser compoter 5 min.",
+        "Verser le riz et le remuer 2 min pour qu'il s'enrobe de gras et devienne translucide.",
+        "Verser le bouillon chaud au safran, mélanger une dernière fois pour répartir le riz, puis ne plus remuer. Cuire 10 min à feu assez vif, puis 10 min à feu doux.",
+        "Disposer les crevettes, les moules (charnière vers le bas) et les petits pois sur le riz. Cuire encore 5 à 8 min, jusqu'à ce que les moules s'ouvrent et que le riz ait absorbé le liquide. Jeter les moules restées fermées.",
+        "Retirer du feu, couvrir d'un torchon et laisser reposer 5 min. Servir directement dans le plat, avec des quartiers de citron."
+      ],
+      "sources": [
+        "https://www.qooq.com/printpdf/140899",
+        "https://www.spar.be/fr/print/pdf/node/3352",
+        "https://ileauxepices.com/blog/2016/06/20/recette-la-paella-au-safran-au-feu-de-bois/wpid11270/"
+      ],
+      "etiquettes": {
+        "diets": [
+          "sans_lactose",
+          "sans_porc"
+        ],
+        "origin": "espagne",
+        "themes": [
+          "fetes",
+          "ete"
+        ],
+        "budget": 3
+      },
+      "photo": null
+    },
+    {
+      "title": "Salade lyonnaise",
+      "category": "Entrée",
+      "prep_time_min": 30,
+      "default_portions": 4,
+      "ingredients": [
+        {
+          "name": "Frisée",
+          "quantity": 1,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Lardons fumés",
+          "quantity": 200,
+          "unit": "g",
+          "rayon": "Viandes & poissons"
+        },
+        {
+          "name": "Œufs",
+          "quantity": 4,
+          "unit": "pièce",
+          "rayon": "Produits laitiers & œufs"
+        },
+        {
+          "name": "Pain rassis",
+          "quantity": 4,
+          "unit": "tranche",
+          "rayon": "Épicerie salée"
+        },
+        {
+          "name": "Ail",
+          "quantity": 1,
+          "unit": "gousse",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Échalote",
+          "quantity": 1,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Moutarde de Dijon",
+          "quantity": 1,
+          "unit": "c. à soupe",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Vinaigre de vin",
+          "quantity": 2,
+          "unit": "c. à soupe",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Huile",
+          "quantity": 4,
+          "unit": "c. à soupe",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Vinaigre blanc",
+          "quantity": 1,
+          "unit": "c. à soupe",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Sel",
+          "quantity": null,
+          "unit": null,
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Poivre",
+          "quantity": null,
+          "unit": null,
+          "rayon": "Condiments & épices"
+        }
+      ],
+      "steps": [
+        "Laver la frisée, garder surtout les parties claires et tendres, l'essorer et la mettre dans un grand saladier.",
+        "Frotter les tranches de pain avec l'ail, les couper en dés et les dorer 4 à 5 min dans une poêle avec 1 c. à soupe d'huile. Les réserver.",
+        "Faire revenir les lardons à sec 5 à 6 min, jusqu'à ce qu'ils soient dorés. Les égoutter en gardant 1 c. à soupe de leur gras dans la poêle.",
+        "Préparer la vinaigrette : mélanger la moutarde, le vinaigre de vin, l'échalote hachée très fin, le reste d'huile, du poivre et un peu de sel. Y ajouter le gras de cuisson tiède.",
+        "Faire frémir de l'eau avec le vinaigre blanc. Casser chaque œuf dans une tasse, puis le glisser dans l'eau. Pocher 3 min, jusqu'à ce que le blanc soit pris et le jaune coulant, puis égoutter sur du papier absorbant.",
+        "Mélanger la frisée avec la vinaigrette, répartir dans les assiettes, ajouter les lardons et les croûtons, et poser un œuf poché sur chaque assiette. Servir tout de suite."
+      ],
+      "sources": [
+        "https://www.visiterlyon.com/se-regaler/recettes-de-lyon-et-d-ailleurs/la-salade-lyonnaise",
+        "https://www.pardonyourfrench.com/frisee-salad-with-bacon-egg-and-croutons-salade-lyonnaise/",
+        "https://tablejourney.com/france/lyon/dish/salade-lyonnaise/"
+      ],
+      "etiquettes": {
+        "diets": [
+          "sans_lactose"
+        ],
+        "origin": "lyonnais",
+        "themes": [
+          "reconfort"
+        ],
+        "budget": 1
+      },
+      "photo": null
+    },
+    {
+      "title": "Crumble pommes-poires",
+      "category": "Dessert",
+      "prep_time_min": 55,
+      "default_portions": 6,
+      "ingredients": [
+        {
+          "name": "Pomme",
+          "quantity": 3,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Poire",
+          "quantity": 3,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Farine",
+          "quantity": 150,
+          "unit": "g",
+          "rayon": "Épicerie salée"
+        },
+        {
+          "name": "Beurre",
+          "quantity": 110,
+          "unit": "g",
+          "rayon": "Produits laitiers & œufs"
+        },
+        {
+          "name": "Sucre roux",
+          "quantity": 80,
+          "unit": "g",
+          "rayon": "Épicerie sucrée"
+        },
+        {
+          "name": "Sucre en poudre",
+          "quantity": 30,
+          "unit": "g",
+          "rayon": "Épicerie sucrée"
+        },
+        {
+          "name": "Cannelle",
+          "quantity": 1,
+          "unit": "c. à café",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Sel",
+          "quantity": 1,
+          "unit": "pincée",
+          "rayon": "Condiments & épices"
+        }
+      ],
+      "steps": [
+        "Préchauffer le four à 180 °C. Beurrer un plat à gratin d'environ 24 cm avec 10 g de beurre.",
+        "Éplucher les pommes et les poires, retirer les cœurs et couper la chair en dés. Les mélanger avec le sucre en poudre et la cannelle, puis les étaler dans le plat.",
+        "Préparer la pâte à crumble : dans un saladier, mélanger la farine, le sucre roux et le sel. Ajouter le reste de beurre froid coupé en petits dés.",
+        "Du bout des doigts, sabler la pâte rapidement jusqu'à obtenir de grosses miettes irrégulières. Ne pas trop la travailler, sinon elle devient une boule.",
+        "Répartir les miettes sur les fruits sans tasser. Enfourner 30 à 35 min, jusqu'à ce que le dessus soit bien doré et que les fruits bouillonnent sur les bords.",
+        "Laisser tiédir 10 min avant de servir, seul ou avec une boule de glace à la vanille."
+      ],
+      "sources": [
+        "https://lefooding.com/fr/staff-meal/recette-36-mon-crumble-pomme-poire-epice",
+        "https://clemfoodie.com/2020/04/05/crumble-facile-pommes-poires",
+        "https://www.zwilling.com/be-fr/magazine/recettes-inspirantes/dessert-selection/apple-pear-crumble.html"
+      ],
+      "etiquettes": {
+        "diets": [
+          "vegetarien"
+        ],
+        "origin": "royaume_uni",
+        "themes": [
+          "reconfort",
+          "hiver",
+          "enfants"
+        ],
+        "budget": 1
+      },
+      "photo": null
+    },
+    {
+      "title": "Butter chicken",
+      "category": "Plat",
+      "prep_time_min": 60,
+      "default_portions": 4,
+      "ingredients": [
+        {
+          "name": "Blancs de poulet",
+          "quantity": 600,
+          "unit": "g",
+          "rayon": "Viandes & poissons"
+        },
+        {
+          "name": "Yaourt nature",
+          "quantity": 150,
+          "unit": "g",
+          "rayon": "Produits laitiers & œufs"
+        },
+        {
+          "name": "Garam masala",
+          "quantity": 2,
+          "unit": "c. à café",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Paprika",
+          "quantity": 1,
+          "unit": "c. à café",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Cumin moulu",
+          "quantity": 1,
+          "unit": "c. à café",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Piment en poudre",
+          "quantity": 0.5,
+          "unit": "c. à café",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Gingembre frais",
+          "quantity": 15,
+          "unit": "g",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Ail",
+          "quantity": 3,
+          "unit": "gousse",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Citron",
+          "quantity": 0.5,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Oignon",
+          "quantity": 2,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Beurre",
+          "quantity": 40,
+          "unit": "g",
+          "rayon": "Produits laitiers & œufs"
+        },
+        {
+          "name": "Tomates concassées",
+          "quantity": 1,
+          "unit": "boîte",
+          "rayon": "Épicerie salée"
+        },
+        {
+          "name": "Crème liquide",
+          "quantity": 15,
+          "unit": "cl",
+          "rayon": "Produits laitiers & œufs"
+        },
+        {
+          "name": "Sucre",
+          "quantity": 1,
+          "unit": "c. à café",
+          "rayon": "Épicerie sucrée"
+        },
+        {
+          "name": "Riz basmati",
+          "quantity": 300,
+          "unit": "g",
+          "rayon": "Épicerie salée"
+        },
+        {
+          "name": "Coriandre fraîche",
+          "quantity": 0.5,
+          "unit": "botte",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Sel",
+          "quantity": null,
+          "unit": null,
+          "rayon": "Condiments & épices"
+        }
+      ],
+      "steps": [
+        "Couper le poulet en cubes de 3 cm. Dans un saladier, mélanger le yaourt, le jus du demi-citron, la moitié des épices (garam masala, paprika, cumin, piment), 1 gousse d'ail écrasée et du sel. Ajouter le poulet et laisser mariner au frais au moins 30 min (idéalement quelques heures).",
+        "Faire cuire le poulet mariné 8 à 10 min dans une poêle bien chaude, en le retournant, jusqu'à ce qu'il soit doré et cuit à cœur. Réserver.",
+        "Dans une sauteuse, faire fondre le beurre et faire revenir les oignons émincés 8 min, jusqu'à ce qu'ils soient tendres et dorés.",
+        "Ajouter le reste de l'ail, le gingembre râpé et le reste des épices, et cuire 1 min en remuant. Verser les tomates concassées et le sucre, puis laisser mijoter 15 min.",
+        "Mixer la sauce jusqu'à ce qu'elle soit lisse, la remettre dans la sauteuse avec le poulet et la crème. Laisser mijoter 10 min à feu doux, en goûtant pour rectifier le sel.",
+        "Pendant ce temps, cuire le riz basmati selon le paquet.",
+        "Servir le poulet sur le riz, parsemé de coriandre ciselée. Se marie très bien avec du pain naan."
+      ],
+      "sources": [
+        "https://www.demotivateur.fr/food/recette/butter-chicken-1345",
+        "https://www.doitinparis.com/fr/recette-chicken-butter-25028",
+        "https://www.jonathangarnier.com/en/blogs/recipes/poulet-au-beurre-2"
+      ],
+      "etiquettes": {
+        "diets": [
+          "sans_porc"
+        ],
+        "origin": "inde",
+        "themes": [
+          "reconfort",
+          "fetes"
+        ],
+        "budget": 2
+      },
+      "photo": null
+    },
+    {
+      "title": "Bibimbap",
+      "category": "Plat",
+      "prep_time_min": 60,
+      "default_portions": 4,
+      "ingredients": [
+        {
+          "name": "Riz rond",
+          "quantity": 300,
+          "unit": "g",
+          "rayon": "Épicerie salée"
+        },
+        {
+          "name": "Bœuf haché",
+          "quantity": 250,
+          "unit": "g",
+          "rayon": "Viandes & poissons"
+        },
+        {
+          "name": "Sauce soja",
+          "quantity": 3,
+          "unit": "c. à soupe",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Huile de sésame",
+          "quantity": 2,
+          "unit": "c. à soupe",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Gochujang",
+          "quantity": 3,
+          "unit": "c. à soupe",
+          "rayon": "Épicerie salée"
+        },
+        {
+          "name": "Sucre",
+          "quantity": 2,
+          "unit": "c. à café",
+          "rayon": "Épicerie sucrée"
+        },
+        {
+          "name": "Ail",
+          "quantity": 2,
+          "unit": "gousse",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Carotte",
+          "quantity": 2,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Courgette",
+          "quantity": 1,
+          "unit": "pièce",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Champignon shiitake",
+          "quantity": 150,
+          "unit": "g",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Épinards frais",
+          "quantity": 200,
+          "unit": "g",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Germes de soja",
+          "quantity": 150,
+          "unit": "g",
+          "rayon": "Fruits & légumes"
+        },
+        {
+          "name": "Œufs",
+          "quantity": 4,
+          "unit": "pièce",
+          "rayon": "Produits laitiers & œufs"
+        },
+        {
+          "name": "Huile neutre",
+          "quantity": 3,
+          "unit": "c. à soupe",
+          "rayon": "Condiments & épices"
+        },
+        {
+          "name": "Graines de sésame",
+          "quantity": 1,
+          "unit": "c. à soupe",
+          "rayon": "Épicerie salée"
+        },
+        {
+          "name": "Sel",
+          "quantity": null,
+          "unit": null,
+          "rayon": "Condiments & épices"
+        }
+      ],
+      "steps": [
+        "Rincer le riz à l'eau froide jusqu'à ce que l'eau soit claire, puis le cuire selon le paquet. Le garder au chaud sous couvercle.",
+        "Mélanger le bœuf haché avec 2 c. à soupe de sauce soja, 1 gousse d'ail écrasée, 1 c. à café de sucre et 1 c. à soupe d'huile de sésame. Laisser mariner 15 min.",
+        "Préparer la sauce : mélanger le gochujang, le reste de sauce soja, de sucre et d'huile de sésame avec 1 c. à soupe d'eau. Goûter : c'est piquant, en mettre moins pour les enfants.",
+        "Couper les carottes en bâtonnets fins, la courgette en demi-rondelles et les shiitakes en lamelles. Les faire sauter séparément 2 à 3 min chacun dans un peu d'huile, avec une pincée de sel, et les réserver dans des petits tas.",
+        "Plonger les épinards 30 s dans l'eau bouillante salée, les égoutter, les presser et les assaisonner d'une goutte d'huile de sésame. Faire de même 2 min avec les germes de soja.",
+        "Faire sauter le bœuf mariné 4 à 5 min à feu vif, en l'émiettant, jusqu'à ce qu'il soit bien cuit. Faire cuire les œufs au plat, jaune coulant.",
+        "Servir le riz dans de grands bols, disposer dessus les légumes, le bœuf et l'œuf. Parsemer de sésame et servir avec la sauce : on mélange tout à table."
+      ],
+      "sources": [
+        "https://www.vitamix.com/ca/fr_ca/recipes/bibimbap-r000004446",
+        "https://www.rtbf.be/article/la-recette-d-un-plat-traditonnel-coreen-le-bibimbap-9834660",
+        "https://www.consoglobe.com/bibimbap-cg"
+      ],
+      "etiquettes": {
+        "diets": [
+          "sans_porc",
+          "sans_lactose"
+        ],
+        "origin": "coree",
+        "themes": [
+          "reconfort"
+        ],
+        "budget": 2
+      },
+      "photo": null
+    }
+  ]
+}

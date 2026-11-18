@@ -2,7 +2,7 @@
 // Utilisé par le générateur de migration (generer.ts) et par les tests
 // (tests/unit/recettes.test.ts). Aucune dépendance : exécutable par Node seul.
 
-export const CATEGORIES = ['Entrée', 'Plat', 'Accompagnement', 'Dessert'] as const
+export const CATEGORIES = ['Entrée', 'Plat', 'Accompagnement', 'Dessert', 'Boisson & cocktail'] as const
 
 /** Rayons de courses, exactement comme dans seed_categories.sql */
 export const RAYONS = [

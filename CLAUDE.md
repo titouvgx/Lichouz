@@ -30,7 +30,7 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `hist
 - **Super-admin** (`super_admins`) : voit tout. **Fondateur** (`super_families.founder_id`) : jusqu'à 3 foyers, gère dans tous. **Admin de foyer** : invite, change les rôles (pas le sien ni le fondateur), renomme, retire / désactive un membre
 - Retirer = supprimer le compte (recettes gardées, auteur NULL). Pas de `DELETE` direct sur `families`, `profiles`, `recipes` : fonctions SQL (`remove_member`, `delete_family`, `delete_my_account`, `set_account_disabled`…)
 - **Invitations** : lien unique 7 jours, seul `sha256(jeton)` stocké, réservable à un e-mail (empreinte + indice), compte créé par la fonction `accepter-invitation` (non confirmé → e-mail « Confirm signup »)
-- **Recettes** : archivées, jamais supprimées ; `visibility` = `famille` (= foyer, défaut) | `super_famille` | `catalogue` (50 livrées, JSON dans `supabase/recettes/`, lecture seule sauf super-admin) ; étiquettes = liste fixe (CHECK + `src/lib/etiquettes.ts`, test qui compare). Planning, listes, habituels, placard, semaines types, événements : par foyer (`is_family`)
+- **Recettes** : archivées, jamais supprimées ; `visibility` = `famille` (= foyer, défaut) | `super_famille` | `catalogue` (60 livrées : 50 + lot 2 ; JSON dans `supabase/recettes/`, lots dans `supabase/recettes/lots/`, lecture seule sauf super-admin) ; étiquettes = liste fixe (CHECK + `src/lib/etiquettes.ts`, test qui compare). Planning, listes, habituels, placard, semaines types, événements : par foyer (`is_family`)
 - **Étoiles** (`recipe_ratings`) : vote privé, moyenne via `recipe_rating_stats(uuid[])`
 - **Commentaires** (`recipe_comments`, migration 31) : visibles dans la famille de l’auteur seulement, lecture par `recipe_comments_list(uuid)`, pas de modification
 - **Trophées** (migration 32) : 40 calculés par `achievement_progress()` (réservée à la base), enregistrés par `refresh_my_achievements()` (renvoie les nouveaux → toast), `user_achievements` écrite par la base seule ; `cook_sessions` (temps « En cuisine »), `booster_openings` ; textes, raretés, points et niveau dans `src/lib/succes.ts` (seuils = `achievement_tiers()`, test qui compare)
@@ -38,8 +38,8 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `hist
 - API front : `src/lib/api/*.ts` ; contexte (`family`, `superFamily`, `isFounder`, `isSuperAdmin`) dans `src/lib/profile.svelte.ts`
 
 ## Migrations et bases
-- Détail : `docs/migrations.md`. Contrôles : `supabase/tests/controle_NN_*.sql`. Migrations GÉNÉRÉES (16, 18, 25 bis) jamais éditées à la main (`npm run recettes`)
-- **État des bases (à tenir à jour)** : `courses-test` (id `oczyjyehltrizhbuttad`, essais libres, pause après 7 j) et `lichouz-prod` (id `kfdtybskxobqfmpetzgc`) **à jour jusqu’à la migration 32** (17/11/2026, par le connecteur Supabase avec l’accord de Titouan, contrôles tout à true sur les deux). ⚠️ **Aucun export de sauvegarde de la prod** (guide `docs/sauvegardes.md`)
+- Détail : `docs/migrations.md`. Contrôles : `supabase/tests/controle_NN_*.sql`. Migrations GÉNÉRÉES (16, 18, 25 bis, 33…) jamais éditées à la main (`npm run recettes` ; un lot = `supabase/recettes/lots/lot-NN.json`, ses migrations lui sont propres)
+- **État des bases (à tenir à jour)** : `courses-test` (id `oczyjyehltrizhbuttad`, essais libres, pause après 7 j) et `lichouz-prod` (id `kfdtybskxobqfmpetzgc`) **à jour jusqu’à la migration 32** (17/11/2026, contrôles tout à true) ; **`lichouz-prod` a en plus la 33** (18/11/2026, lot 2, appliquée sans passer par `courses-test` sur demande de Titouan, contrôle : 60 au catalogue) ; `courses-test` : 33 à rattraper. ⚠️ **Aucun export de sauvegarde de la prod** (guide `docs/sauvegardes.md`)
 - **Règle** : d'abord `courses-test`, puis `lichouz-prod` **seulement avec l'accord de Titouan** (il valide la fenêtre Supabase dans les 2 minutes) ; requête de contrôle AVANT de pousser le code qui en dépend. Nouvelle table = RLS + attaques ajoutées dans `tests/rls`. Jamais les vraies recettes de la famille dans le dépôt public
 
 ## Sécurité (OBLIGATOIRE)
@@ -63,8 +63,9 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `hist
 - Sortir X.Y.Z : bases à jour → `npm version X.Y.Z --no-git-tag-version` → CHANGELOG daté → check + test + build + capture → `preprod` → go de Titouan → `main` → vérifier site et Actions → Titouan crée l'étiquette et la Release
 - Réglages Supabase (invitations, mot de passe oublié, SMTP Brevo) : `supabase/functions/README.md`, `supabase/prod/README.md`
 
-## État et suite (17/11/2026)
-- **En ligne : v2.7.0** (17/11/2026, migration 32) : 40 trophées calculés en base, toast, page Mes trophées, niveau du compte, conditions 2026-11-19. Avant : 2.6.0 commentaires (famille seulement), 2.5.0 boosters à thème, 2.4.x booster du jour + aura, 2.3.0 Tendances
+## État et suite (18/11/2026)
+- **v2.8.0** (18/11/2026, migration 33) : lot 2 de 10 recettes au catalogue (sans photo) ; mécanisme de lots en place. **Chantier recettes : catalogue public tranché** ; reste : photos Unsplash du lot 2 (migration 34), lots suivants. Quiz du jour : toujours à faire
+- **Avant : v2.7.0** (17/11/2026, migration 32) : 40 trophées calculés en base, toast, page Mes trophées, niveau du compte, conditions 2026-11-19. Avant : 2.6.0 commentaires (famille seulement), 2.5.0 boosters à thème, 2.4.x booster du jour + aura, 2.3.0 Tendances
 - Boosters = **petit plus, jamais central** (décision de Titouan). Album, cartes rares, boosters bonus : avec le lot Succès (une seule ré-acceptation)
 - **Todo si l’appli devient publique** (décision de Titouan) : les commentaires deviendront **publics pour tout le monde** → modération (signaler, masquer, page de modération), CGU, moins de 15 ans
 - **PROCHAINE SESSION (18/11/2026) : Quiz du jour** (feu vert de Titouan). Cadrage déjà écrit dans le doc claude.ai `courses-famille/boite-a-idees.md` (« Quiz du jour ») : mêmes questions du jour pour le foyer (graine date + foyer, heure de Paris), 3 à 5 questions à choix multiples + courte explication, score perso + série de jours, carte sur l’Accueil, pseudo obligatoire ; banque de 300 à 400 questions rédigées par nous (faits vérifiés, source notée, pas de copie), JSON contrôlé par un test ; réponses en base (RLS + attaques), bonne réponse cachée avant de répondre (fonction SQL), score calculé par la base ; lien avec les trophées possible. **À confirmer avec Titouan** : les 4 points retenus le 16/11, nombre de questions par jour, trophées « quiz », qui voit les scores. Avant : export de sauvegarde de la prod + tests des 35 trophées non testés
@@ -74,4 +75,4 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `hist
 - En attente : export de sauvegarde de la prod ; relecture des textes légaux avec Titouan ; contacter Marmiton (Titouan) ; page Genèse reportée ; tests sur téléphone (QR, icône, étoiles, accord parental, fenêtre d'accueil)
 
 ## Commandes
-`npm run dev` · `npm run build` · `npm run check` · `npm test` (unitaires + banc RLS) · `npm run test:unit` · `npm run test:rls` · `npm run recettes` (migrations 16 et 18) · `npm run prod:sql`
+`npm run dev` · `npm run build` · `npm run check` · `npm test` (unitaires + banc RLS) · `npm run test:unit` · `npm run test:rls` · `npm run recettes` (migrations 16, 18, 25 bis et lots) · `npm run prod:sql`
