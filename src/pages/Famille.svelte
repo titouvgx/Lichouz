@@ -266,6 +266,12 @@
     return own ? canManage : isFounder || isSuperAdmin
   }
 
+  /** Le fondateur ne peut ni changer de rôle ni être retiré, mais le super-admin peut le désactiver. */
+  function canDisableMember(m: Member, own: boolean): boolean {
+    if (m.id === founderId) return !!me && m.id !== me && isSuperAdmin
+    return canEditMember(m, own)
+  }
+
   /** Applique un changement à la liste où se trouve ce membre. */
   function patchMember(m: Member, change: (list: Member[]) => Member[]) {
     if (m.family_id === familyId) members = change(members)
@@ -442,6 +448,7 @@
 
 {#snippet memberRow(m: Member, own: boolean)}
   {@const editable = canEditMember(m, own)}
+  {@const disablable = canDisableMember(m, own)}
   <li class="row" class:row-off={m.disabled}>
     <span class="avatar" class:avatar-admin={m.role === 'admin'} aria-hidden="true">{initialOf(m.display_name)}</span>
     <span class="row-main">
@@ -455,8 +462,9 @@
         {#if m.disabled}<span class="badge badge-off">Désactivé</span>{/if}
       </span>
     </span>
-    {#if editable}
+    {#if editable || disablable}
       <span class="row-actions">
+      {#if editable}
       <button
         class="btn btn-row-action"
         onclick={() => (roleTarget = m)}
@@ -464,6 +472,7 @@
       >
         {m.role === 'admin' ? 'Passer membre' : 'Passer admin'}
       </button>
+      {/if}
       <button
         class="icon-btn"
         class:icon-on={m.disabled}
@@ -473,9 +482,11 @@
       >
         <Icon name={m.disabled ? 'key' : 'lock'} size={18} />
       </button>
+      {#if editable}
       <button class="icon-btn icon-danger" onclick={() => (removeTarget = m)} aria-label={`Retirer ${m.display_name} du foyer`}>
         <Icon name="trash" size={18} />
       </button>
+      {/if}
       </span>
     {/if}
   </li>
