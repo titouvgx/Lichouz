@@ -21,6 +21,10 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+## [2.10.0] — 2026-11-19
+
+- **Le super-admin peut désactiver un fondateur** (migration 36) : seul un super-admin peut le faire ; un super-admin reste intouchable ; « Retirer » un fondateur reste interdit. Un fondateur désactivé perd aussi ses pouvoirs (inviter, gérer ses foyers) : `is_founder` ignore les comptes désactivés. Cadenas visible sur la ligne du fondateur (Ma famille) côté super-admin. Banc RLS : test de l'ancienne règle remplacé par 3 tests (désactivation par le super-admin, pas par soi-même, pas par l'admin d'un autre foyer).
+
 ## [2.9.0] — 2026-11-18
 
 - **Modération super-admin** (migration 35) : section « Modération » dans la page Admin : derniers commentaires de toutes les familles (suppression), liste des comptes (désactiver / réactiver). Trois fonctions SQL réservées au super-admin, aucune table nouvelle ; 6 tests ajoutés au banc RLS.

@@ -3585,8 +3585,22 @@ describe('Migration 27 : comptes désactivés (set_account_disabled)', () => {
   attaque('personne ne se désactive soi-même', async (s) => {
     expectRefused(await s.as('adminA', DISABLE, [ID.adminA, true]), '42501', 'soi-même', /propre compte/)
   })
-  attaque('le compte d\'un fondateur ne se désactive pas (admin B fondateur de SB, par le super-admin)', async (s) => {
-    expectRefused(await s.as('superAdmin', DISABLE, [ID.adminB, true]), '42501', 'fondateur', /fondateur/)
+  controle('migration 36 : le super-admin désactive un fondateur (admin B, fondateur de SB), qui perd ses pouvoirs', async (s) => {
+    const avant = await s.as('adminB', `SELECT public.is_founder($1) AS v`, [ID.sfB])
+    expect(avant.rows[0].v, 'fondateur actif').toBe(true)
+    expectOk(await s.as('superAdmin', DISABLE, [ID.adminB, true]), 'super-admin désactive le fondateur', 1)
+    expect(await isDisabled(s, ID.adminB)).toBe(true)
+    const apres = await s.as('adminB', `SELECT public.is_founder($1) AS v`, [ID.sfB])
+    expect(apres.rows[0].v, 'fondateur désactivé').toBe(false)
+    expectOk(await s.as('superAdmin', DISABLE, [ID.adminB, false]), 'super-admin réactive le fondateur', 1)
+    expect(await isDisabled(s, ID.adminB)).toBe(false)
+  })
+  attaque('migration 36 : un fondateur ne se désactive pas lui-même', async (s) => {
+    expectRefused(await s.as('adminB', DISABLE, [ID.adminB, true]), '42501', 'fondateur sur lui-même', /propre compte/)
+    expect(await isDisabled(s, ID.adminB)).toBe(false)
+  })
+  attaque('migration 36 : seul le super-admin désactive un fondateur (pas l\'admin d\'un autre foyer)', async (s) => {
+    expectRefused(await s.as('adminA', DISABLE, [ID.adminB, true]), '42501', 'admin A sur fondateur B', /introuvable|fondateur/)
     expect(await isDisabled(s, ID.adminB)).toBe(false)
   })
   attaque('un super-admin ne se désactive pas (même par l\'admin de sa famille)', async (s) => {

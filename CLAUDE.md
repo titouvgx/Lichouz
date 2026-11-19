@@ -39,7 +39,7 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `hist
 
 ## Migrations et bases
 - Détail : `docs/migrations.md`. Contrôles : `supabase/tests/controle_NN_*.sql`. Migrations GÉNÉRÉES (16, 18, 25 bis, 33…) jamais éditées à la main (`npm run recettes` ; un lot = `supabase/recettes/lots/lot-NN.json`, ses migrations lui sont propres)
-- **État des bases (à tenir à jour)** : `courses-test` (id `oczyjyehltrizhbuttad`, essais libres, pause après 7 j) et `lichouz-prod` (id `kfdtybskxobqfmpetzgc`) **à jour jusqu’à la migration 32** (17/11/2026, contrôles tout à true) ; **`lichouz-prod` a en plus la 33, la 34 et la 35** (18/11/2026, lot 2 + 7 photos + modération, appliquées sans passer par `courses-test` sur demande de Titouan, contrôles : 60 au catalogue, 56 avec photo) ; `courses-test` : 33, 34 et 35 à rattraper. ⚠️ **Aucun export de sauvegarde de la prod** (guide `docs/sauvegardes.md`)
+- **État des bases (à tenir à jour)** : `courses-test` (id `oczyjyehltrizhbuttad`, essais libres, pause après 7 j) et `lichouz-prod` (id `kfdtybskxobqfmpetzgc`) **à jour jusqu’à la migration 32** (17/11/2026, contrôles tout à true) ; **`lichouz-prod` a en plus la 33, la 34, la 35 et la 36** (36 : 19/11/2026, super-admin peut désactiver un fondateur, appliquée sur test puis prod, contrôle tout à true) (18/11/2026, lot 2 + 7 photos + modération, appliquées sans passer par `courses-test` sur demande de Titouan, contrôles : 60 au catalogue, 56 avec photo) ; `courses-test` : a la 36 mais 33, 34 et 35 sont à rattraper. ⚠️ **Aucun export de sauvegarde de la prod** (guide `docs/sauvegardes.md`)
 - **Règle** : d'abord `courses-test`, puis `lichouz-prod` **seulement avec l'accord de Titouan** (il valide la fenêtre Supabase dans les 2 minutes) ; requête de contrôle AVANT de pousser le code qui en dépend. Nouvelle table = RLS + attaques ajoutées dans `tests/rls`. Jamais les vraies recettes de la famille dans le dépôt public
 
 ## Sécurité (OBLIGATOIRE)
@@ -64,6 +64,7 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `hist
 - Réglages Supabase (invitations, mot de passe oublié, SMTP Brevo) : `supabase/functions/README.md`, `supabase/prod/README.md`
 
 ## État et suite (18/11/2026)
+- **v2.10.0** (19/11/2026, migration 36) : le super-admin peut désactiver un fondateur ; un fondateur désactivé perd ses pouvoirs.
 - **v2.9.0** (18/11/2026, migration 35) : modération super-admin (page Admin : commentaires de toutes les familles, désactiver/réactiver les comptes) ; photos du lot 2 (migration 34, sans version). Pas de bouton « signaler » pour les utilisateurs.
 - **Avant : v2.8.0** (18/11/2026, migration 33) : lot 2 de 10 recettes au catalogue (sans photo) ; mécanisme de lots en place. **Chantier recettes : catalogue public tranché** ; reste : photos Unsplash du lot 2 (migration 34), lots suivants. Quiz du jour : toujours à faire
 - **Avant : v2.7.0** (17/11/2026, migration 32) : 40 trophées calculés en base, toast, page Mes trophées, niveau du compte, conditions 2026-11-19. Avant : 2.6.0 commentaires (famille seulement), 2.5.0 boosters à thème, 2.4.x booster du jour + aura, 2.3.0 Tendances
