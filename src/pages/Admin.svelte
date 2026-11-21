@@ -9,6 +9,7 @@
   import Icon from '../components/Icon.svelte'
   import ConfirmDialog from '../components/ConfirmDialog.svelte'
   import InviteDialog from '../components/InviteDialog.svelte'
+  import PublicReviewQueue from '../components/PublicReviewQueue.svelte'
   import { profileState } from '../lib/profile.svelte'
   import { href } from '../lib/router.svelte'
   import { toast } from '../lib/toast.svelte'
@@ -568,6 +569,8 @@
     </section>
 
     <!-- ── Journal des erreurs (v1.6.0) ── -->
+    <PublicReviewQueue />
+
     <section class="card" aria-labelledby="moderation-title">
       <h2 id="moderation-title" class="section-title">
         <span class="section-icon"><Icon name="alert-circle" size={18} /></span> Modération

@@ -529,6 +529,44 @@ export async function setRecipeVisibility(recipeId: string, visibility: 'famille
   if (!data || data.length === 0) throw new Error('Action refusée : tu ne peux pas modifier cette recette.')
 }
 
+/** Demande la publication publique (validation par l'administrateur). Renvoie le nouveau statut. */
+export async function requestPublicPublication(recipeId: string): Promise<'en_attente' | 'validee'> {
+  if (!supabase) throw new Error('Supabase non configuré')
+  const { data, error } = await supabase.rpc('request_public_publication', { p_recipe: recipeId })
+  if (error) throw error
+  return data as 'en_attente' | 'validee'
+}
+
+/** Retire la demande ou dépublie (les copies déjà faites restent). */
+export async function withdrawPublicPublication(recipeId: string): Promise<void> {
+  if (!supabase) throw new Error('Supabase non configuré')
+  const { error } = await supabase.rpc('withdraw_public_publication', { p_recipe: recipeId })
+  if (error) throw error
+}
+
+/** Valide ou refuse une demande (super-admin ; refus = motif de la liste). */
+export async function reviewPublicRecipe(recipeId: string, approve: boolean, reason?: string): Promise<void> {
+  if (!supabase) throw new Error('Supabase non configuré')
+  const { error } = await supabase.rpc('review_public_recipe', { p_recipe: recipeId, p_approve: approve, p_reason: reason ?? null })
+  if (error) throw error
+}
+
+export interface PublicReviewItem {
+  recipe_id: string
+  title: string
+  image_url: string | null
+  author_pseudo: string | null
+  requested_at: string
+}
+
+/** File de validation (super-admin), la plus ancienne demande d'abord. */
+export async function fetchPublicReviewQueue(): Promise<PublicReviewItem[]> {
+  if (!supabase) return []
+  const { data, error } = await supabase.rpc('public_review_queue')
+  if (error) throw error
+  return (data ?? []) as PublicReviewItem[]
+}
+
 /** Recettes archivées visibles par la personne (les plus récentes d'abord). */
 export async function fetchArchivedRecipes(): Promise<RecipeWithCategory[]> {
   if (!supabase) return []

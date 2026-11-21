@@ -4164,3 +4164,172 @@ describe('Migration 35 : modération par le super-admin', () => {
     expect(rows.find((r) => r.user_id === ID.adminA)?.disabled).toBe(false)
   })
 })
+
+describe('Migration 37 : validation par l’admin des recettes publiques', () => {
+  const statut = async (s: Scenario, id: string) =>
+    (await s.su<{ public_status: string | null }>(`SELECT public_status FROM public.recipes WHERE id = $1`, [id]))[0].public_status
+  const demander = (s: Scenario, who: Parameters<Scenario['as']>[0], id: string) =>
+    s.as(who, `SELECT public.request_public_publication($1)`, [id])
+  const valider = (s: Scenario, id: string) => s.as('superAdmin', `SELECT public.review_public_recipe($1, true)`, [id])
+  const lit = async (s: Scenario, who: Parameters<Scenario['as']>[0], id: string) =>
+    (await s.as(who, `SELECT id FROM public.recipes WHERE id = $1`, [id])).count
+  /** 3 recettes de plus pour adminA (4 au total avec recA) */
+  const autresRecettes = async (s: Scenario) => {
+    const ids = [
+      'a0000000-0000-4000-8000-0000000000f1',
+      'a0000000-0000-4000-8000-0000000000f2',
+      'a0000000-0000-4000-8000-0000000000f3',
+    ]
+    for (const [i, id] of ids.entries())
+      await s.su(`INSERT INTO public.recipes (id, family_id, title, created_by) VALUES ($1, $2, $3, $4)`, [id, ID.famA, `Test ${i}`, ID.adminA])
+    return ids
+  }
+
+  controle('l’auteur demande, reste invisible du public tant que ce n’est pas validé, puis le public la lit', async (s) => {
+    expectOk(await demander(s, 'adminA', ID.recA), 'demande', 1)
+    expect(await statut(s, ID.recA)).toBe('en_attente')
+    expect(await lit(s, 'adminB', ID.recA)).toBe(0)
+    expect(await lit(s, 'superAdmin', ID.recA)).toBe(1)
+    const file = (await s.as('superAdmin', `SELECT recipe_id FROM public.public_review_queue()`)).rows as { recipe_id: string }[]
+    expect(file.map((r) => r.recipe_id)).toContain(ID.recA)
+    expectOk(await valider(s, ID.recA), 'validation', 1)
+    expect(await statut(s, ID.recA)).toBe('validee')
+    expect(await lit(s, 'adminB', ID.recA)).toBe(1)
+    expect(await lit(s, 'memberB', ID.recA)).toBe(1)
+  })
+  controle('la recette du super-admin est publiée directement', async (s) => {
+    const id = 'c0000000-0000-4000-8000-0000000000a1'
+    await s.su(`INSERT INTO public.recipes (id, family_id, title, created_by) VALUES ($1, $2, 'Recette admin', $3)`, [id, ID.famA, ID.superAdmin])
+    expectOk(await demander(s, 'superAdmin', id), 'publication directe', 1)
+    expect(await statut(s, id)).toBe('validee')
+    expect(await lit(s, 'adminB', id)).toBe(1)
+  })
+  controle('refus avec un motif : reste invisible, l’auteur peut retirer puis redemander', async (s) => {
+    await demander(s, 'adminA', ID.recA)
+    expectOk(await s.as('superAdmin', `SELECT public.review_public_recipe($1, false, 'doublon')`, [ID.recA]), 'refus', 1)
+    expect(await statut(s, ID.recA)).toBe('refusee')
+    expect(await lit(s, 'adminB', ID.recA)).toBe(0)
+    expectOk(await demander(s, 'adminA', ID.recA), 'nouvelle demande après refus', 1)
+    expect(await statut(s, ID.recA)).toBe('en_attente')
+    expect((await s.su<{ r: string | null }>(`SELECT public_refusal_reason AS r FROM public.recipes WHERE id = $1`, [ID.recA]))[0].r).toBeNull()
+  })
+  controle('dépublier : par l’auteur et par le super-admin ; archiver masque aussi', async (s) => {
+    await demander(s, 'adminA', ID.recA)
+    await valider(s, ID.recA)
+    expectOk(await s.as('adminA', `SELECT public.withdraw_public_publication($1)`, [ID.recA]), 'auteur', 1)
+    expect(await statut(s, ID.recA)).toBeNull()
+    expect(await lit(s, 'adminB', ID.recA)).toBe(0)
+    await demander(s, 'adminA', ID.recA)
+    await valider(s, ID.recA)
+    expectOk(await s.as('superAdmin', `SELECT public.withdraw_public_publication($1)`, [ID.recA]), 'super-admin', 1)
+    expect(await statut(s, ID.recA)).toBeNull()
+    await demander(s, 'adminA', ID.recA)
+    await valider(s, ID.recA)
+    await s.as('adminA', `UPDATE public.recipes SET archived_at = now() WHERE id = $1`, [ID.recA])
+    expect(await lit(s, 'adminB', ID.recA)).toBe(0)
+  })
+  controle('recette validée modifiée (fiche, ingrédient ou étape) : retour en attente et sortie du public', async (s) => {
+    for (const modif of [
+      `UPDATE public.recipes SET title = 'Titre changé' WHERE id = '${ID.recA}'`,
+      `UPDATE public.recipe_ingredients SET name = 'Autre' WHERE id = '${ID.ingA}'`,
+      `INSERT INTO public.recipe_ingredients (recipe_id, name) VALUES ('${ID.recA}', 'Nouveau')`,
+      `UPDATE public.recipe_steps SET instruction = 'Autre étape' WHERE id = '${ID.stepA}'`,
+    ]) {
+      await s.su(`UPDATE public.recipes SET public_status = NULL WHERE id = $1`, [ID.recA])
+      await demander(s, 'adminA', ID.recA)
+      await valider(s, ID.recA)
+      expect(await lit(s, 'adminB', ID.recA)).toBe(1)
+      expectOk(await s.as('adminA', modif), modif, 1)
+      expect(await statut(s, ID.recA), modif).toBe('en_attente')
+      expect(await lit(s, 'adminB', ID.recA), modif).toBe(0)
+    }
+  })
+
+  attaque('personne ne se valide soi-même : écriture directe des colonnes de publication', async (s) => {
+    for (const who of ['adminA', 'memberA', 'adminB'] as const) {
+      expectBlocked(await s.as(who, `UPDATE public.recipes SET public_status = 'validee' WHERE id = $1 RETURNING id`, [ID.recA]), `${who} statut`)
+    }
+    expectBlocked(await s.as('adminA', `UPDATE public.recipes SET public_status = 'validee', public_reviewed_by = $2 WHERE id = $1 RETURNING id`, [ID.recA, ID.superAdmin]), 'faux validateur')
+    expectBlocked(await s.as('adminA', `UPDATE public.recipes SET public_refusal_reason = 'autre' WHERE id = $1 RETURNING id`, [ID.recA]), 'motif')
+    expect(await statut(s, ID.recA)).toBeNull()
+    expect(await lit(s, 'adminB', ID.recA)).toBe(0)
+  })
+  attaque('création directe d’une recette déjà « validée »', async (s) => {
+    const before = await countRows(s, 'public.recipes')
+    expectBlocked(await s.as('adminA', `INSERT INTO public.recipes (family_id, title, created_by, public_status) VALUES ($1, 'Pirate', auth.uid(), 'validee') RETURNING id`, [ID.famA]), 'insertion validée')
+    expect(await countRows(s, 'public.recipes')).toBe(before)
+  })
+  attaque('seul le super-admin valide ou refuse', async (s) => {
+    await demander(s, 'adminA', ID.recA)
+    for (const who of ['adminA', 'memberA', 'adminB'] as const) {
+      expectBlocked(await s.as(who, `SELECT public.review_public_recipe($1, true)`, [ID.recA]), `${who} valide`)
+      expectBlocked(await s.as(who, `SELECT public.review_public_recipe($1, false, 'autre')`, [ID.recA]), `${who} refuse`)
+      expectBlocked(await s.as(who, `SELECT * FROM public.public_review_queue()`), `${who} file`)
+    }
+    expect(await statut(s, ID.recA)).toBe('en_attente')
+  })
+  attaque('seul l’auteur demande ou retire : ni le foyer, ni un autre foyer', async (s) => {
+    expectBlocked(await demander(s, 'memberA', ID.recA), 'membre du même foyer')
+    expectBlocked(await demander(s, 'adminB', ID.recA), 'autre foyer')
+    expectBlocked(await demander(s, 'adminA', ID.recAshared), 'admin du foyer, recette d’un autre auteur')
+    expect(await statut(s, ID.recA)).toBeNull()
+    await demander(s, 'adminA', ID.recA)
+    await valider(s, ID.recA)
+    expectBlocked(await s.as('memberA', `SELECT public.withdraw_public_publication($1)`, [ID.recA]), 'membre dépublie')
+    expectBlocked(await s.as('adminB', `SELECT public.withdraw_public_publication($1)`, [ID.recA]), 'autre foyer dépublie')
+    expect(await statut(s, ID.recA)).toBe('validee')
+  })
+  attaque('pas plus de 3 demandes en attente par auteur', async (s) => {
+    const autres = await autresRecettes(s)
+    expectOk(await demander(s, 'adminA', ID.recA), 'demande 1', 1)
+    expectOk(await demander(s, 'adminA', autres[0]), 'demande 2', 1)
+    expectOk(await demander(s, 'adminA', autres[1]), 'demande 3', 1)
+    expectRefused(await demander(s, 'adminA', autres[2]), '23514', '4e demande', /3 demandes/)
+    expect(await statut(s, autres[2])).toBeNull()
+    expectOk(await valider(s, ID.recA), 'une est traitée', 1)
+    expectOk(await demander(s, 'adminA', autres[2]), 'place libérée', 1)
+  })
+  attaque('demande impossible : déjà en attente, archivée, ou du catalogue', async (s) => {
+    await demander(s, 'adminA', ID.recA)
+    expectRefused(await demander(s, 'adminA', ID.recA), '23514', 'déjà en attente')
+    await s.su(`UPDATE public.recipes SET archived_at = now() WHERE id = $1`, [ID.recAshared])
+    expectRefused(await demander(s, 'memberA', ID.recAshared), '23514', 'archivée')
+    const cat = 'c0000000-0000-4000-8000-0000000000a2'
+    await s.su(`INSERT INTO public.recipes (id, family_id, title, created_by, visibility) VALUES ($1, $2, 'Catalogue', $3, 'catalogue')`, [cat, ID.famA, ID.superAdmin])
+    expectRefused(await demander(s, 'superAdmin', cat), '23514', 'catalogue')
+  })
+  attaque('un refus exige un motif de la liste ; on ne traite que ce qui est en attente', async (s) => {
+    await demander(s, 'adminA', ID.recA)
+    expectRefused(await s.as('superAdmin', `SELECT public.review_public_recipe($1, false)`, [ID.recA]), '23514', 'sans motif')
+    expectRefused(await s.as('superAdmin', `SELECT public.review_public_recipe($1, false, 'parce que')`, [ID.recA]), '23514', 'motif libre')
+    expect(await statut(s, ID.recA)).toBe('en_attente')
+    expectRefused(await s.as('superAdmin', `SELECT public.review_public_recipe($1, true)`, [ID.recB]), '23514', 'pas en attente')
+  })
+  attaque('une recette en attente ou refusée n’est lisible ni par un autre foyer ni par une autre famille', async (s) => {
+    await demander(s, 'adminA', ID.recA)
+    for (const who of ['adminA2', 'adminB', 'memberB', 'sansProfil'] as const) expect(await lit(s, who, ID.recA), `${who} en attente`).toBe(0)
+    await s.as('superAdmin', `SELECT public.review_public_recipe($1, false, 'autre')`, [ID.recA])
+    for (const who of ['adminA2', 'adminB', 'memberB', 'sansProfil'] as const) expect(await lit(s, who, ID.recA), `${who} refusée`).toBe(0)
+    // ses ingrédients et étapes non plus
+    expect(await countRows(s, 'public.recipe_ingredients', 'recipe_id = $1', [ID.recA])).toBeGreaterThan(0)
+    expect((await s.as('adminB', `SELECT id FROM public.recipe_ingredients WHERE recipe_id = $1`, [ID.recA])).count).toBe(0)
+  })
+  attaque('un compte sans foyer ne lit pas une recette publique ; l’anonyme n’exécute rien', async (s) => {
+    await demander(s, 'adminA', ID.recA)
+    await valider(s, ID.recA)
+    expect(await lit(s, 'sansProfil', ID.recA)).toBe(0)
+    expect(await lit(s, 'anon', ID.recA)).toBe(0)
+    expectNoExecute(await s.as('anon', `SELECT public.request_public_publication($1)`, [ID.recA]), 'anon demande')
+    expectNoExecute(await s.as('anon', `SELECT public.withdraw_public_publication($1)`, [ID.recA]), 'anon retire')
+    expectNoExecute(await s.as('anon', `SELECT public.review_public_recipe($1, true)`, [ID.recA]), 'anon valide')
+    expectNoExecute(await s.as('anon', `SELECT * FROM public.public_review_queue()`), 'anon file')
+  })
+  attaque('une recette publique reste modifiable par son seul foyer', async (s) => {
+    await demander(s, 'adminA', ID.recA)
+    await valider(s, ID.recA)
+    expectBlocked(await s.as('adminB', `UPDATE public.recipes SET title = 'Piratée' WHERE id = $1 RETURNING id`, [ID.recA]), 'autre foyer modifie')
+    expectBlocked(await s.as('adminB', `DELETE FROM public.recipe_ingredients WHERE recipe_id = $1 RETURNING id`, [ID.recA]), 'autre foyer supprime un ingrédient')
+    expectBlocked(await s.as('adminB', `INSERT INTO public.recipe_steps (recipe_id, instruction) VALUES ($1, 'piège') RETURNING id`, [ID.recA]), 'autre foyer ajoute une étape')
+    expect(await statut(s, ID.recA)).toBe('validee')
+  })
+})

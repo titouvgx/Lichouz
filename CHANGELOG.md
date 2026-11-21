@@ -21,6 +21,12 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+### Validation des recettes publiques (migration 37, priorité du 19/11/2026)
+- Une recette ne devient visible du public qu'après **validation par le super-admin** ; « foyer » et « toute la famille » n'ont aucune validation.
+- Mes recettes : « Publier en public », retirer la demande, dépublier, motif en cas de refus. Administration : file « Recettes à valider » (valider, ou refuser avec un motif de la liste).
+- Règles côté base : pas d'auto-validation, 3 demandes en attente au plus par auteur, recette publique modifiée → retour en attente (fiche, ingrédients, étapes), recettes du super-admin publiées directement.
+- Migration : `20261121100000_validation_publique.sql` (+ 15 scénarios au banc RLS). **Pas encore appliquée sur `courses-test` ni sur la prod.**
+
 ## [2.10.0] — 2026-11-19
 
 - **Le super-admin peut désactiver un fondateur** (migration 36) : seul un super-admin peut le faire ; un super-admin reste intouchable ; « Retirer » un fondateur reste interdit. Un fondateur désactivé perd aussi ses pouvoirs (inviter, gérer ses foyers) : `is_founder` ignore les comptes désactivés. Cadenas visible sur la ligne du fondateur (Ma famille) côté super-admin. Banc RLS : test de l'ancienne règle remplacé par 3 tests (désactivation par le super-admin, pas par soi-même, pas par l'admin d'un autre foyer).

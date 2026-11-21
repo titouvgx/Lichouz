@@ -14,7 +14,9 @@
   import { toast } from '../lib/toast.svelte'
   import {
     fetchMyRecipes, groupMyRecipes, setRecipeVisibility, setRecipeArchived,
+    requestPublicPublication, withdrawPublicPublication,
   } from '../lib/api/recipes'
+  import { publicationInfo, REVIEW_DELAY_TEXT, MAX_PENDING_REQUESTS } from '../lib/publication'
   import type { RecipeWithCategory } from '../lib/types'
 
   const isAdmin = $derived(profileState.profile?.role === 'admin' || !!profileState.context?.isSuperAdmin)
@@ -24,6 +26,8 @@
   let loading = $state(true)
   let loadError = $state<string | null>(null)
   let busyId = $state<string | null>(null)
+  /** Recette pour laquelle on affiche l'explication avant d'envoyer la demande */
+  let confirmId = $state<string | null>(null)
 
   const groups = $derived(groupMyRecipes(recipes))
 
@@ -50,6 +54,40 @@
       await setRecipeVisibility(r.id, next)
       patch(r.id, { visibility: next })
       toast.success(next === 'super_famille' ? 'Partagée avec toute la famille' : 'Gardée pour ton foyer')
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Action impossible')
+    } finally {
+      busyId = null
+    }
+  }
+
+  async function publicAction(r: RecipeWithCategory) {
+    if (busyId) return
+    const info = publicationInfo(r)
+    if (info.action === 'demander' || info.action === 'redemander') {
+      confirmId = r.id
+      return
+    }
+    busyId = r.id
+    try {
+      await withdrawPublicPublication(r.id)
+      patch(r.id, { public_status: null, public_refusal_reason: null })
+      toast.success(info.action === 'retirer' ? 'Demande retirée' : 'Recette dépubliée')
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Action impossible')
+    } finally {
+      busyId = null
+    }
+  }
+
+  async function sendRequest(r: RecipeWithCategory) {
+    if (busyId) return
+    busyId = r.id
+    try {
+      const status = await requestPublicPublication(r.id)
+      patch(r.id, { public_status: status, public_refusal_reason: null })
+      confirmId = null
+      toast.success(status === 'validee' ? 'Recette publiée' : 'Demande envoyée : réponse ' + REVIEW_DELAY_TEXT)
     } catch (e: any) {
       toast.error(e?.message ?? 'Action impossible')
     } finally {
@@ -104,6 +142,7 @@
           <p class="group-sub">{section.sub}</p>
           <ul>
             {#each section.items as r, i (r.id)}
+              {@const pub = publicationInfo(r)}
               <li class="row" style="--i: {Math.min(i, 8)}">
                 <a class="row-main" href={href('recette', r.id)}>
                   <span class="thumb" style="--cat: {categoryColor(r.recipe_categories?.name)}" aria-hidden="true">
@@ -115,12 +154,18 @@
                   </span>
                   <span class="row-title">{r.title}</span>
                 </a>
+                {#if pub.badge}
+                  <p class="pub"><span class="pub-badge pub-{r.public_status}">{pub.badge}</span> {pub.note}</p>
+                {/if}
                 <div class="row-actions">
                   {#if !r.archived_at}
                     <a class="act" href={href('editer-recette', r.id)}>Modifier</a>
                     <button class="act" onclick={() => toggleShare(r)} disabled={busyId === r.id}>
                       {r.visibility === 'super_famille' ? 'Garder pour mon foyer' : 'Partager'}
                     </button>
+                    {#if pub.action}
+                      <button class="act" onclick={() => publicAction(r)} disabled={busyId === r.id}>{pub.actionLabel}</button>
+                    {/if}
                   {/if}
                   {#if isAdmin}
                     <button class="act" class:danger={!r.archived_at} onclick={() => toggleArchive(r)} disabled={busyId === r.id}>
@@ -128,6 +173,19 @@
                     </button>
                   {/if}
                 </div>
+                {#if confirmId === r.id}
+                  <div class="confirm" role="group" aria-label="Confirmer la demande de publication">
+                    <p>
+                      Ta recette sera visible de <strong>tous les utilisateurs</strong> après validation par
+                      l’administrateur (réponse {REVIEW_DELAY_TEXT}). Tu pourras la dépublier à tout moment ;
+                      les copies déjà faites restent. Maximum {MAX_PENDING_REQUESTS} demandes en attente.
+                    </p>
+                    <div class="confirm-actions">
+                      <button class="btn btn-primary" onclick={() => sendRequest(r)} disabled={busyId === r.id}>Envoyer la demande</button>
+                      <button class="btn btn-outline" onclick={() => (confirmId = null)}>Annuler</button>
+                    </div>
+                  </div>
+                {/if}
               </li>
             {/each}
           </ul>
@@ -235,6 +293,20 @@
   .act:active:not(:disabled) { transform: translate(1px, 1px); }
   .act.danger { color: var(--error); }
   .act:disabled { opacity: 0.5; }
+
+  .pub { margin: 0; font-size: 13px; color: var(--text-secondary); }
+  .pub-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border: var(--line-w) solid var(--line);
+    font-weight: var(--fw-bold);
+    color: var(--text);
+  }
+  .pub-validee { background: var(--success-bg, transparent); }
+  .pub-refusee { color: var(--error); }
+  .confirm { margin-top: var(--sp-2); padding: var(--sp-3); border: var(--line-w) solid var(--line); font-size: 14px; }
+  .confirm p { margin: 0 0 var(--sp-2); }
+  .confirm-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 
   .empty { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-3); }
   .muted { color: var(--text-secondary); }

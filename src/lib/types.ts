@@ -85,6 +85,10 @@ export interface Recipe {
   origin?: string | null
   themes?: string[]
   budget?: number | null
+  /** Publication publique (migration 37) : null = non demandée */
+  public_status?: 'en_attente' | 'validee' | 'refusee' | null
+  public_requested_at?: string | null
+  public_refusal_reason?: string | null
 }
 
 /** Recette enrichie avec sa catégorie (jointure) */
