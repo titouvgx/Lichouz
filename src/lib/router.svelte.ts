@@ -138,7 +138,8 @@ window.addEventListener('hashchange', () => {
   if (next.current === router.current && next.recipeId === router.recipeId && next.token === router.token) return
 
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  if (!supportsViewTransitions || reduce) {
+  // Appli en arrière-plan : le navigateur refuse l'animation (InvalidStateError) → on change d'écran sans animation
+  if (!supportsViewTransitions || reduce || document.visibilityState === 'hidden') {
     applyRoute(next)
     return
   }
@@ -153,9 +154,15 @@ window.addEventListener('hashchange', () => {
     applyRoute(next)
     await tick() // attendre que Svelte ait mis la nouvelle page dans le DOM
   })
-  transition.finished.finally(() => {
-    delete root.dataset.nav
-  })
+  // Une transition peut être annulée par le navigateur (écran masqué, taille changée) :
+  // ce n'est pas une erreur de l'appli, on ignore ces refus pour ne pas polluer le journal.
+  transition.ready?.catch(() => {})
+  transition.updateCallbackDone?.catch(() => {})
+  transition.finished
+    .catch(() => {})
+    .finally(() => {
+      delete root.dataset.nav
+    })
 })
 
 export function href(route: Route | string, id?: string): string {

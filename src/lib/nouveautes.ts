@@ -10,6 +10,15 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '2.11.0',
+    date: '2026-11-21',
+    items: [
+      'Mes recettes : « Publier en public » envoie ta recette à l’administrateur, qui la valide avant qu’elle soit visible de tous (réponse en général sous 24 h). Un badge indique si une recette est publique, en attente ou refusée (avec le motif).',
+      'Foyer et « toute la famille » ne changent pas : aucune validation.',
+      'Petit correctif : plus d’erreur parasite quand l’appli passe en arrière-plan pendant un changement d’écran.',
+    ],
+  },
+  {
     version: '2.8.0',
     date: '2026-11-18',
     items: [

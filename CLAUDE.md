@@ -63,7 +63,8 @@ Tab bar (5) : Accueil | Recettes | Semaine | Courses | Tendances. Autres : `hist
 - Sortir X.Y.Z : bases à jour → `npm version X.Y.Z --no-git-tag-version` → CHANGELOG daté → check + test + build + capture → `preprod` → go de Titouan → `main` → vérifier site et Actions → Titouan crée l'étiquette et la Release
 - Réglages Supabase (invitations, mot de passe oublié, SMTP Brevo) : `supabase/functions/README.md`, `supabase/prod/README.md`
 
-## État et suite (18/11/2026)
+## État et suite (21/11/2026)
+- **v2.11.0** (21/11/2026, migration 37, appliquée sur `courses-test` et `lichouz-prod`) : validation par le super-admin des recettes rendues publiques (`recipes.public_status`, fonctions `request_public_publication` / `withdraw_public_publication` / `review_public_recipe` / `public_review_queue`, garde dans `guard_recipe_write`, 3 demandes en attente max, modif d'une recette validée → retour en attente) ; correctif des erreurs « view transition ». Pas encore de page « Recettes publiques », textes légaux non modifiés.
 - **v2.10.0** (19/11/2026, migration 36) : le super-admin peut désactiver un fondateur ; un fondateur désactivé perd ses pouvoirs.
 - **v2.9.0** (18/11/2026, migration 35) : modération super-admin (page Admin : commentaires de toutes les familles, désactiver/réactiver les comptes) ; photos du lot 2 (migration 34, sans version). Pas de bouton « signaler » pour les utilisateurs.
 - **Avant : v2.8.0** (18/11/2026, migration 33) : lot 2 de 10 recettes au catalogue (sans photo) ; mécanisme de lots en place. **Chantier recettes : catalogue public tranché** ; reste : photos Unsplash du lot 2 (migration 34), lots suivants. Quiz du jour : toujours à faire
