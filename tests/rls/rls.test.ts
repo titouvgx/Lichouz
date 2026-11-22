@@ -4333,3 +4333,20 @@ describe('Migration 37 : validation par l’admin des recettes publiques', () =>
     expect(await statut(s, ID.recA)).toBe('validee')
   })
 })
+
+describe('Migration 38 : déplacement de foyer (temporaire)', () => {
+  attaque('seul le super-admin déplace un foyer ; les autres et l’anonyme sont refusés', async (s) => {
+    for (const who of ['adminA', 'adminA2', 'adminB', 'memberB', 'sansProfil'] as const) {
+      expectRefused(await s.as(who, `SELECT public.move_family($1, $2)`, [ID.famB, ID.sfA]), '42501', `${who} déplace`)
+    }
+    expectNoExecute(await s.as('anon', `SELECT public.move_family($1, $2)`, [ID.famB, ID.sfA]), 'anon déplace')
+    expect((await s.as('superAdmin', `SELECT super_family_id FROM public.families WHERE id = $1`, [ID.famB])).rows[0].super_family_id).not.toBe(ID.sfA)
+  })
+  attaque('le super-admin déplace un foyer, mais pas vers une famille inconnue ni la même', async (s) => {
+    const o = await s.as('superAdmin', `SELECT public.move_family($1, $2)`, [ID.famB, ID.sfA])
+    expect(o.error ?? null, 'déplacement').toBeNull()
+    expect((await s.as('superAdmin', `SELECT super_family_id FROM public.families WHERE id = $1`, [ID.famB])).rows[0].super_family_id).toBe(ID.sfA)
+    expectRefused(await s.as('superAdmin', `SELECT public.move_family($1, $2)`, [ID.famB, ID.sfA]), '23514', 'même famille')
+    expectRefused(await s.as('superAdmin', `SELECT public.move_family($1, gen_random_uuid())`, [ID.famB]), 'P0002', 'famille inconnue')
+  })
+})

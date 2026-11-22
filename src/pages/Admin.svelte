@@ -22,7 +22,7 @@
     fetchModerationComments, deleteModerationComment, fetchModerationAccounts,
     type ModerationComment, type ModerationAccount,
   } from '../lib/api/moderation'
-  import { setAccountDisabled } from '../lib/api/famille'
+  import { setAccountDisabled, moveFamily } from '../lib/api/famille'
   import {
     fetchFeedback, setFeedbackStatus, fetchErrors, clearErrors,
     type FeedbackRow, type FeedbackStatus, type ErrorRow,
@@ -83,6 +83,25 @@
   let modError = $state<string | null>(null)
   let showAccounts = $state(false)
   let modBusy = $state(false)
+  // ── Déplacer un foyer (temporaire, migration 38) ──
+  let moveTarget = $state<{ id: string; name: string; from: string } | null>(null)
+  let moveDest = $state('')
+  let moving = $state(false)
+  async function confirmMove() {
+    if (!moveTarget || !moveDest) return
+    moving = true
+    try {
+      await moveFamily(moveTarget.id, moveDest)
+      toast.success('Foyer déplacé')
+      moveTarget = null
+      await loadOverview()
+    } catch (e) {
+      toast.error(messageOf(e, 'Le déplacement a échoué.'))
+    } finally {
+      moving = false
+    }
+  }
+
   let modAction = $state<{ kind: 'comment'; c: ModerationComment } | { kind: 'account'; a: ModerationAccount } | null>(null)
 
   async function loadModeration() {
@@ -437,6 +456,9 @@
                       <li class="fam-row">
                         <span class="fam-name">{f.name}</span>
                         <span class="fam-count">{f.members === 0 ? 'Aucun membre' : plural(f.members, 'membre', 'membres')}</span>
+                        {#if overview.length > 1}
+                          <button class="link-btn" onclick={() => { moveTarget = { id: f.id, name: f.name, from: sf.id }; moveDest = '' }}>Déplacer</button>
+                        {/if}
                       </li>
                     {/each}
                   </ul>
@@ -668,6 +690,26 @@
     oncancel={() => (confirmClearErrors = false)}
   >
     <p>Les {errors.length} erreurs affichées seront supprimées définitivement.</p>
+  </ConfirmDialog>
+{/if}
+
+{#if moveTarget}
+  <ConfirmDialog
+    title="Déplacer « {moveTarget.name} » ?"
+    confirmLabel="Déplacer"
+    cancelLabel="Annuler"
+    busy={moving}
+    confirmDisabled={!moveDest}
+    onconfirm={confirmMove}
+    oncancel={() => (moveTarget = null)}
+  >
+    <label for="move-dest">Vers la famille :</label>
+    <select id="move-dest" bind:value={moveDest}>
+      <option value="" disabled>Choisir…</option>
+      {#each overview.filter((x) => x.id !== moveTarget?.from) as x (x.id)}
+        <option value={x.id}>{x.name}</option>
+      {/each}
+    </select>
   </ConfirmDialog>
 {/if}
 

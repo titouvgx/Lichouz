@@ -412,3 +412,9 @@ export async function fetchOverview(): Promise<SuperFamilyOverview[]> {
     families: families.filter((f) => f.super_family_id === sf.id).map((f) => ({ ...f, members: counts[f.id] ?? 0 })),
   }))
 }
+
+/** Super-admin : déplace un foyer dans une autre famille (outil temporaire, migration 38). */
+export async function moveFamily(familyId: string, superFamilyId: string): Promise<void> {
+  const { error } = await db().rpc('move_family', { p_family: familyId, p_super_family: superFamilyId })
+  if (error) throw error
+}

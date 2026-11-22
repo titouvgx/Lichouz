@@ -21,6 +21,9 @@ numérotation [SemVer](https://semver.org/lang/fr/) : **MAJEUR.MINEUR.CORRECTIF*
 
 ## [Non publié]
 
+### Ajouté
+- **Admin (temporaire)** : bouton « Déplacer » sur chaque foyer de la vue d'ensemble, pour le placer dans une autre famille (migration 38, fonction `move_family`, super-admin seulement ; limite de 3 foyers gardée sauf famille d'un super-admin). À retirer après la mise en place.
+
 ## [2.11.0] — 2026-11-21
 
 ### Validation des recettes publiques (migration 37, priorité du 19/11/2026)
